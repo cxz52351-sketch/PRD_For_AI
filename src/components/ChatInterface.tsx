@@ -44,14 +44,14 @@ export function ChatInterface() {
   const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: "1",
-      title: "工业AI对话系统介绍",
+      title: "PRD For AI",
       timestamp: new Date(Date.now() - 1000 * 60 * 30),
-      preview: "欢迎使用工业级AI对话系统",
+      preview: "欢迎使用 PRD For AI 产品设计对话助手",
       messages: [
         {
           id: "1",
           type: "ai",
-          content: "欢迎使用工业级AI对话系统！\n\n我是您的AI助手，基于DeepSeek模型，可以帮助您:\n\n**核心功能:**\n• 📝 智能文本对话和代码生成\n• 🎤 语音输入和识别\n• 📎 文件上传和解析\n• 💾 对话历史管理\n\n**支持格式:**\n```text\nPDF, DOCX, TXT, JPG, PNG, XLSX, PPTX\n最大文件大小: 50MB\n```\n\n请随时向我提问或上传文件，我会为您提供专业的分析和建议！",
+          content: "欢迎使用 PRD For AI！\n\n我是你的产品设计与文档助手，基于 DeepSeek 模型，帮助你：\n\n**核心功能:**\n• 🧭 需求澄清与用户画像\n• 🧩 功能拆解与优先级\n• 📄 PRD/BRD/需求文档生成与评审\n• 📎 文件上传与洞察提炼\n• 💬 多轮对话与版本管理\n\n开始对我说：例如“为一个 AI 会议纪要工具产出 PRD 结构”。",
           timestamp: new Date(Date.now() - 1000 * 60 * 30),
         }
       ]
@@ -354,7 +354,7 @@ export function ChatInterface() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-aurora">
       <ChatSidebar
         conversations={conversations}
         activeConversationId={activeConversationId}
@@ -367,18 +367,17 @@ export function ChatInterface() {
 
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border bg-background">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">
-              {activeConversation?.title || "工业AI对话系统"}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              智能对话 • 文件分析 • 代码生成
-            </p>
+        <div className="flex items-center justify-between p-4 border-b border-border bg-background/60 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <img src="/logo-prd-for-ai.svg" alt="PRD For AI" className="h-10 w-10" />
+            <div>
+              <h1 className="text-xl font-bold text-foreground">{activeConversation?.title || "PRD For AI"}</h1>
+              {/* <p className="text-sm text-muted-foreground">产品文档 • 设计协作</p> */}
+            </div>
           </div>
           
           <div className="flex gap-2">
-            <DropdownMenu>
+            {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
                   <FileDown className="h-4 w-4 mr-2" />
@@ -399,9 +398,9 @@ export function ChatInterface() {
                   Markdown
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
 
-            <Button
+            {/* <Button
               variant="outline"
               size="sm"
               onClick={() => setSelectedModel(selectedModel === "deepseek-chat" ? "deepseek-coder" : "deepseek-chat")}
@@ -409,7 +408,7 @@ export function ChatInterface() {
               <Settings className="h-4 w-4 mr-2" />
               {selectedModel === "deepseek-chat" ? "DeepSeek Chat" : "DeepSeek Coder"}
             </Button>
-            
+             */}
             <Button
               variant="outline"
               size="sm"

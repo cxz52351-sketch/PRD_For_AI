@@ -8,127 +8,123 @@ All colors MUST be HSL. Enterprise-grade color palette with industrial aesthetic
 
 @layer base {
   :root {
-    /* Industrial Color Palette */
-    --background: 220 15% 97%;
-    --foreground: 210 40% 15%;
+    /* PRD For AI - Pink / Gold / Purple Theme (Light) */
+    --background: 330 40% 98%;
+    --foreground: 268 30% 18%;
 
     --card: 0 0% 100%;
-    --card-foreground: 210 40% 15%;
+    --card-foreground: 268 30% 18%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 40% 15%;
+    --popover-foreground: 268 30% 18%;
 
-    /* Industrial Blue Primary */
-    --primary: 210 35% 25%;  /* #2C3E50 equivalent */
+    /* Primary: Elegant Purple */
+    --primary: 268 45% 46%;
     --primary-foreground: 0 0% 98%;
-    --primary-light: 210 35% 40%;
-    --primary-dark: 210 35% 15%;
+    --primary-light: 268 60% 62%;
+    --primary-dark: 268 45% 36%;
 
-    /* Industrial Gray Secondary */
-    --secondary: 210 15% 92%;  /* #ECF0F1 equivalent */
-    --secondary-foreground: 210 40% 15%;
+    /* Secondary: Soft Pink */
+    --secondary: 330 70% 95%;
+    --secondary-foreground: 268 30% 22%;
 
-    --muted: 210 15% 94%;
-    --muted-foreground: 210 20% 45%;
+    --muted: 330 40% 96%;
+    --muted-foreground: 268 20% 42%;
 
-    --accent: 210 50% 55%;
-    --accent-foreground: 0 0% 98%;
+    /* Accent: Warm Gold */
+    --accent: 42 90% 60%;
+    --accent-foreground: 268 30% 16%;
 
-    --destructive: 0 75% 55%;
+    --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 210 20% 85%;
-    --input: 210 20% 95%;
-    --ring: 210 35% 25%;
+    --border: 280 20% 88%;
+    --input: 280 20% 96%;
+    --ring: 268 45% 46%;
 
     /* AI Chat Specific Colors */
-    --ai-message: 210 15% 96%;
-    --user-message: 210 35% 25%;
+    --ai-message: 275 45% 97%;
+    --user-message: 268 45% 46%;
     --user-message-foreground: 0 0% 98%;
-    --code-background: 210 20% 20%;
-    --success: 145 85% 35%;
-    --warning: 45 85% 55%;
+    --code-background: 268 25% 18%;
+    --success: 145 60% 40%;
+    --warning: 42 90% 55%;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-light)));
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
     --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--secondary)));
     
     /* Shadows */
-    --shadow-soft: 0 2px 8px -2px hsl(var(--primary) / 0.1);
-    --shadow-medium: 0 4px 16px -4px hsl(var(--primary) / 0.15);
-    --shadow-strong: 0 8px 24px -8px hsl(var(--primary) / 0.2);
+    --shadow-soft: 0 2px 8px -2px hsl(var(--primary) / 0.12);
+    --shadow-medium: 0 4px 16px -4px hsl(var(--primary) / 0.18);
+    --shadow-strong: 0 8px 24px -8px hsl(var(--primary) / 0.24);
     
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-fast: all 0.15s ease-out;
 
-    --radius: 0.5rem;
+    --radius: 0.6rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
+    /* Sidebar */
+    --sidebar-background: 330 45% 98%;
+    --sidebar-foreground: 268 30% 22%;
+    --sidebar-primary: 268 45% 46%;
     --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 330 60% 96%;
+    --sidebar-accent-foreground: 268 30% 22%;
+    --sidebar-border: 280 20% 90%;
+    --sidebar-ring: 42 90% 60%;
   }
 
   .dark {
-    /* Dark Industrial Theme */
-    --background: 210 20% 8%;
-    --foreground: 210 15% 92%;
+    /* PRD For AI - Pink / Gold / Purple Theme (Dark) */
+    --background: 268 30% 9%;
+    --foreground: 0 0% 96%;
 
-    --card: 210 20% 10%;
-    --card-foreground: 210 15% 92%;
+    --card: 268 30% 11%;
+    --card-foreground: 0 0% 96%;
 
-    --popover: 210 20% 10%;
-    --popover-foreground: 210 15% 92%;
+    --popover: 268 30% 11%;
+    --popover-foreground: 0 0% 96%;
 
-    --primary: 210 50% 65%;
-    --primary-foreground: 210 20% 8%;
-    --primary-light: 210 50% 75%;
-    --primary-dark: 210 50% 55%;
+    --primary: 268 65% 72%;
+    --primary-foreground: 268 25% 12%;
+    --primary-light: 268 70% 78%;
+    --primary-dark: 268 55% 58%;
 
-    --secondary: 210 20% 15%;
-    --secondary-foreground: 210 15% 85%;
+    --secondary: 330 35% 18%;
+    --secondary-foreground: 0 0% 96%;
 
-    --muted: 210 20% 12%;
-    --muted-foreground: 210 15% 60%;
+    --muted: 268 20% 16%;
+    --muted-foreground: 0 0% 76%;
 
-    --accent: 210 50% 60%;
-    --accent-foreground: 210 20% 8%;
+    --accent: 42 90% 62%;
+    --accent-foreground: 268 25% 12%;
 
-    --destructive: 0 75% 55%;
+    --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 210 20% 20%;
-    --input: 210 20% 15%;
-    --ring: 210 50% 65%;
+    --border: 268 20% 20%;
+    --input: 268 20% 16%;
+    --ring: 268 65% 72%;
 
     /* Dark AI Chat Colors */
-    --ai-message: 210 20% 12%;
-    --user-message: 210 50% 25%;
-    --user-message-foreground: 210 15% 92%;
-    --code-background: 210 20% 5%;
-    --success: 145 85% 45%;
-    --warning: 45 85% 65%;
+    --ai-message: 268 22% 14%;
+    --user-message: 268 65% 32%;
+    --user-message-foreground: 0 0% 96%;
+    --code-background: 268 25% 10%;
+    --success: 145 60% 45%;
+    --warning: 42 90% 60%;
 
-    --sidebar-background: 210 20% 6%;
-    --sidebar-foreground: 210 15% 85%;
-    --sidebar-primary: 210 50% 60%;
-    --sidebar-primary-foreground: 210 20% 8%;
-    --sidebar-accent: 210 20% 12%;
-    --sidebar-accent-foreground: 210 15% 85%;
-    --sidebar-border: 210 20% 18%;
-    --sidebar-ring: 210 50% 65%;
+    /* Sidebar */
+    --sidebar-background: 268 30% 8%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 268 65% 60%;
+    --sidebar-primary-foreground: 268 25% 12%;
+    --sidebar-accent: 268 22% 14%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 268 22% 18%;
+    --sidebar-ring: 42 90% 62%;
   }
 }
 
@@ -143,6 +139,26 @@ All colors MUST be HSL. Enterprise-grade color palette with industrial aesthetic
 }
 
 @layer utilities {
+  /* Aurora soft gradient background inspired by your reference */
+  .bg-aurora {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(60% 45% at 20% 18%, hsla(330, 80%, 88%, 0.85) 0%, transparent 60%),
+      radial-gradient(55% 40% at 80% 16%, hsla(42, 95%, 75%, 0.65) 0%, transparent 60%),
+      radial-gradient(60% 45% at 76% 78%, hsla(268, 70%, 78%, 0.6) 0%, transparent 60%),
+      radial-gradient(55% 55% at 12% 85%, hsla(268, 45%, 42%, 0.20) 0%, transparent 70%);
+    background-attachment: fixed;
+  }
+
+  .dark .bg-aurora {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(60% 45% at 20% 18%, hsla(330, 65%, 40%, 0.55) 0%, transparent 60%),
+      radial-gradient(55% 40% at 80% 16%, hsla(42, 90%, 52%, 0.45) 0%, transparent 60%),
+      radial-gradient(60% 45% at 76% 78%, hsla(268, 70%, 55%, 0.45) 0%, transparent 60%),
+      radial-gradient(55% 55% at 12% 85%, hsla(268, 45%, 22%, 0.25) 0%, transparent 70%);
+  }
+
   .line-clamp-2 {
     overflow: hidden;
     display: -webkit-box;

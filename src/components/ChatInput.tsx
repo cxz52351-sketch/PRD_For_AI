@@ -181,19 +181,18 @@ export function ChatInput({
 
   return (
     <div className="border-t border-border bg-background p-4">
-      {/* File Upload Area */}
-      <div 
-        className={cn(
-          "relative border-2 border-dashed rounded-lg p-4 mb-4 transition-colors",
-          dragActive ? "border-primary bg-primary/5" : "border-border",
-          files.length > 0 ? "bg-secondary/30" : ""
-        )}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
-      >
-        {files.length > 0 ? (
+      {/* File Upload Area - only show after selecting files */}
+      {files.length > 0 && (
+        <div 
+          className={cn(
+            "relative border rounded-lg p-4 mb-4 transition-colors bg-secondary/30",
+            dragActive ? "ring-2 ring-primary/40" : ""
+          )}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+        >
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground mb-2">已选择文件:</p>
             {files.map((file, index) => (
@@ -213,12 +212,8 @@ export function ChatInput({
               </div>
             ))}
           </div>
-        ) : (
-          <p className="text-center text-muted-foreground text-sm">
-            拖拽文件到此处或点击上传按钮选择文件
-          </p>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Input Area */}
       <div className="flex gap-2">
