@@ -38,6 +38,10 @@ interface Conversation {
   timestamp: Date;
   preview: string;
   messages: Message[];
+  // 后端本地数据库会话ID
+  dbConversationId?: string;
+  // Dify 的会话ID
+  difyConversationId?: string;
 }
 
 export function ChatInterface() {
@@ -57,7 +61,7 @@ export function ChatInterface() {
       ]
     }
   ]);
-  
+
   const [activeConversationId, setActiveConversationId] = useState<string>("1");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -106,15 +110,15 @@ export function ChatInterface() {
     };
 
     // Update conversation with user message
-    setConversations(prev => prev.map(conv => 
-      conv.id === activeConversationId 
-        ? { 
-            ...conv, 
-            messages: [...conv.messages, userMessage],
-            title: conv.messages.length === 0 ? generateConversationTitle(content) : conv.title,
-            timestamp: new Date(),
-            preview: content.length > 50 ? content.substring(0, 50) + "..." : content
-          }
+    setConversations(prev => prev.map(conv =>
+      conv.id === activeConversationId
+        ? {
+          ...conv,
+          messages: [...conv.messages, userMessage],
+          title: conv.messages.length === 0 ? generateConversationTitle(content) : conv.title,
+          timestamp: new Date(),
+          preview: content.length > 50 ? content.substring(0, 50) + "..." : content
+        }
         : conv
     ));
 
@@ -143,8 +147,8 @@ export function ChatInterface() {
       };
 
       // 先添加空的AI消息
-      setConversations(prev => prev.map(conv => 
-        conv.id === activeConversationId 
+      setConversations(prev => prev.map(conv =>
+        conv.id === activeConversationId
           ? { ...conv, messages: [...conv.messages, aiMessage] }
           : conv
       ));
@@ -157,47 +161,49 @@ export function ChatInterface() {
           temperature: 0.7,
           max_tokens: 4000,
           stream: true,
-          output_format: outputFormat
+          output_format: outputFormat,
+          conversation_id: activeConversation?.dbConversationId,
+          dify_conversation_id: activeConversation?.difyConversationId,
         });
 
         const parser = parseStreamResponse(stream);
-        
+
         for await (const chunk of parser) {
           if (chunk.choices && chunk.choices[0]?.delta?.content) {
             const content = chunk.choices[0].delta.content;
-            
+
             // 更新消息内容
-            setConversations(prev => prev.map(conv => 
-              conv.id === activeConversationId 
+            setConversations(prev => prev.map(conv =>
+              conv.id === activeConversationId
                 ? {
-                    ...conv,
-                    messages: conv.messages.map(msg => 
-                      msg.id === aiMessageId 
-                        ? { ...msg, content: msg.content + content }
-                        : msg
-                    )
-                  }
+                  ...conv,
+                  messages: conv.messages.map(msg =>
+                    msg.id === aiMessageId
+                      ? { ...msg, content: msg.content + content }
+                      : msg
+                  )
+                }
                 : conv
             ));
           } else if (chunk.type === "file") {
             // 处理生成的文件
-            setConversations(prev => prev.map(conv => 
-              conv.id === activeConversationId 
+            setConversations(prev => prev.map(conv =>
+              conv.id === activeConversationId
                 ? {
-                    ...conv,
-                    messages: conv.messages.map(msg => 
-                      msg.id === aiMessageId 
-                        ? { 
-                            ...msg, 
-                            generatedFile: {
-                              filename: chunk.filename,
-                              url: chunk.url,
-                              mime_type: chunk.mime_type
-                            }
-                          }
-                        : msg
-                    )
-                  }
+                  ...conv,
+                  messages: conv.messages.map(msg =>
+                    msg.id === aiMessageId
+                      ? {
+                        ...msg,
+                        generatedFile: {
+                          filename: chunk.filename,
+                          url: chunk.url,
+                          mime_type: chunk.mime_type
+                        }
+                      }
+                      : msg
+                  )
+                }
                 : conv
             ));
 
@@ -205,6 +211,17 @@ export function ChatInterface() {
               title: "文件生成成功",
               description: `已生成文件：${chunk.filename}`,
             });
+          } else if (chunk.type === "conversation") {
+            // 更新当前会话的本地与 Dify 会话ID
+            setConversations(prev => prev.map(conv =>
+              conv.id === activeConversationId
+                ? {
+                  ...conv,
+                  dbConversationId: chunk.conversation_id || conv.dbConversationId,
+                  difyConversationId: chunk.dify_conversation_id || conv.difyConversationId,
+                }
+                : conv
+            ));
           }
         }
       } else {
@@ -215,24 +232,29 @@ export function ChatInterface() {
           temperature: 0.7,
           max_tokens: 4000,
           stream: false,
-          output_format: outputFormat
+          output_format: outputFormat,
+          conversation_id: activeConversation?.dbConversationId,
+          dify_conversation_id: activeConversation?.difyConversationId,
         });
 
         // 更新AI消息内容
-        setConversations(prev => prev.map(conv => 
-          conv.id === activeConversationId 
+        setConversations(prev => prev.map(conv =>
+          conv.id === activeConversationId
             ? {
-                ...conv,
-                messages: conv.messages.map(msg => 
-                  msg.id === aiMessageId 
-                    ? { 
-                        ...msg, 
-                        content: response.choices[0]?.message?.content || "抱歉，我无法生成回复。",
-                        generatedFile: response.file
-                      }
-                    : msg
-                )
-              }
+              ...conv,
+              messages: conv.messages.map(msg =>
+                msg.id === aiMessageId
+                  ? {
+                    ...msg,
+                    content: response.choices[0]?.message?.content || "抱歉，我无法生成回复。",
+                    generatedFile: response.file
+                  }
+                  : msg
+              )
+              ,
+              dbConversationId: response.conversation_id || conv.dbConversationId,
+              difyConversationId: (response as any).dify_conversation_id || conv.difyConversationId
+            }
             : conv
         ));
 
@@ -246,7 +268,7 @@ export function ChatInterface() {
 
     } catch (error) {
       console.error('发送消息失败:', error);
-      
+
       // 添加错误消息
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -256,8 +278,8 @@ export function ChatInterface() {
         isError: true,
       };
 
-      setConversations(prev => prev.map(conv => 
-        conv.id === activeConversationId 
+      setConversations(prev => prev.map(conv =>
+        conv.id === activeConversationId
           ? { ...conv, messages: [...conv.messages, errorMessage] }
           : conv
       ));
@@ -288,7 +310,7 @@ export function ChatInterface() {
 
   const handleDeleteConversation = (id: string) => {
     setConversations(prev => prev.filter(conv => conv.id !== id));
-    
+
     // If deleting active conversation, switch to another one
     if (id === activeConversationId) {
       const remaining = conversations.filter(conv => conv.id !== id);
@@ -302,25 +324,25 @@ export function ChatInterface() {
 
   const handleRetryMessage = () => {
     if (!activeConversation) return;
-    
+
     const lastUserMessage = [...activeConversation.messages]
       .reverse()
       .find(msg => msg.type === "user");
-    
+
     if (lastUserMessage) {
       // Remove the last error message
-      setConversations(prev => prev.map(conv => 
-        conv.id === activeConversationId 
+      setConversations(prev => prev.map(conv =>
+        conv.id === activeConversationId
           ? { ...conv, messages: conv.messages.slice(0, -1) }
           : conv
       ));
-      
+
       // Retry sending
       const files = lastUserMessage.attachments?.map(att => {
         // Note: In a real app, you'd need to store the actual File objects
         return new File([], att.name, { type: att.type });
       });
-      
+
       handleSendMessage(lastUserMessage.content, files);
     }
   };
@@ -329,7 +351,7 @@ export function ChatInterface() {
     if (!activeConversation) return;
 
     const markdown = `# ${activeConversation.title}\n\n` +
-      activeConversation.messages.map(msg => 
+      activeConversation.messages.map(msg =>
         `## ${msg.type === 'user' ? '用户' : 'AI助手'} (${msg.timestamp.toLocaleString()})\n\n${msg.content}\n`
       ).join('\n');
 
@@ -375,7 +397,7 @@ export function ChatInterface() {
               {/* <p className="text-sm text-muted-foreground">产品文档 • 设计协作</p> */}
             </div>
           </div>
-          
+
           <div className="flex gap-2">
             {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -449,7 +471,7 @@ export function ChatInterface() {
                 )}
               </div>
             ))}
-            
+
             {isLoading && (
               <div className="flex justify-start">
                 <div className="bg-ai-message rounded-lg p-4 max-w-[80%]">

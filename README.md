@@ -1,6 +1,6 @@
 # Indus AI Dialogue Forge
 
-一个基于 DeepSeek 大语言模型的工业级智能对话系统，提供智能对话、代码生成和文件分析功能。
+一个基于 Dify 工作流（已替换 DeepSeek 调用）的工业级智能对话系统，提供智能对话、代码生成和文件分析功能。
 
 ## 项目信息
 
@@ -36,7 +36,7 @@ chmod +x start.sh
 
 2. **配置环境变量**
    - 复制 `backend/env.example` 为 `backend/.env`
-   - 在 `.env` 文件中设置您的 `DEEPSEEK_API_KEY`
+   - 在 `.env` 文件中设置 `DIFY_API_BASE` 与 `DIFY_API_KEY`（已在示例中提供默认值）
 
 3. **启动服务**
    ```bash
@@ -50,12 +50,12 @@ chmod +x start.sh
 
 4. **访问应用**
    - 前端: http://localhost:8081
-   - 后端API: http://localhost:8000
-   - API文档: http://localhost:8000/docs
+   - 后端API: http://localhost:8001
+   - API文档: http://localhost:8001/docs
 
 ## 📚 详细文档
 
-查看 [DeepSeek 集成指南](README_DEEPSEEK.md) 了解详细的使用说明和配置方法。
+已切换到 Dify 工作流集成。
 
 ## How can I edit this code?
 

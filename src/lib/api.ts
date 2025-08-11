@@ -14,7 +14,8 @@ export interface ChatRequest {
   max_tokens?: number;
   stream?: boolean;
   output_format?: string;
-  conversation_id?: string;
+  conversation_id?: string; // 本地数据库对话ID
+  dify_conversation_id?: string; // Dify 会话ID
 }
 
 export interface FileResponse {
@@ -118,7 +119,7 @@ async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   const defaultOptions: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
@@ -136,7 +137,7 @@ async function apiRequest<T>(
     } catch {
       // 如果无法解析JSON，使用默认错误消息
     }
-    
+
     throw new APIError(errorMessage, response.status);
   }
 
@@ -149,7 +150,7 @@ export async function streamRequest(
   options: RequestInit = {}
 ): Promise<ReadableStream<Uint8Array>> {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   const defaultOptions: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
@@ -167,7 +168,7 @@ export async function streamRequest(
     } catch {
       // 如果无法解析JSON，使用默认错误消息
     }
-    
+
     throw new APIError(errorMessage, response.status);
   }
 
@@ -183,14 +184,14 @@ export const api = {
   getModels: () => apiRequest<{ models: Model[] }>('/api/models'),
 
   // 聊天对话
-  chat: (request: ChatRequest) => 
+  chat: (request: ChatRequest) =>
     apiRequest<ChatResponse>('/api/chat', {
       method: 'POST',
       body: JSON.stringify(request),
     }),
 
   // 流式聊天对话
-  chatStream: (request: ChatRequest) => 
+  chatStream: (request: ChatRequest) =>
     streamRequest('/api/chat', {
       method: 'POST',
       body: JSON.stringify({ ...request, stream: true }),
@@ -200,11 +201,11 @@ export const api = {
   uploadFile: async (file: File, messageId?: string, conversationId?: string): Promise<UploadResponse> => {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     if (messageId) {
       formData.append('message_id', messageId);
     }
-    
+
     if (conversationId) {
       formData.append('conversation_id', conversationId);
     }
@@ -223,7 +224,7 @@ export const api = {
       } catch {
         // 如果无法解析JSON，使用默认错误消息
       }
-      
+
       throw new APIError(errorMessage, response.status);
     }
 
@@ -240,30 +241,30 @@ export const api = {
     link.click();
     document.body.removeChild(link);
   },
-  
+
   // 获取对话列表
-  getConversations: (limit: number = 20, offset: number = 0) => 
+  getConversations: (limit: number = 20, offset: number = 0) =>
     apiRequest<{ conversations: Conversation[] }>(`/api/conversations?limit=${limit}&offset=${offset}`),
 
   // 获取对话详情
-  getConversation: (conversationId: string) => 
+  getConversation: (conversationId: string) =>
     apiRequest<ConversationDetail>(`/api/conversations/${conversationId}`),
 
   // 更新对话标题
-  updateConversationTitle: (conversationId: string, title: string) => 
+  updateConversationTitle: (conversationId: string, title: string) =>
     apiRequest<{ status: string }>(`/api/conversations/${conversationId}`, {
       method: 'PUT',
       body: JSON.stringify({ title }),
     }),
 
   // 删除对话
-  deleteConversation: (conversationId: string) => 
+  deleteConversation: (conversationId: string) =>
     apiRequest<{ status: string }>(`/api/conversations/${conversationId}`, {
       method: 'DELETE',
     }),
 
   // 获取统计信息
-  getStats: () => 
+  getStats: () =>
     apiRequest<{ conversations: number, messages: number, attachments: number, generated_files: number }>('/api/stats'),
 };
 
@@ -293,7 +294,7 @@ export function parseStreamResponse(stream: ReadableStream<Uint8Array>) {
               if (data === '[DONE]') {
                 return;
               }
-              
+
               try {
                 const parsed = JSON.parse(data);
                 yield parsed;

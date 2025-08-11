@@ -60,7 +60,8 @@ class ChatRequest(BaseModel):
     max_tokens: int = 4000
     stream: bool = True
     output_format: str = "text"  # text, pdf, docx, markdown
-    conversation_id: Optional[str] = None  # 对话ID，如果提供则添加到现有对话
+    conversation_id: Optional[str] = None  # 本地数据库对话ID
+    dify_conversation_id: Optional[str] = None  # Dify 会话ID，用于与 Dify 持续对话
 
 class ChatResponse(BaseModel):
     id: str
@@ -70,12 +71,12 @@ class ChatResponse(BaseModel):
     choices: List[Dict[str, Any]]
     usage: Dict[str, int]
 
-# DeepSeek API配置
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
-DEEPSEEK_API_BASE = "https://api.deepseek.com/v1"
+# Dify API 配置（默认使用提供的本地网关与密钥）
+DIFY_API_BASE = os.getenv("DIFY_API_BASE", "http://localhost/v1")
+DIFY_API_KEY = os.getenv("DIFY_API_KEY", "app-GFcHLDy1b1h3RjszVIEPXSMX")
 
-if not DEEPSEEK_API_KEY:
-    print("警告: 未设置DEEPSEEK_API_KEY环境变量")
+if not DIFY_API_KEY:
+    print("警告: 未设置DIFY_API_KEY环境变量")
 
 # 文件存储目录
 UPLOAD_DIR = "uploads"
@@ -239,15 +240,17 @@ async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 @app.post("/api/chat")
-async def chat_with_deepseek(request: ChatRequest):
+async def chat_with_dify(request: ChatRequest):
     """
-    与DeepSeek模型进行对话
+    通过 Dify 工作流进行对话（兼容现有前端协议）。
+    - 流式：将 Dify SSE 事件转换为 OpenAI/DeepSeek 风格的 delta 流
+    - 阻塞：将 Dify 的 answer 映射到 choices[0].message.content
     """
-    if not DEEPSEEK_API_KEY:
-        raise HTTPException(status_code=500, detail="DeepSeek API密钥未配置")
+    if not DIFY_API_KEY:
+        raise HTTPException(status_code=500, detail="Dify API密钥未配置")
     
     try:
-        print(f"开始处理聊天请求，API Key: {DEEPSEEK_API_KEY[:8]}...")
+        print(f"开始处理聊天请求，Dify API Key: {DIFY_API_KEY[:8]}...")
         
         # 从请求中提取用户消息
         user_message = next((msg for msg in request.messages if msg.role == "user"), None)
@@ -277,41 +280,48 @@ async def chat_with_deepseek(request: ChatRequest):
         )
         print(f"添加用户消息: {user_message_id}")
         
-        # 准备请求数据
-        payload = {
-            "model": request.model,
-            "messages": [{"role": msg.role, "content": msg.content} for msg in request.messages],
-            "temperature": request.temperature,
-            "max_tokens": request.max_tokens,
-            "stream": request.stream
+        # Dify 请求数据
+        user_query = user_message.content
+        dify_payload = {
+            "inputs": {},
+            "query": user_query,
+            "response_mode": "streaming" if request.stream else "blocking",
+            # 仅将 Dify 会话ID传给 Dify，用于延续上下文
+            "conversation_id": (request.dify_conversation_id or ""),
+            "user": "abc-123",
         }
-        
+
         headers = {
-            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "Authorization": f"Bearer {DIFY_API_KEY}",
             "Content-Type": "application/json"
         }
         
         if request.stream:
-            # 流式响应
-            print("处理流式响应请求...")
+            # 流式响应（SSE）
+            print("处理流式响应请求（Dify）...")
             
             async def generate():
                 full_content = ""  # 收集完整内容用于文件生成和数据库存储
                 ai_message_id = None
+                dify_conversation_id = conversation_id
                 
                 try:
                     async with httpx.AsyncClient(timeout=60.0) as client:
-                        async with client.stream("POST", f"{DEEPSEEK_API_BASE}/chat/completions", 
-                                            json=payload, headers=headers) as response:
+                        async with client.stream(
+                            "POST",
+                            f"{DIFY_API_BASE}/chat-messages",
+                            json=dify_payload,
+                            headers=headers,
+                        ) as response:
                             if response.status_code != 200:
                                 error_text = await response.aread()
-                                error_msg = f"DeepSeek API错误: {error_text.decode()}"
+                                error_msg = f"Dify API错误: {error_text.decode()}"
                                 print(f"API错误: {error_msg}")
                                 yield f"data: {{\"error\": {{\"message\": \"{error_msg}\"}} }}\n\n"
                                 yield "data: [DONE]\n\n"
                                 return
                             
-                            print("开始接收流式数据...")
+                            print("开始接收 Dify 流式数据...")
                             buffer = ""
                             async for chunk in response.aiter_text():
                                 if chunk:
@@ -321,30 +331,82 @@ async def chat_with_deepseek(request: ChatRequest):
                                         line, buffer = buffer.split('\n', 1)
                                         if line.strip():
                                             if line.startswith('data: '):
-                                                # 解析JSON并提取内容
+                                                # 解析 Dify 事件，转换为 OpenAI/DeepSeek 风格 delta
                                                 try:
                                                     data = line[6:].strip()
-                                                    if data and data != '[DONE]':
+                                                    if not data or data == '[DONE]':
+                                                        pass
+                                                    else:
                                                         parsed = json.loads(data)
-                                                        if parsed.get('choices') and parsed['choices'][0].get('delta', {}).get('content'):
-                                                            content = parsed['choices'][0]['delta']['content']
-                                                            full_content += content
-                                                except:
+                                                        event = parsed.get('event')
+
+                                                        if event == 'message':
+                                                            # 追加内容
+                                                            delta_text = parsed.get('answer', '')
+                                                            if delta_text:
+                                                                full_content += delta_text
+                                                                transformed = {
+                                                                    "choices": [
+                                                                        {"delta": {"content": delta_text}}
+                                                                    ]
+                                                                }
+                                                                yield f"data: {json.dumps(transformed, ensure_ascii=False)}\n\n"
+                                                            # 记录会话ID（如有）
+                                                            if parsed.get('conversation_id'):
+                                                                dify_conversation_id = parsed['conversation_id']
+
+                                                        elif event == 'message_file':
+                                                            # 文件事件映射到前端可识别的自定义文件块
+                                                            file_url = parsed.get('url')
+                                                            file_type = parsed.get('type')
+                                                            file_block = {
+                                                                "type": "file",
+                                                                "filename": f"{file_type}-{parsed.get('id')}",
+                                                                "url": file_url,
+                                                                "mime_type": "application/octet-stream",
+                                                                "conversation_id": parsed.get('conversation_id') or dify_conversation_id,
+                                                            }
+                                                            yield f"data: {json.dumps(file_block, ensure_ascii=False)}\n\n"
+
+                                                        elif event == 'message_end':
+                                                            # 结束事件，保存会话ID
+                                                            if parsed.get('conversation_id'):
+                                                                dify_conversation_id = parsed['conversation_id']
+                                                            # 不直接输出给前端（保持原有协议），将在结尾统一发 [DONE]
+
+                                                        elif event in ('workflow_started', 'node_started', 'node_finished', 'workflow_finished', 'tts_message', 'tts_message_end', 'message_replace', 'ping'):
+                                                            # 可选：忽略或在调试时打印
+                                                            pass
+
+                                                        elif event == 'error' or parsed.get('error'):
+                                                            err_msg = parsed.get('message') or parsed.get('error') or '未知错误'
+                                                            error_response = {"error": {"message": f"Dify 错误: {err_msg}"}}
+                                                            yield f"data: {json.dumps(error_response, ensure_ascii=False)}\n\n"
+                                                            yield "data: [DONE]\n\n"
+                                                            return
+                                                except Exception as e:
+                                                    # 解析异常时忽略该行
+                                                    print(f"解析Dify流式数据行失败: {e}")
                                                     pass
-                                                
-                                                print(f"转发数据: {line[:50]}...")
-                                                yield f"{line}\n\n"
-                                            else:
-                                                yield f"data: {line}\n\n"
                             
-                            # 处理剩余的buffer
+                            # 处理剩余的buffer（无需额外转发）
                             if buffer.strip():
-                                if buffer.startswith('data: '):
-                                    yield f"{buffer}\n\n"
-                                else:
-                                    yield f"data: {buffer}\n\n"
+                                try:
+                                    rem = buffer
+                                    if rem.startswith('data: '):
+                                        data = rem[6:].strip()
+                                        if data and data != '[DONE]':
+                                            parsed = json.loads(data)
+                                            if parsed.get('event') == 'message':
+                                                delta_text = parsed.get('answer', '')
+                                                if delta_text:
+                                                    full_content += delta_text
+                                                    transformed = {"choices": [{"delta": {"content": delta_text}}]}
+                                                    yield f"data: {json.dumps(transformed, ensure_ascii=False)}\n\n"
+                                except Exception:
+                                    pass
                             
-                            # 将完整的AI回复存入数据库
+                            # 将完整的AI回复存入数据库（始终使用本地会话ID）
                             if full_content:
                                 ai_message_id = await db.add_message(
                                     conversation_id=conversation_id,
@@ -375,14 +437,15 @@ async def chat_with_deepseek(request: ChatRequest):
                                         "filename": file_info["filename"],
                                         "url": file_info["url"],
                                         "mime_type": file_info["mime_type"],
-                                        "conversation_id": conversation_id
+                                        "conversation_id": dify_conversation_id or conversation_id
                                     }
                                     yield f"data: {json.dumps(file_data)}\n\n"
                             
-                            # 向客户端发送对话ID
+                            # 向客户端发送对话ID（本地与 Dify）
                             conversation_data = {
                                 "type": "conversation",
-                                "conversation_id": conversation_id
+                                "conversation_id": conversation_id,  # 本地数据库会话ID
+                                "dify_conversation_id": dify_conversation_id or ""
                             }
                             yield f"data: {json.dumps(conversation_data)}\n\n"
                             
@@ -409,52 +472,79 @@ async def chat_with_deepseek(request: ChatRequest):
             return StreamingResponse(generate(), media_type="text/event-stream")
         
         else:
-            # 普通响应
-            print("发送请求到 DeepSeek API...")
-            print(f"请求数据: {json.dumps(payload, ensure_ascii=False, indent=2)}")
+            # 普通（阻塞）响应
+            print("发送请求到 Dify API（阻塞模式）...")
+            print(f"请求数据: {json.dumps(dify_payload, ensure_ascii=False, indent=2)}")
             
             async with httpx.AsyncClient(timeout=60.0) as client:
-                response = await client.post(f"{DEEPSEEK_API_BASE}/chat/completions", 
-                                           json=payload, headers=headers)
+                response = await client.post(
+                    f"{DIFY_API_BASE}/chat-messages",
+                    json=dify_payload,
+                    headers=headers,
+                )
                 
                 print(f"收到响应，状态码: {response.status_code}")
                 if response.status_code != 200:
                     raise HTTPException(status_code=response.status_code, 
-                                      detail=f"DeepSeek API错误: {response.text}")
+                                      detail=f"Dify API错误: {response.text}")
                 
-                response_data = response.json()
-                print(f"响应数据: {json.dumps(response_data, ensure_ascii=False, indent=2)}")
-                
-                # 存储AI回复到数据库
-                ai_content = response_data['choices'][0]['message']['content']
-                ai_message_id = await db.add_message(
-                    conversation_id=conversation_id,
-                    role="assistant",
-                    content=ai_content
-                )
-                print(f"添加AI回复到数据库: {ai_message_id}")
-                
+                dify_data = response.json()
+                print(f"响应数据: {json.dumps(dify_data, ensure_ascii=False, indent=2)}")
+
+                # Dify -> 前端兼容结构
+                ai_content = dify_data.get('answer', '')
+                # 存储AI回复到数据库（始终使用本地会话ID）
+                if ai_content:
+                    ai_message_id = await db.add_message(
+                        conversation_id=conversation_id,
+                        role="assistant",
+                        content=ai_content
+                    )
+                    print(f"添加AI回复到数据库: {ai_message_id}")
+
                 # 生成文件（如果需要）
+                file_info = None
                 if request.output_format != "text" and ai_content.strip():
                     print(f"生成{request.output_format}文件...")
                     file_info = await generate_file(ai_content, request.output_format)
-                    if file_info:
+                    if file_info and ai_content:
                         # 存储生成的文件信息到数据库
-                        file_db_id = await db.add_generated_file(
+                        await db.add_generated_file(
                             message_id=ai_message_id,
                             filename=file_info["filename"],
                             file_path=os.path.join(GENERATED_DIR, file_info["filename"]),
                             mime_type=file_info["mime_type"],
                             format=request.output_format
                         )
-                        print(f"添加生成的文件到数据库: {file_db_id}")
-                        
-                        # 添加文件信息到响应
-                        response_data['file'] = file_info
-                
-                # 添加对话ID到响应
-                response_data['conversation_id'] = conversation_id
-                return response_data
+                        print("生成文件已写入数据库")
+
+                # 构造兼容的返回体
+                compatible = {
+                    "id": dify_data.get('id', str(uuid.uuid4())),
+                    "object": "chat.completion",
+                    "created": int(datetime.now().timestamp()),
+                    "model": request.model,
+                    "choices": [
+                        {
+                            "index": 0,
+                            "message": {"role": "assistant", "content": ai_content},
+                            "finish_reason": "stop",
+                        }
+                    ],
+                    "usage": dify_data.get('metadata', {}).get('usage', {
+                        "prompt_tokens": 0,
+                        "completion_tokens": 0,
+                        "total_tokens": 0,
+                    }),
+                    # 对前端：conversation_id 为本地会话ID；另返回 dify_conversation_id
+                    "conversation_id": conversation_id,
+                    "dify_conversation_id": final_conversation_id or "",
+                }
+
+                if file_info:
+                    compatible['file'] = file_info
+
+                return compatible
                 
     except httpx.TimeoutException:
         raise HTTPException(status_code=408, detail="请求超时")
