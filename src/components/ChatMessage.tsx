@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Copy, Check, Download, AlertTriangle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Mermaid from "./Mermaid";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface ChatMessageProps {
   type: "user" | "ai";
@@ -50,6 +52,18 @@ export function ChatMessage({
     }
   };
 
+  // 预处理：去掉模型“思考/推理”内容与 <details> 包裹的块
+  const cleanedContent = useMemo(() => {
+    let text = content ?? "";
+    // 移除 <details>...</details>
+    text = text.replace(/<details[\s\S]*?<\/details>/gi, "");
+    // 移除 ```thinking / ```reasoning / ```思考 等代码块
+    text = text.replace(/```(?:thinking|reasoning|thoughts|思考|推理)[\s\S]*?```/gi, "");
+    // 移除行内 [思考] 或 (思考中...) 前缀
+    text = text.replace(/^\s*(?:\[?思考\]?|\[?Thinking\]?|\[?Reasoning\]?):.*$/gim, "");
+    return text.trim();
+  }, [content]);
+
   const renderContent = () => {
     if (isError) {
       return (
@@ -71,121 +85,81 @@ export function ChatMessage({
       );
     }
 
-    // Simple markdown-like rendering
-    const lines = content.split('\n');
-    let codeBlockIndex = 0;
+    // 使用 ReactMarkdown 以正确渲染标题/列表/表格等
+    let blockIndex = 0;
+    return (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          code({ className, children, ...props }) {
+            const match = /language-(\w+)/.exec(className || "");
+            const language = (match?.[1] || "").toLowerCase();
+            const codeText = String(children ?? "");
+            const current = blockIndex++;
 
-    return lines.map((line, index) => {
-      // Code block detection
-      if (line.startsWith('```')) {
-        const nextEnd = lines.slice(index + 1).findIndex(l => l.startsWith('```'));
-        if (nextEnd !== -1) {
-          const language = (line.slice(3).trim() || 'text').toLowerCase();
-          const codeContent = lines.slice(index + 1, index + 1 + nextEnd).join('\n');
-          const currentBlockIndex = codeBlockIndex++;
+            // 以是否包含换行粗略判断是否为块级代码
+            const isBlock = /\n/.test(codeText);
 
-          // Mermaid chart rendering
-          if (language === 'mermaid') {
-            return (
-              <div key={index} className="my-4">
-                <div className="relative">
+            if (isBlock && language === "mermaid") {
+              return (
+                <div className="my-4">
                   <div className="flex items-center justify-between bg-code-background text-gray-600 dark:text-gray-300 px-4 py-2 rounded-t-lg text-sm">
                     <span>mermaid</span>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-6 w-6 p-0 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-                      onClick={() => copyToClipboard(codeContent, currentBlockIndex)}
+                      onClick={() => copyToClipboard(codeText, current)}
                     >
-                      {copiedBlocks.has(currentBlockIndex) ? (
-                        <Check className="h-3 w-3" />
-                      ) : (
-                        <Copy className="h-3 w-3" />
-                      )}
+                      {copiedBlocks.has(current) ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                     </Button>
                   </div>
                   <div className="bg-code-background p-4 rounded-b-lg overflow-x-auto text-gray-800 dark:text-gray-100">
-                    <Mermaid chart={codeContent} />
+                    <Mermaid chart={codeText} />
                   </div>
                 </div>
-              </div>
-            );
-          }
+              );
+            }
 
-          return (
-            <div key={index} className="my-4">
-              <div className="relative">
-                <div className="flex items-center justify-between bg-code-background text-gray-600 dark:text-gray-300 px-4 py-2 rounded-t-lg text-sm">
-                  <span>{language}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-                    onClick={() => copyToClipboard(codeContent, currentBlockIndex)}
-                  >
-                    {copiedBlocks.has(currentBlockIndex) ? (
-                      <Check className="h-3 w-3" />
-                    ) : (
-                      <Copy className="h-3 w-3" />
-                    )}
-                  </Button>
+            if (isBlock) {
+              return (
+                <div className="my-4">
+                  <div className="flex items-center justify-between bg-code-background text-gray-600 dark:text-gray-300 px-4 py-2 rounded-t-lg text-sm">
+                    <span>{language || "text"}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                      onClick={() => copyToClipboard(codeText, current)}
+                    >
+                      {copiedBlocks.has(current) ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                    </Button>
+                  </div>
+                  <pre className="bg-code-background text-gray-800 dark:text-gray-100 p-4 rounded-b-lg overflow-x-auto">
+                    <code {...props}>{codeText}</code>
+                  </pre>
                 </div>
-                <pre className="bg-code-background text-gray-800 dark:text-gray-100 p-4 rounded-b-lg overflow-x-auto">
-                  <code>{codeContent}</code>
-                </pre>
-              </div>
-            </div>
-          );
-        }
-      }
+              );
+            }
 
-      // Skip lines that are part of code blocks
-      if (lines.slice(0, index).some((l, i) => {
-        const isCodeStart = l.startsWith('```');
-        if (isCodeStart) {
-          const nextEnd = lines.slice(i + 1).findIndex(l => l.startsWith('```'));
-          return nextEnd !== -1 && index > i && index <= i + nextEnd;
-        }
-        return false;
-      })) {
-        return null;
-      }
-
-      // Inline code
-      if (line.includes('`')) {
-        const parts = line.split('`');
-        return (
-          <p key={index} className="mb-2">
-            {parts.map((part, i) => 
-              i % 2 === 0 ? part : (
-                <code key={i} className="bg-muted px-1 py-0.5 rounded text-sm">
-                  {part}
-                </code>
-              )
-            )}
-          </p>
-        );
-      }
-
-      // Bold text
-      if (line.includes('**')) {
-        const parts = line.split('**');
-        return (
-          <p key={index} className="mb-2">
-            {parts.map((part, i) => 
-              i % 2 === 0 ? part : <strong key={i}>{part}</strong>
-            )}
-          </p>
-        );
-      }
-
-      // Regular line
-      return line.trim() ? (
-        <p key={index} className="mb-2">{line}</p>
-      ) : (
-        <br key={index} />
-      );
-    });
+            return (
+              <code className="bg-muted px-1 py-0.5 rounded text-sm" {...props}>
+                {children}
+              </code>
+            );
+          },
+          a({ children, href }) {
+            return (
+              <a href={href} target="_blank" rel="noreferrer" className="underline text-primary">
+                {children}
+              </a>
+            );
+          },
+        }}
+      >
+        {cleanedContent}
+      </ReactMarkdown>
+    );
   };
 
   return (
@@ -196,10 +170,15 @@ export function ChatMessage({
       <div className={cn(
         "max-w-[80%] rounded-lg p-4 shadow-sm",
         type === "user" 
-          ? "bg-user-message text-user-message-foreground ml-auto" 
+          ? "bg-user-message text-white ml-auto"
           : "bg-ai-message text-foreground"
       )}>
-        <div className="prose prose-sm max-w-none">
+        <div className={cn(
+          "prose max-w-none prose-p:leading-relaxed prose-li:leading-relaxed",
+          type === "user"
+            ? "prose-invert"
+            : "prose-zinc prose-headings:text-foreground"
+        )}>
           {renderContent()}
         </div>
 
@@ -222,7 +201,10 @@ export function ChatMessage({
           </div>
         )}
 
-        <div className="text-xs text-muted-foreground mt-3 opacity-70">
+        <div className={cn(
+          "text-xs mt-3",
+          type === "user" ? "text-white/70" : "text-muted-foreground opacity-70"
+        )}>
           {formatTime(timestamp)}
         </div>
       </div>

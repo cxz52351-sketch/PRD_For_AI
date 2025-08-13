@@ -22,6 +22,16 @@ export default function Mermaid({ chart, className }: MermaidProps) {
           suppressErrorRenderer: true,
           logLevel: 5,
         });
+        // 先做语法校验，避免 mermaid 自带的全局错误渲染
+        try {
+          // parse 会在语法错误时抛出异常
+          // v11 仍保留该 API
+          // @ts-ignore
+          mermaid.parse(chart);
+        } catch (parseErr) {
+          throw parseErr;
+        }
+
         const { svg } = await mermaid.render(`mermaid-${rawId}`, chart);
         if (mounted) setSvg(svg);
       } catch (e) {

@@ -47,7 +47,7 @@ export function ChatSidebar({
     <div 
       className={cn(
         "relative h-full bg-secondary/60 backdrop-blur-md border-r border-border transition-all duration-300",
-        isCollapsed ? "w-16" : "w-68"
+        isCollapsed ? "w-16" : "w-64"
       )}
     >
       {/* Header */}
