@@ -55,7 +55,7 @@ export function ChatInterface() {
         {
           id: "1",
           type: "ai",
-          content: "欢迎使用 PRD For AI！\n\n我是你的产品设计与文档助手，基于 DeepSeek 模型，帮助你：\n\n**核心功能:**\n• 🧭 需求澄清与用户画像\n• 🧩 功能拆解与优先级\n• 📄 PRD/BRD/需求文档生成与评审\n• 📎 文件上传与洞察提炼\n• 💬 多轮对话与版本管理\n\n开始对我说：例如“为一个 AI 会议纪要工具产出 PRD 结构”。",
+          content: "欢迎使用 PRD For AI！\n\n我是你的产品设计与文档助手，帮助你：\n\n**核心功能:**\n• 🧭 需求澄清与用户画像\n• 🧩 功能拆解与优先级\n• 📄 PRD/BRD/需求文档生成与评审\n• 📎 文件上传与洞察提炼\n• 💬 多轮对话与版本管理\n\n开始对我说：例如“为一个 AI 会议纪要工具产出 PRD 结构”。",
           timestamp: new Date(Date.now() - 1000 * 60 * 30),
         }
       ]
@@ -389,11 +389,11 @@ export function ChatInterface() {
 
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border bg-background/60 backdrop-blur-md">
+        <div className="flex items-center justify-between p-4 bg-transparent">
           <div className="flex items-center gap-3">
-            <img src="/logo-prd-for-ai.svg" alt="PRD For AI" className="h-10 w-10" />
+            {/* 移除头部Logo，Logo移至侧边栏 */}
             <div>
-              <h1 className="text-xl font-bold text-foreground">{activeConversation?.title || "PRD For AI"}</h1>
+              <h1 className="text-xl font-bold text-foreground">PRD For AI</h1>
               {/* <p className="text-sm text-muted-foreground">产品文档 • 设计协作</p> */}
             </div>
           </div>

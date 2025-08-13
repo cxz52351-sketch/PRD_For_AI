@@ -15,11 +15,11 @@
     </style>
   </defs>
 
-  <!-- Background for nice inset look -->
-  <rect width="512" height="512" rx="32" fill="#FDF3F8"/>
+  <!-- Background transparent -->
+  <rect width="512" height="512" rx="32" fill="none"/>
 
-  <!-- Petals -->
-  <g transform="translate(256,256)">
+  <!-- Petals (scaled up more) -->
+  <g transform="translate(256,256) scale(1.25)">
     <g fill="url(#petal)">
       <path d="M0,-188 C-40,-160 -58,-108 -48,-66 C-36,-16 0,6 0,6 C0,6 36,-16 48,-66 C58,-108 40,-160 0,-188Z"/>
       <path d="M133,-133 C96,-126 54,-92 42,-52 C28,-6 58,22 58,22 C58,22 96,-2 116,-44 C133,-79 142,-118 133,-133Z" transform="rotate(45)"/>
@@ -62,10 +62,7 @@
     </g>
   </g>
 
-  <!-- Subtle title -->
-  <g transform="translate(256,464)">
-    <text text-anchor="middle" font-family="'SF Pro Display', ui-sans-serif, system-ui" font-weight="700" font-size="36" fill="#7B5AAE">PRD For AI</text>
-  </g>
+  
 </svg>
 
 

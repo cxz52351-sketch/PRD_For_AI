@@ -47,13 +47,13 @@ export function ChatSidebar({
     <div 
       className={cn(
         "relative h-full bg-secondary/60 backdrop-blur-md border-r border-border transition-all duration-300",
-        isCollapsed ? "w-16" : "w-80"
+        isCollapsed ? "w-16" : "w-68"
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="flex items-center justify-between p-4">
         {!isCollapsed && (
-          <h2 className="text-lg font-semibold text-foreground">对话历史</h2>
+          <img src="/logo-prd-for-ai.svg" alt="PRD For AI" className="h-8 w-8" />
         )}
         <Button
           variant="ghost"

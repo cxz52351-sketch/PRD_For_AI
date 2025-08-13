@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Copy, Check, Download, AlertTriangle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import Mermaid from "./Mermaid";
 
 interface ChatMessageProps {
   type: "user" | "ai";
@@ -79,19 +80,47 @@ export function ChatMessage({
       if (line.startsWith('```')) {
         const nextEnd = lines.slice(index + 1).findIndex(l => l.startsWith('```'));
         if (nextEnd !== -1) {
-          const language = line.slice(3).trim() || 'text';
+          const language = (line.slice(3).trim() || 'text').toLowerCase();
           const codeContent = lines.slice(index + 1, index + 1 + nextEnd).join('\n');
           const currentBlockIndex = codeBlockIndex++;
-          
+
+          // Mermaid chart rendering
+          if (language === 'mermaid') {
+            return (
+              <div key={index} className="my-4">
+                <div className="relative">
+                  <div className="flex items-center justify-between bg-code-background text-gray-600 dark:text-gray-300 px-4 py-2 rounded-t-lg text-sm">
+                    <span>mermaid</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                      onClick={() => copyToClipboard(codeContent, currentBlockIndex)}
+                    >
+                      {copiedBlocks.has(currentBlockIndex) ? (
+                        <Check className="h-3 w-3" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="bg-code-background p-4 rounded-b-lg overflow-x-auto text-gray-800 dark:text-gray-100">
+                    <Mermaid chart={codeContent} />
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
           return (
             <div key={index} className="my-4">
               <div className="relative">
-                <div className="flex items-center justify-between bg-code-background text-gray-300 px-4 py-2 rounded-t-lg text-sm">
+                <div className="flex items-center justify-between bg-code-background text-gray-600 dark:text-gray-300 px-4 py-2 rounded-t-lg text-sm">
                   <span>{language}</span>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 w-6 p-0 text-gray-300 hover:text-white"
+                    className="h-6 w-6 p-0 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                     onClick={() => copyToClipboard(codeContent, currentBlockIndex)}
                   >
                     {copiedBlocks.has(currentBlockIndex) ? (
@@ -101,7 +130,7 @@ export function ChatMessage({
                     )}
                   </Button>
                 </div>
-                <pre className="bg-code-background text-gray-100 p-4 rounded-b-lg overflow-x-auto">
+                <pre className="bg-code-background text-gray-800 dark:text-gray-100 p-4 rounded-b-lg overflow-x-auto">
                   <code>{codeContent}</code>
                 </pre>
               </div>

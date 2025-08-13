@@ -37,12 +37,8 @@ async def startup_event():
 # 配置CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8080", 
-        "http://127.0.0.1:8080",
-        "http://localhost:8081", 
-        "http://127.0.0.1:8081"
-    ],
+    # 开发环境放宽跨域，前端端口可能变化（8081/8082/8083/8084...）
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
