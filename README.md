@@ -36,7 +36,11 @@ chmod +x start.sh
 
 2. **配置环境变量**
    - 复制 `backend/env.example` 为 `backend/.env`
-   - 在 `.env` 文件中设置 `DIFY_API_BASE` 与 `DIFY_API_KEY`（已在示例中提供默认值）
+   - 在 `.env` 或 `backend/1.env` 中设置：
+     ```
+     DIFY_API_BASE=http://teach.excelmaster.ai/v1
+     DIFY_API_KEY=app-wiFSsheVuALpQ5cN7LrPv5Lb
+     ```
 
 3. **启动服务**
    ```bash

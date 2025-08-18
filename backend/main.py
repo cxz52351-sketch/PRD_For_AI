@@ -67,9 +67,17 @@ class ChatResponse(BaseModel):
     choices: List[Dict[str, Any]]
     usage: Dict[str, int]
 
-# Dify API 配置（默认使用提供的本地网关与密钥）
-DIFY_API_BASE = os.getenv("DIFY_API_BASE", "http://localhost/v1")
-DIFY_API_KEY = os.getenv("DIFY_API_KEY", "app-GFcHLDy1b1h3RjszVIEPXSMX")
+# Dify API 配置（可通过环境变量覆盖），默认指向教研环境网关
+# 如需切换，请在运行环境中设置 DIFY_API_BASE 与 DIFY_API_KEY
+DIFY_API_BASE = os.getenv("DIFY_API_BASE", "http://teach.excelmaster.ai/v1")
+DIFY_API_KEY = os.getenv("DIFY_API_KEY", "app-wiFSsheVuALpQ5cN7LrPv5Lb")
+# 优先调用工作流接口（/workflows/run）。如需改为应用聊天接口（/chat-messages），将该值设为 "chat"
+DIFY_API_CHANNEL = os.getenv("DIFY_API_CHANNEL", "workflow")  # workflow | chat
+
+def _dify_endpoint() -> str:
+    if DIFY_API_CHANNEL.lower() == "chat":
+        return f"{DIFY_API_BASE}/chat-messages"
+    return f"{DIFY_API_BASE}/workflows/run"
 
 if not DIFY_API_KEY:
     print("警告: 未设置DIFY_API_KEY环境变量")
@@ -278,11 +286,12 @@ async def chat_with_dify(request: ChatRequest):
         
         # Dify 请求数据
         user_query = user_message.content
+        # 工作流通常使用 /workflows/run，输入以 inputs 传递；
+        # 为了最大兼容，inputs 同时包含 query 与 text 两个键。
         dify_payload = {
-            "inputs": {},
-            "query": user_query,
+            "inputs": {"query": user_query, "text": user_query},
+            "query": user_query,  # 若对接到 chat-messages 也可工作
             "response_mode": "streaming" if request.stream else "blocking",
-            # 仅将 Dify 会话ID传给 Dify，用于延续上下文
             "conversation_id": (request.dify_conversation_id or ""),
             "user": "abc-123",
         }
@@ -302,16 +311,16 @@ async def chat_with_dify(request: ChatRequest):
                 dify_conversation_id = conversation_id
                 
                 try:
-                    async with httpx.AsyncClient(timeout=60.0) as client:
+                    async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
                         async with client.stream(
                             "POST",
-                            f"{DIFY_API_BASE}/chat-messages",
+                            _dify_endpoint(),
                             json=dify_payload,
-                            headers=headers,
+                            headers={**headers, "Accept": "text/event-stream"},
                         ) as response:
                             if response.status_code != 200:
-                                error_text = await response.aread()
-                                error_msg = f"Dify API错误: {error_text.decode()}"
+                                error_text = (await response.aread()).decode(errors="ignore")
+                                error_msg = f"Dify API错误 (status={response.status_code}): {error_text}"
                                 print(f"API错误: {error_msg}")
                                 yield f"data: {{\"error\": {{\"message\": \"{error_msg}\"}} }}\n\n"
                                 yield "data: [DONE]\n\n"
@@ -472,9 +481,9 @@ async def chat_with_dify(request: ChatRequest):
             print("发送请求到 Dify API（阻塞模式）...")
             print(f"请求数据: {json.dumps(dify_payload, ensure_ascii=False, indent=2)}")
             
-            async with httpx.AsyncClient(timeout=60.0) as client:
+            async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
                 response = await client.post(
-                    f"{DIFY_API_BASE}/chat-messages",
+                    _dify_endpoint(),
                     json=dify_payload,
                     headers=headers,
                 )
@@ -482,7 +491,7 @@ async def chat_with_dify(request: ChatRequest):
                 print(f"收到响应，状态码: {response.status_code}")
                 if response.status_code != 200:
                     raise HTTPException(status_code=response.status_code, 
-                                      detail=f"Dify API错误: {response.text}")
+                                      detail=f"Dify API错误 (status={response.status_code}): {response.text}")
                 
                 dify_data = response.json()
                 print(f"响应数据: {json.dumps(dify_data, ensure_ascii=False, indent=2)}")
@@ -515,6 +524,9 @@ async def chat_with_dify(request: ChatRequest):
                         print("生成文件已写入数据库")
 
                 # 构造兼容的返回体
+                # 读取 Dify 的会话ID用于前端持续对话
+                dify_conversation_id_resp = dify_data.get('conversation_id') or ""
+
                 compatible = {
                     "id": dify_data.get('id', str(uuid.uuid4())),
                     "object": "chat.completion",
@@ -534,7 +546,7 @@ async def chat_with_dify(request: ChatRequest):
                     }),
                     # 对前端：conversation_id 为本地会话ID；另返回 dify_conversation_id
                     "conversation_id": conversation_id,
-                    "dify_conversation_id": final_conversation_id or "",
+                    "dify_conversation_id": dify_conversation_id_resp,
                 }
 
                 if file_info:

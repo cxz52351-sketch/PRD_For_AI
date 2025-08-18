@@ -36,7 +36,7 @@ export function ChatSidebar({
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    
+
     if (days === 0) return "今天";
     if (days === 1) return "昨天";
     if (days < 7) return `${days}天前`;
@@ -44,7 +44,7 @@ export function ChatSidebar({
   };
 
   return (
-    <div 
+    <div
       className={cn(
         "relative h-full bg-secondary/60 backdrop-blur-md border-r border-border transition-all duration-300",
         isCollapsed ? "w-16" : "w-64"
@@ -69,7 +69,7 @@ export function ChatSidebar({
       <div className="p-4">
         <Button
           onClick={onNewConversation}
-          className="w-full bg-primary hover:bg-primary-light transition-colors"
+          className="w-full btn-gradient-soft text-primary-foreground transition-all rounded-2xl h-11"
         >
           <Plus className="h-4 w-4" />
           {!isCollapsed && <span className="ml-2">新建对话</span>}
@@ -93,7 +93,7 @@ export function ChatSidebar({
             >
               <div className="flex items-start gap-3">
                 <MessageSquare className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
-                
+
                 {!isCollapsed && (
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-medium text-foreground truncate">

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { Send, Mic, MicOff, Paperclip, X } from "lucide-react";
+import { Send, Mic, MicOff, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -11,17 +11,17 @@ interface ChatInputProps {
   placeholder?: string;
 }
 
-export function ChatInput({ 
-  onSendMessage, 
+export function ChatInput({
+  onSendMessage,
   disabled = false,
-  placeholder = "请输入内容..."
+  placeholder = "说出您的需求"
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [charCount, setCharCount] = useState(0);
-  
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -48,12 +48,12 @@ export function ChatInput({
 
   const handleSend = () => {
     if ((!message.trim() && files.length === 0) || disabled) return;
-    
+
     onSendMessage(message.trim(), files);
     setMessage("");
     setFiles([]);
     setCharCount(0);
-    
+
     // Auto-resize textarea
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -116,7 +116,7 @@ export function ChatInput({
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileSelect(e.dataTransfer.files);
     }
@@ -137,7 +137,7 @@ export function ChatInput({
         const audioFile = new File([audioBlob], 'voice-message.wav', { type: 'audio/wav' });
         setFiles(prev => [...prev, audioFile]);
         setMessage("语音输入的内容会在这里显示...");
-        
+
         // Stop all tracks
         stream.getTracks().forEach(track => track.stop());
       };
@@ -163,7 +163,7 @@ export function ChatInput({
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      
+
       toast({
         title: "录音完成",
         description: "语音消息已准备发送",
@@ -180,10 +180,10 @@ export function ChatInput({
   };
 
   return (
-    <div className="border-t border-border bg-background p-4">
+    <div className="bg-transparent p-4 pb-6">
       {/* File Upload Area - only show after selecting files */}
       {files.length > 0 && (
-        <div 
+        <div
           className={cn(
             "relative border rounded-lg p-4 mb-4 transition-colors bg-secondary/30",
             dragActive ? "ring-2 ring-primary/40" : ""
@@ -215,58 +215,73 @@ export function ChatInput({
         </div>
       )}
 
-      {/* Input Area */}
-      <div className="flex gap-2">
-        <div className="flex-1 relative">
-          <Textarea
-            ref={textareaRef}
-            value={message}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyPress}
-            placeholder={placeholder}
-            disabled={disabled}
-            className="min-h-[44px] max-h-32 resize-none pr-16"
-            style={{ height: 'auto' }}
-          />
-          <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">
-            {charCount}/{MAX_CHARS}
-          </div>
-        </div>
-
-        <div className="flex gap-1">
-          {/* File Upload Button */}
+      {/* Input Area - pill style bar (minimal, themed) */}
+      <div className="max-w-4xl mx-auto">
+        <div
+          className={cn(
+            "relative flex items-end gap-1 rounded-[28px] bg-card/80 px-2 py-2 md:px-3 md:py-2 shadow-md backdrop-blur supports-[backdrop-filter]:bg-card/60 ai-input-border",
+            dragActive ? "ring-2 ring-primary/40" : ""
+          )}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+        >
+          {/* Left: add/attach */}
           <Button
-            variant="outline"
-            size="sm"
+            variant="ghost"
+            size="icon"
+            aria-label="添加附件"
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled}
-            className="h-11 w-11 p-0"
+            className="h-8 w-8 rounded-full self-end"
           >
-            <Paperclip className="h-4 w-4" />
+            <Plus className="h-4 w-4" />
           </Button>
 
-          {/* Voice Recording Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={isRecording ? stopRecording : startRecording}
-            disabled={disabled}
-            className={cn(
-              "h-11 w-11 p-0",
-              isRecording && "bg-destructive text-destructive-foreground"
+          {/* Textarea */}
+          <div className="flex-1 relative">
+            <Textarea
+              ref={textareaRef}
+              value={message}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyPress}
+              placeholder={placeholder}
+              disabled={disabled}
+              className="min-h-[56px] max-h-32 resize-none bg-transparent border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 md:px-0 pr-16 pt-2 pb-2 text-[15px] leading-6 text-left placeholder:text-foreground/60"
+              style={{ height: 'auto' }}
+            />
+
+          </div>
+
+          {/* Right: show mic when empty, send when has content */}
+          <div className="flex items-end gap-1 md:gap-2">
+            {message.trim().length === 0 && files.length === 0 ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={isRecording ? "停止录音" : "开始录音"}
+                onClick={isRecording ? stopRecording : startRecording}
+                disabled={disabled}
+                className={cn(
+                  "h-8 w-8 rounded-full self-end",
+                  isRecording && "bg-destructive text-destructive-foreground"
+                )}
+              >
+                {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSend}
+                disabled={disabled}
+                size="icon"
+                aria-label="发送"
+                className="h-8 w-8 rounded-full p-0 bg-primary hover:bg-primary-light text-primary-foreground self-end"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
             )}
-          >
-            {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </Button>
-
-          {/* Send Button */}
-          <Button
-            onClick={handleSend}
-            disabled={disabled || (!message.trim() && files.length === 0)}
-            className="h-11 w-11 p-0 bg-primary hover:bg-primary-light"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+          </div>
         </div>
       </div>
 

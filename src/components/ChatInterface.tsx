@@ -392,10 +392,7 @@ export function ChatInterface() {
         <div className="flex items-center justify-between p-4 bg-transparent">
           <div className="flex items-center gap-3">
             {/* 移除头部Logo，Logo移至侧边栏 */}
-            <div>
-              <h1 className="text-xl font-bold text-foreground">PRD For AI</h1>
-              {/* <p className="text-sm text-muted-foreground">产品文档 • 设计协作</p> */}
-            </div>
+
           </div>
 
           <div className="flex gap-2">
@@ -489,7 +486,7 @@ export function ChatInterface() {
         <ChatInput
           onSendMessage={handleSendMessage}
           disabled={isLoading}
-          placeholder="请输入内容..."
+          placeholder="请说出您的需求"
         />
       </div>
     </div>

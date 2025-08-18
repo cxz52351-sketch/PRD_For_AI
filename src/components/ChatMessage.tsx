@@ -19,20 +19,20 @@ interface ChatMessageProps {
   }>;
 }
 
-export function ChatMessage({ 
-  type, 
-  content, 
-  timestamp, 
-  isError = false, 
+export function ChatMessage({
+  type,
+  content,
+  timestamp,
+  isError = false,
   onRetry,
   attachments = []
 }: ChatMessageProps) {
   const [copiedBlocks, setCopiedBlocks] = useState<Set<number>>(new Set());
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("zh-CN", { 
-      hour: "2-digit", 
-      minute: "2-digit" 
+    return date.toLocaleTimeString("zh-CN", {
+      hour: "2-digit",
+      minute: "2-digit"
     });
   };
 
@@ -169,15 +169,13 @@ export function ChatMessage({
     )}>
       <div className={cn(
         "max-w-[80%] rounded-lg p-4 shadow-sm",
-        type === "user" 
-          ? "bg-user-message text-white ml-auto"
-          : "bg-ai-message text-foreground"
+        type === "user"
+          ? "bg-ai-message text-foreground ml-auto"
+          : "bg-transparent border border-border text-foreground"
       )}>
         <div className={cn(
-          "prose max-w-none prose-p:leading-relaxed prose-li:leading-relaxed",
-          type === "user"
-            ? "prose-invert"
-            : "prose-zinc prose-headings:text-foreground"
+          "prose max-w-none prose-p:leading-relaxed prose-li:leading-relaxed prose-zinc dark:prose-invert prose-headings:text-foreground",
+          type === "ai" ? "prose-sm" : undefined
         )}>
           {renderContent()}
         </div>
@@ -202,8 +200,7 @@ export function ChatMessage({
         )}
 
         <div className={cn(
-          "text-xs mt-3",
-          type === "user" ? "text-white/70" : "text-muted-foreground opacity-70"
+          "text-xs mt-3 text-muted-foreground opacity-70"
         )}>
           {formatTime(timestamp)}
         </div>
