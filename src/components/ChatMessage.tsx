@@ -205,7 +205,7 @@ export function ChatMessage({
           "rounded-lg p-4 shadow-sm",
           type === "user"
             ? "max-w-[100%] bg-ai-message text-foreground ml-auto"
-            : "max-w-[80%] bg-transparent border border-border text-foreground"
+            : "max-w-[100%] bg-transparent border border-border text-foreground"
         )}
         >
         <div className={cn(
