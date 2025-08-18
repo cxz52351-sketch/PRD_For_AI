@@ -13,63 +13,59 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  saveConversations,
+  loadConversations,
+  saveActiveConversationId,
+  loadActiveConversationId,
+  saveSidebarCollapsed,
+  loadSidebarCollapsed,
+  saveSelectedModel,
+  loadSelectedModel,
+  saveIsStreaming,
+  loadIsStreaming,
+  saveOutputFormat,
+  loadOutputFormat,
+  clearAllStoredData,
+  type Conversation as StoredConversation,
+  type Message as StoredMessage
+} from "@/lib/storage";
 
-interface Message {
-  id: string;
-  type: "user" | "ai";
-  content: string;
-  timestamp: Date;
-  isError?: boolean;
-  attachments?: Array<{
-    name: string;
-    type: string;
-    url: string;
-  }>;
-  generatedFile?: {
-    filename: string;
-    url: string;
-    mime_type: string;
-  };
-}
-
-interface Conversation {
-  id: string;
-  title: string;
-  timestamp: Date;
-  preview: string;
-  messages: Message[];
-  // 后端本地数据库会话ID
-  dbConversationId?: string;
-  // Dify 的会话ID
-  difyConversationId?: string;
-}
+// 使用存储模块中的类型定义
+type Message = StoredMessage;
+type Conversation = StoredConversation;
 
 export function ChatInterface() {
-  const [conversations, setConversations] = useState<Conversation[]>([
-    {
-      id: "1",
-      title: "PRD For AI",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30),
-      preview: "欢迎使用 PRD For AI 产品设计对话助手",
-      messages: [
-        {
-          id: "1",
-          type: "ai",
-          content: "欢迎使用 PRD For AI！\n\n我是你的产品设计与文档助手，帮助你：\n\n**核心功能:**\n• 🧭 需求澄清与用户画像\n• 🧩 功能拆解与优先级\n• 📄 PRD/BRD/需求文档生成与评审\n• 📎 文件上传与洞察提炼\n• 💬 多轮对话与版本管理\n\n开始对我说：例如“为一个 AI 会议纪要工具产出 PRD 结构”。",
-          timestamp: new Date(Date.now() - 1000 * 60 * 30),
-        }
-      ]
-    }
-  ]);
-
-  const [activeConversationId, setActiveConversationId] = useState<string>("1");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // 从本地存储初始化状态
+  const [conversations, setConversations] = useState<Conversation[]>(() => {
+    const loaded = loadConversations();
+    return loaded;
+  });
+  const [activeConversationId, setActiveConversationId] = useState<string>(() => {
+    const stored = loadActiveConversationId();
+    // 验证存储的ID是否有效
+    const loadedConversations = loadConversations();
+    return loadedConversations.some(conv => conv.id === stored) ? stored : "1";
+  });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => loadSidebarCollapsed());
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("deepseek-chat");
-  const [isStreaming, setIsStreaming] = useState(true);
-  const [outputFormat, setOutputFormat] = useState<"text" | "pdf" | "docx" | "markdown">("text");
+  const [selectedModel, setSelectedModel] = useState<string>(() => loadSelectedModel());
+  const [isStreaming, setIsStreaming] = useState<boolean>(() => loadIsStreaming());
+  const [outputFormat, setOutputFormat] = useState<"text" | "pdf" | "docx" | "markdown">(() => loadOutputFormat());
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // 在首次加载时显示恢复提示
+  useEffect(() => {
+    const hasStoredData = localStorage.getItem('prd-ai-conversations');
+    if (hasStoredData && conversations.length > 1) {
+      toast({
+        title: "数据已恢复",
+        description: "您之前的聊天记录已从本地存储恢复",
+        duration: 3000,
+      });
+    }
+  }, []); // 只在组件首次挂载时执行
 
   const activeConversation = conversations.find(c => c.id === activeConversationId);
 
@@ -85,6 +81,36 @@ export function ChatInterface() {
   useEffect(() => {
     scrollToBottom();
   }, [activeConversation?.messages]);
+
+  // 自动保存对话列表到本地存储
+  useEffect(() => {
+    saveConversations(conversations);
+  }, [conversations]);
+
+  // 自动保存当前活跃对话ID
+  useEffect(() => {
+    saveActiveConversationId(activeConversationId);
+  }, [activeConversationId]);
+
+  // 自动保存侧边栏状态
+  useEffect(() => {
+    saveSidebarCollapsed(sidebarCollapsed);
+  }, [sidebarCollapsed]);
+
+  // 自动保存模型选择
+  useEffect(() => {
+    saveSelectedModel(selectedModel);
+  }, [selectedModel]);
+
+  // 自动保存流式传输设置
+  useEffect(() => {
+    saveIsStreaming(isStreaming);
+  }, [isStreaming]);
+
+  // 自动保存输出格式设置
+  useEffect(() => {
+    saveOutputFormat(outputFormat);
+  }, [outputFormat]);
 
   const generateConversationTitle = (content: string): string => {
     const firstLine = content.split('\n')[0];
@@ -304,12 +330,22 @@ export function ChatInterface() {
       messages: []
     };
 
-    setConversations(prev => [newConversation, ...prev]);
+    setConversations(prev => {
+      const updated = [newConversation, ...prev];
+      // 立即保存到本地存储
+      saveConversations(updated);
+      return updated;
+    });
     setActiveConversationId(newId);
   };
 
   const handleDeleteConversation = (id: string) => {
-    setConversations(prev => prev.filter(conv => conv.id !== id));
+    setConversations(prev => {
+      const updated = prev.filter(conv => conv.id !== id);
+      // 立即保存到本地存储
+      saveConversations(updated);
+      return updated;
+    });
 
     // If deleting active conversation, switch to another one
     if (id === activeConversationId) {
@@ -371,6 +407,25 @@ export function ChatInterface() {
     });
   };
 
+  const handleClearAllData = () => {
+    if (confirm('确定要清除所有聊天记录吗？此操作不可撤销。')) {
+      clearAllStoredData();
+      // 重新加载默认数据
+      const defaultConversations = loadConversations();
+      setConversations(defaultConversations);
+      setActiveConversationId("1");
+      setSidebarCollapsed(false);
+      setSelectedModel("deepseek-chat");
+      setIsStreaming(true);
+      setOutputFormat("text");
+      
+      toast({
+        title: "数据已清除",
+        description: "所有聊天记录已被清除",
+      });
+    }
+  };
+
   const handleDownloadFile = (url: string) => {
     api.downloadFile(url);
   };
@@ -428,6 +483,19 @@ export function ChatInterface() {
               {selectedModel === "deepseek-chat" ? "DeepSeek Chat" : "DeepSeek Coder"}
             </Button>
              */}
+            
+            {/* 开发调试用：清除所有数据按钮 */}
+            {process.env.NODE_ENV === 'development' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearAllData}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                清除数据
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
