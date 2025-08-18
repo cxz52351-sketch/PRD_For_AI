@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Copy, Check, Download, AlertTriangle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,9 @@ export function ChatMessage({
   attachments = []
 }: ChatMessageProps) {
   const [copiedBlocks, setCopiedBlocks] = useState<Set<number>>(new Set());
+  const [messageCopied, setMessageCopied] = useState(false);
+  const [showCopyBtn, setShowCopyBtn] = useState(false); // 仅用于用户气泡
+  const hideCopyTimerRef = useRef<number | null>(null);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString("zh-CN", {
@@ -49,6 +52,33 @@ export function ChatMessage({
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
+  };
+
+  const copyWholeMessage = async () => {
+    try {
+      // 对于用户与AI，均复制原始 content。AI 的 content 即 Dify 的 "answer" 原文
+      await navigator.clipboard.writeText(content || "");
+      setMessageCopied(true);
+      setTimeout(() => setMessageCopied(false), 1500);
+    } catch (e) {
+      console.error("Failed to copy message: ", e);
+    }
+  };
+
+  // 控制用户气泡复制按钮显示/隐藏（延迟消失）
+  const showCopy = () => {
+    if (hideCopyTimerRef.current) {
+      window.clearTimeout(hideCopyTimerRef.current);
+      hideCopyTimerRef.current = null;
+    }
+    setShowCopyBtn(true);
+  };
+
+  const hideCopyWithDelay = () => {
+    if (hideCopyTimerRef.current) window.clearTimeout(hideCopyTimerRef.current);
+    hideCopyTimerRef.current = window.setTimeout(() => {
+      setShowCopyBtn(false);
+    }, 1000);
   };
 
   // 预处理：去掉模型“思考/推理”内容与 <details> 包裹的块
@@ -166,12 +196,18 @@ export function ChatMessage({
       "flex gap-4 p-4 max-w-none",
       type === "user" ? "justify-end" : "justify-start"
     )}>
-      <div className={cn(
-        "max-w-[80%] rounded-lg p-4 shadow-sm",
-        type === "user"
-          ? "bg-ai-message text-foreground ml-auto"
-          : "bg-transparent border border-border text-foreground"
-      )}>
+      <div className={cn("flex flex-col", type === "user" ? "items-end" : "items-start")}> 
+        <div
+          onMouseEnter={type === "user" ? showCopy : undefined}
+          onMouseLeave={type === "user" ? hideCopyWithDelay : undefined}
+          className={cn(
+          // 气泡容器：用户略宽一些
+          "rounded-lg p-4 shadow-sm",
+          type === "user"
+            ? "max-w-[100%] bg-ai-message text-foreground ml-auto"
+            : "max-w-[80%] bg-transparent border border-border text-foreground"
+        )}
+        >
         <div className={cn(
           "prose max-w-none prose-p:leading-relaxed prose-li:leading-relaxed prose-zinc dark:prose-invert prose-headings:text-foreground",
           type === "ai" ? "prose-sm" : undefined
@@ -202,6 +238,37 @@ export function ChatMessage({
           "text-xs mt-3 text-muted-foreground opacity-70"
         )}>
           {formatTime(timestamp)}
+        </div>
+        </div>
+
+        {/* Copy button below bubble */}
+        <div
+          onMouseEnter={type === "user" ? showCopy : undefined}
+          onMouseLeave={type === "user" ? hideCopyWithDelay : undefined}
+          className={cn(
+            "mt-2 transition-opacity",
+            type === "user"
+              ? showCopyBtn
+                ? "opacity-100"
+                : "opacity-0 pointer-events-none"
+              : "opacity-100"
+          )}
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "h-7 px-2 rounded-full border bg-background/60 hover:bg-background text-muted-foreground",
+              type === "user" ? "" : ""
+            )}
+            onClick={copyWholeMessage}
+          >
+            {messageCopied ? (
+              <Check className="h-3 w-3" />
+            ) : (
+              <Copy className="h-3 w-3" />
+            )}
+          </Button>
         </div>
       </div>
     </div>
