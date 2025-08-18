@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { Copy, Check, Download, AlertTriangle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import Mermaid from "./Mermaid";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -114,9 +113,9 @@ export function ChatMessage({
                       {copiedBlocks.has(current) ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                     </Button>
                   </div>
-                  <div className="bg-code-background p-4 rounded-b-lg overflow-x-auto text-gray-800 dark:text-gray-100">
-                    <Mermaid chart={codeText} />
-                  </div>
+                  <pre className="bg-code-background text-gray-800 dark:text-gray-100 p-4 rounded-b-lg overflow-x-auto">
+                    <code {...props}>{codeText}</code>
+                  </pre>
                 </div>
               );
             }

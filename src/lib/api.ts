@@ -7,15 +7,43 @@ export interface Message {
   content: string;
 }
 
+// Dify API 格式的聊天请求
+export interface DifyChatRequest {
+  query: string;
+  inputs?: Record<string, any>;
+  response_mode: "streaming" | "blocking";
+  user: string;
+  conversation_id?: string;
+  files?: Array<{
+    type: string;
+    transfer_method: string;
+    url?: string;
+    upload_file_id?: string;
+  }>;
+  auto_generate_name?: boolean;
+}
+
+// 保持兼容性的旧格式
 export interface ChatRequest {
-  messages: Message[];
+  messages?: Message[];
   model?: string;
   temperature?: number;
   max_tokens?: number;
   stream?: boolean;
   output_format?: string;
-  conversation_id?: string; // 本地数据库对话ID
+  conversation_id?: string;
   dify_conversation_id?: string; // Dify 会话ID
+  // Dify 格式字段
+  query?: string;
+  inputs?: Record<string, any>;
+  response_mode?: "streaming" | "blocking";
+  user?: string;
+  files?: Array<{
+    type: string;
+    transfer_method: string;
+    url?: string;
+    upload_file_id?: string;
+  }>;
 }
 
 export interface FileResponse {
@@ -24,12 +52,35 @@ export interface FileResponse {
   mime_type: string;
 }
 
+// Dify API 响应格式
+export interface DifyChatResponse {
+  event: string;
+  task_id?: string;
+  id?: string;
+  message_id?: string;
+  conversation_id?: string;
+  mode?: string;
+  answer?: string;
+  metadata?: {
+    usage?: {
+      prompt_tokens: number;
+      completion_tokens: number;
+      total_tokens: number;
+      total_price: string;
+      currency: string;
+      latency: number;
+    };
+  };
+  created_at?: number;
+}
+
+// 保持兼容性的响应格式
 export interface ChatResponse {
-  id: string;
-  object: string;
-  created: number;
-  model: string;
-  choices: Array<{
+  id?: string;
+  object?: string;
+  created?: number;
+  model?: string;
+  choices?: Array<{
     index: number;
     message: {
       role: string;
@@ -37,13 +88,20 @@ export interface ChatResponse {
     };
     finish_reason: string;
   }>;
-  usage: {
+  usage?: {
     prompt_tokens: number;
     completion_tokens: number;
     total_tokens: number;
   };
   file?: FileResponse;
   conversation_id?: string;
+  // Dify 格式字段
+  event?: string;
+  task_id?: string;
+  message_id?: string;
+  mode?: string;
+  answer?: string;
+  metadata?: any;
 }
 
 export interface UploadResponse {
@@ -190,11 +248,18 @@ export const api = {
       body: JSON.stringify(request),
     }),
 
-  // 流式聊天对话
-  chatStream: (request: ChatRequest) =>
+  // 流式聊天对话（支持中止）
+  chatStream: (request: ChatRequest, abortSignal?: AbortSignal) =>
     streamRequest('/api/chat', {
       method: 'POST',
-      body: JSON.stringify({ ...request, stream: true }),
+      body: JSON.stringify(request),
+      signal: abortSignal,
+    }),
+
+  // 停止响应
+  stopResponse: (taskId: string) =>
+    apiRequest<{ success: boolean; result?: string }>(`/api/chat/stop/${taskId}`, {
+      method: 'POST',
     }),
 
   // 上传文件

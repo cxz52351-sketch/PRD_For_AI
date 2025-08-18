@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { Send, Mic, MicOff, Plus, X } from "lucide-react";
+import { Send, Mic, MicOff, Plus, X, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -7,13 +7,17 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ChatInputProps {
   onSendMessage: (content: string, files?: File[]) => void;
+  onStopResponse?: () => void;
   disabled?: boolean;
+  isGenerating?: boolean;
   placeholder?: string;
 }
 
 export function ChatInput({
   onSendMessage,
+  onStopResponse,
   disabled = false,
+  isGenerating = false,
   placeholder = "说出您的需求"
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
@@ -47,7 +51,7 @@ export function ChatInput({
   };
 
   const handleSend = () => {
-    if ((!message.trim() && files.length === 0) || disabled) return;
+    if ((!message.trim() && files.length === 0) || disabled || isGenerating) return;
 
     onSendMessage(message.trim(), files);
     setMessage("");
@@ -57,6 +61,12 @@ export function ChatInput({
     // Auto-resize textarea
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
+    }
+  };
+
+  const handleStop = () => {
+    if (onStopResponse) {
+      onStopResponse();
     }
   };
 
@@ -254,9 +264,19 @@ export function ChatInput({
 
           </div>
 
-          {/* Right: show mic when empty, send when has content */}
+          {/* Right: show mic when empty, send when has content, stop when generating */}
           <div className="flex items-end gap-1 md:gap-2">
-            {message.trim().length === 0 && files.length === 0 ? (
+            {isGenerating ? (
+              <Button
+                onClick={handleStop}
+                disabled={disabled}
+                size="icon"
+                aria-label="停止响应"
+                className="h-8 w-8 rounded-full p-0 bg-destructive hover:bg-destructive/90 text-destructive-foreground self-end"
+              >
+                <Square className="h-4 w-4" />
+              </Button>
+            ) : message.trim().length === 0 && files.length === 0 ? (
               <Button
                 variant="ghost"
                 size="icon"
@@ -273,7 +293,7 @@ export function ChatInput({
             ) : (
               <Button
                 onClick={handleSend}
-                disabled={disabled}
+                disabled={disabled || isGenerating}
                 size="icon"
                 aria-label="发送"
                 className="h-8 w-8 rounded-full p-0 bg-primary hover:bg-primary-light text-primary-foreground self-end"

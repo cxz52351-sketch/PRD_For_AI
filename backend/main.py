@@ -256,10 +256,14 @@ async def chat_with_dify(request: ChatRequest):
     try:
         print(f"开始处理聊天请求，Dify API Key: {DIFY_API_KEY[:8]}...")
         
-        # 从请求中提取用户消息
-        user_message = next((msg for msg in request.messages if msg.role == "user"), None)
-        if not user_message:
+        # 从请求中提取用户消息（取最后一个，即当前轮的输入）
+        user_messages = [msg for msg in request.messages if msg.role == "user"]
+        if not user_messages:
             raise HTTPException(status_code=400, detail="请求中必须包含用户消息")
+        
+        user_message = user_messages[-1]  # 取最后一个用户消息
+        print(f"提取到的用户消息: {user_message.content[:100]}...")
+        print(f"总共有 {len(user_messages)} 条用户消息，使用最后一条")
         
         # 创建或获取对话ID
         conversation_id = request.conversation_id
@@ -312,9 +316,10 @@ async def chat_with_dify(request: ChatRequest):
                 
                 try:
                     async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
+                        # 根据官方文档：流式端点为 /chat-messages
                         async with client.stream(
                             "POST",
-                            _dify_endpoint(),
+                            f"{DIFY_API_BASE}/chat-messages",
                             json=dify_payload,
                             headers={**headers, "Accept": "text/event-stream"},
                         ) as response:
@@ -322,12 +327,13 @@ async def chat_with_dify(request: ChatRequest):
                                 error_text = (await response.aread()).decode(errors="ignore")
                                 error_msg = f"Dify API错误 (status={response.status_code}): {error_text}"
                                 print(f"API错误: {error_msg}")
-                                yield f"data: {{\"error\": {{\"message\": \"{error_msg}\"}} }}\n\n"
+                                yield f"data: {json.dumps({"error": {"message": error_msg}}, ensure_ascii=False)}\n\n"
                                 yield "data: [DONE]\n\n"
                                 return
-                            
+
                             print("开始接收 Dify 流式数据...")
                             buffer = ""
+                            current_task_id = None
                             async for chunk in response.aiter_text():
                                 if chunk:
                                     buffer += chunk
@@ -345,6 +351,12 @@ async def chat_with_dify(request: ChatRequest):
                                                         parsed = json.loads(data)
                                                         event = parsed.get('event')
 
+                                                        # 尽早把 task_id 传给前端，便于立即停止
+                                                        if parsed.get('task_id') and parsed.get('task_id') != current_task_id:
+                                                            current_task_id = parsed.get('task_id')
+                                                            task_info = {"type": "task", "task_id": current_task_id}
+                                                            yield f"data: {json.dumps(task_info, ensure_ascii=False)}\n\n"
+
                                                         if event == 'message':
                                                             # 追加内容
                                                             delta_text = parsed.get('answer', '')
@@ -355,10 +367,16 @@ async def chat_with_dify(request: ChatRequest):
                                                                         {"delta": {"content": delta_text}}
                                                                     ]
                                                                 }
+                                                                # 若已知 task_id，一并携带
+                                                                if current_task_id:
+                                                                    transformed["task_id"] = current_task_id
                                                                 yield f"data: {json.dumps(transformed, ensure_ascii=False)}\n\n"
                                                             # 记录会话ID（如有）
                                                             if parsed.get('conversation_id'):
                                                                 dify_conversation_id = parsed['conversation_id']
+                                                            # 记录task_id（如有）
+                                                            if current_task_id:
+                                                                print(f"📋 从Dify获取到task_id: {current_task_id}")
 
                                                         elif event == 'message_file':
                                                             # 文件事件映射到前端可识别的自定义文件块
@@ -564,6 +582,77 @@ async def chat_with_dify(request: ChatRequest):
         import traceback
         print(f"错误堆栈: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"服务器内部错误: {str(e)}")
+
+@app.post("/api/chat/stop/{task_id}")
+async def stop_chat_response(task_id: str):
+    """
+    停止指定的Dify响应任务
+    """
+    if not DIFY_API_KEY:
+        raise HTTPException(status_code=500, detail="Dify API密钥未配置")
+    
+    try:
+        print(f"停止响应任务: {task_id}")
+        
+        # 调用Dify API停止响应
+        headers = {
+            "Authorization": f"Bearer {DIFY_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        # 构造候选停止端点（不同网关/版本可能不同）
+        # 为了兼容性，不再区分 channel，全部都尝试
+        base_candidates = [
+            f"{DIFY_API_BASE}/chat-messages/{task_id}/stop",
+            f"{DIFY_API_BASE}/workflows/{task_id}/stop",
+            f"{DIFY_API_BASE}/workflows/tasks/{task_id}/stop",
+            f"{DIFY_API_BASE}/tasks/{task_id}/stop",
+        ]
+        # 同时加入带斜杠版本，解决 308 重定向（有些网关要求以 / 结尾）
+        candidate_urls = []
+        for u in base_candidates:
+            candidate_urls.append(u)
+            if not u.endswith('/'):
+                candidate_urls.append(u + '/')
+
+        last_status = None
+        last_text = None
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+            for stop_url in candidate_urls:
+                try:
+                    print(f"尝试停止 URL: {stop_url}")
+                    response = await client.post(stop_url, headers=headers)
+                    last_status = response.status_code
+                    last_text = response.text
+                    print(f"停止返回: {last_status} {last_text[:200]}")
+                    if response.status_code in (200, 204):
+                        try:
+                            dify_response = response.json()
+                        except Exception:
+                            dify_response = {"result": "success"}
+                        return {
+                            "success": True,
+                            "result": dify_response.get("result", "success"),
+                            "message": "响应已成功停止"
+                        }
+                except Exception as e:
+                    print(f"调用 {stop_url} 出错: {e}")
+
+        raise HTTPException(
+            status_code=500 if (last_status is None or last_status == 200) else last_status,
+            detail=f"停止响应失败: {last_text or '未知错误'}"
+        )
+                
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=408, detail="停止响应请求超时")
+    except httpx.RequestError as e:
+        print(f"停止响应网络错误: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"网络错误: {str(e)}")
+    except Exception as e:
+        print(f"停止响应内部错误: {str(e)}")
+        import traceback
+        print(f"错误堆栈: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"内部错误: {str(e)}")
 
 @app.post("/api/upload")
 async def upload_file(file: UploadFile = File(...), message_id: Optional[str] = Form(None), conversation_id: Optional[str] = Form(None)):

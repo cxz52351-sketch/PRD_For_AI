@@ -52,7 +52,11 @@ export function ChatInterface() {
   const [selectedModel, setSelectedModel] = useState<string>(() => loadSelectedModel());
   const [isStreaming, setIsStreaming] = useState<boolean>(() => loadIsStreaming());
   const [outputFormat, setOutputFormat] = useState<"text" | "pdf" | "docx" | "markdown">(() => loadOutputFormat());
+  // 停止响应相关状态
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const { toast } = useToast();
 
   // 在首次加载时显示恢复提示
@@ -117,10 +121,40 @@ export function ChatInterface() {
     return firstLine.length > 30 ? firstLine.substring(0, 30) + "..." : firstLine;
   };
 
+  // 停止响应处理函数
+  const handleStopResponse = async () => {
+    try {
+      if (currentTaskId) {
+        // 已有 Dify 任务ID，调用后端停止
+        const response = await api.stopResponse(currentTaskId);
+        if (response.success) {
+          toast({ title: "已停止响应", description: "AI响应已成功停止" });
+        }
+      } else if (abortControllerRef.current) {
+        // 还没有 task_id，直接中止 fetch 流
+        abortControllerRef.current.abort();
+        toast({ title: "已中止", description: "已中止本地流连接" });
+      } else {
+        toast({ title: "无法停止", description: "没有正在进行的响应任务", variant: "destructive" });
+        return;
+      }
+    } catch (error) {
+      console.error("停止响应失败:", error);
+      toast({ title: "停止失败", description: error instanceof Error ? error.message : "停止响应时出现错误", variant: "destructive" });
+    } finally {
+      setIsGenerating(false);
+      setIsLoading(false);
+      setCurrentTaskId(null);
+      abortControllerRef.current = null;
+    }
+  };
+
   const handleSendMessage = async (content: string, files?: File[]) => {
     if (!content.trim() && (!files || files.length === 0)) return;
 
     setIsLoading(true);
+    setIsGenerating(false); // 初始时不生成，等开始流式响应后再设置
+    setCurrentTaskId(null);
 
     // Create user message
     const userMessage: Message = {
@@ -135,33 +169,47 @@ export function ChatInterface() {
       }))
     };
 
-    // Update conversation with user message
-    setConversations(prev => prev.map(conv =>
-      conv.id === activeConversationId
-        ? {
-          ...conv,
-          messages: [...conv.messages, userMessage],
-          title: conv.messages.length === 0 ? generateConversationTitle(content) : conv.title,
-          timestamp: new Date(),
-          preview: content.length > 50 ? content.substring(0, 50) + "..." : content
-        }
-        : conv
-    ));
-
     try {
-      // 准备发送给API的消息历史
-      const conversationMessages: APIMessage[] = activeConversation?.messages
+      // 构建完整的消息历史（现有历史 + 当前新消息）
+      const currentConversation = conversations.find(conv => conv.id === activeConversationId);
+      const existingMessages: APIMessage[] = currentConversation?.messages
         .filter(msg => msg.type === "user" || msg.type === "ai")
         .map(msg => ({
           role: msg.type === "user" ? "user" : "assistant",
           content: msg.content
         })) || [];
 
-      // 添加当前用户消息
-      conversationMessages.push({
-        role: "user",
-        content: content
-      });
+      // 添加当前用户消息到消息历史
+      const conversationMessages: APIMessage[] = [
+        ...existingMessages,
+        {
+          role: "user",
+          content: content
+        }
+      ];
+
+      // 调试日志
+      console.log('📋 当前会话ID:', activeConversationId);
+      console.log('📋 Dify会话ID:', activeConversation?.difyConversationId);
+      console.log('📋 当前输入内容:', content);
+      console.log('🚀 发送给后端的消息历史:', conversationMessages.map((msg, index) => ({
+        index: index + 1,
+        role: msg.role,
+        content: msg.content.substring(0, 100) + (msg.content.length > 100 ? '...' : '')
+      })));
+
+      // 然后更新UI状态（添加用户消息到界面）
+      setConversations(prev => prev.map(conv =>
+        conv.id === activeConversationId
+          ? {
+            ...conv,
+            messages: [...conv.messages, userMessage],
+            title: conv.messages.length === 0 ? generateConversationTitle(content) : conv.title,
+            timestamp: new Date(),
+            preview: content.length > 50 ? content.substring(0, 50) + "..." : content
+          }
+          : conv
+      ));
 
       // 创建AI消息占位符
       const aiMessageId = (Date.now() + 1).toString();
@@ -180,7 +228,9 @@ export function ChatInterface() {
       ));
 
       if (isStreaming) {
-        // 流式响应
+        // 流式响应 - 发送完整消息历史
+        // 在发起请求前创建 AbortController，用于在未拿到 task_id 前也能中止
+        abortControllerRef.current = new AbortController();
         const stream = await api.chatStream({
           messages: conversationMessages,
           model: selectedModel,
@@ -190,11 +240,29 @@ export function ChatInterface() {
           output_format: outputFormat,
           conversation_id: activeConversation?.dbConversationId,
           dify_conversation_id: activeConversation?.difyConversationId,
-        });
+        } as any, abortControllerRef.current.signal);
 
         const parser = parseStreamResponse(stream);
 
+        // 开始流式响应后，切换状态
+        setIsLoading(false);  // 不再显示"思考中"
+        setIsGenerating(true); // 显示停止按钮
+
         for await (const chunk of parser) {
+          // 一种更宽松的task_id获取：兼容服务端发来的 {type:'task', task_id: '...'}
+          if (!currentTaskId && (chunk.task_id || chunk.type === 'task')) {
+            const tid = chunk.task_id || chunk.task_id || chunk.id;
+            if (tid) {
+              setCurrentTaskId(tid);
+              console.log('📋 记录task_id:', tid);
+            }
+          }
+          // 获取task_id（用于停止响应）
+          if (chunk.task_id && !currentTaskId) {
+            setCurrentTaskId(chunk.task_id);
+            console.log('📋 获取到task_id:', chunk.task_id);
+          }
+
           if (chunk.choices && chunk.choices[0]?.delta?.content) {
             const content = chunk.choices[0].delta.content;
 
@@ -221,11 +289,11 @@ export function ChatInterface() {
                     msg.id === aiMessageId
                       ? {
                         ...msg,
-                        generatedFile: {
-                          filename: chunk.filename,
-                          url: chunk.url,
-                          mime_type: chunk.mime_type
-                        }
+                                            generatedFile: {
+                      filename: chunk.filename,
+                      url: chunk.url,
+                      mime_type: chunk.mime_type
+                    }
                       }
                       : msg
                   )
@@ -251,7 +319,8 @@ export function ChatInterface() {
           }
         }
       } else {
-        // 普通响应
+        // 普通响应 - 发送完整消息历史
+        // 非流式响应保持loading状态，不显示停止按钮
         const response = await api.chat({
           messages: conversationMessages,
           model: selectedModel,
@@ -261,7 +330,7 @@ export function ChatInterface() {
           output_format: outputFormat,
           conversation_id: activeConversation?.dbConversationId,
           dify_conversation_id: activeConversation?.difyConversationId,
-        });
+        } as any);
 
         // 更新AI消息内容
         setConversations(prev => prev.map(conv =>
@@ -317,6 +386,8 @@ export function ChatInterface() {
       });
     } finally {
       setIsLoading(false);
+      setIsGenerating(false);
+      setCurrentTaskId(null);
     }
   };
 
@@ -537,12 +608,12 @@ export function ChatInterface() {
               </div>
             ))}
 
-            {isLoading && (
+            {(isLoading || isGenerating) && (
               <div className="flex justify-start">
                 <div className="bg-ai-message rounded-lg p-4 max-w-[80%]">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
-                    <span>AI正在思考中...</span>
+                    <span>{isLoading ? "AI正在思考中..." : "AI正在生成回复..."}</span>
                   </div>
                 </div>
               </div>
@@ -553,7 +624,9 @@ export function ChatInterface() {
         {/* Input */}
         <ChatInput
           onSendMessage={handleSendMessage}
+          onStopResponse={handleStopResponse}
           disabled={isLoading}
+          isGenerating={isGenerating}
           placeholder="请说出您的需求"
         />
       </div>
