@@ -46,8 +46,10 @@ export function ChatSidebar({
   return (
     <div
       className={cn(
-        "relative h-full bg-secondary/60 backdrop-blur-md border-r border-border transition-all duration-300",
-        isCollapsed ? "w-16" : "w-64"
+        // 使侧边栏成为纵向flex容器，并允许子项使用flex-1撑满剩余空间
+        // min-h-0 防止flex子项计算高度时溢出，确保内部滚动生效
+        "relative h-full min-h-0 flex flex-col bg-secondary/60 backdrop-blur-md border-r border-border transition-all duration-300",
+        isCollapsed ? "w-16" : "w-72"
       )}
     >
       {/* Header */}
@@ -77,7 +79,8 @@ export function ChatSidebar({
       </div>
 
       {/* Conversations List */}
-      <ScrollArea className="flex-1 px-2">
+      {/* 列表区域：占据剩余高度并允许内部滚动 */}
+      <ScrollArea className="flex-1 min-h-0 px-2">
         <div className="space-y-2">
           {conversations.map((conversation) => (
             <div

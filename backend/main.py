@@ -621,10 +621,44 @@ async def stop_chat_response(task_id: str):
             for stop_url in candidate_urls:
                 try:
                     print(f"尝试停止 URL: {stop_url}")
-                    response = await client.post(stop_url, headers=headers)
+                    user_val = "abc-123"
+                    # 按文档先用 JSON body
+                    response = await client.post(stop_url, headers={**headers, "Accept": "application/json"}, json={"user": user_val})
                     last_status = response.status_code
                     last_text = response.text
                     print(f"停止返回: {last_status} {last_text[:200]}")
+                    if response.status_code in (200, 204):
+                        try:
+                            dify_response = response.json()
+                        except Exception:
+                            dify_response = {"result": "success"}
+                        return {
+                            "success": True,
+                            "result": dify_response.get("result", "success"),
+                            "message": "响应已成功停止"
+                        }
+
+                    # 再尝试 Query 方式 ?user=xxx（部分网关可能这样要求）
+                    response = await client.post(stop_url, headers=headers, params={"user": user_val})
+                    last_status = response.status_code
+                    last_text = response.text
+                    print(f"停止返回(带query): {last_status} {last_text[:200]}")
+                    if response.status_code in (200, 204):
+                        try:
+                            dify_response = response.json()
+                        except Exception:
+                            dify_response = {"result": "success"}
+                        return {
+                            "success": True,
+                            "result": dify_response.get("result", "success"),
+                            "message": "响应已成功停止"
+                        }
+
+                    # 再尝试自定义 Header 方式 X-User（防御性兼容）
+                    response = await client.post(stop_url, headers={**headers, "X-User": user_val})
+                    last_status = response.status_code
+                    last_text = response.text
+                    print(f"停止返回(带X-User): {last_status} {last_text[:200]}")
                     if response.status_code in (200, 204):
                         try:
                             dify_response = response.json()
