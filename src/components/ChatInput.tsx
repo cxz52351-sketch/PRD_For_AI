@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Send, Mic, MicOff, Plus, X, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +29,9 @@ export function ChatInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  // Speech recognition refs
+  const recognitionRef = useRef<any>(null);
+  const isSpeechSupported = typeof window !== 'undefined' && ("webkitSpeechRecognition" in (window as any) || "SpeechRecognition" in (window as any));
   const { toast } = useToast();
 
   const MAX_CHARS = 5000;
@@ -143,11 +146,8 @@ export function ChatInput({
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        const audioFile = new File([audioBlob], 'voice-message.wav', { type: 'audio/wav' });
-        setFiles(prev => [...prev, audioFile]);
-        setMessage("语音输入的内容会在这里显示...");
-
+        // 不生成音频文件，只保留识别文本
+        setFiles([]);
         // Stop all tracks
         stream.getTracks().forEach(track => track.stop());
       };
@@ -156,10 +156,49 @@ export function ChatInput({
       mediaRecorder.start();
       setIsRecording(true);
 
-      toast({
-        title: "开始录音",
-        description: "正在录制语音消息...",
-      });
+      toast({ title: "开始录音", description: "正在录制语音..." });
+
+      // 同步启动浏览器语音识别（若支持）
+      if (isSpeechSupported) {
+        try {
+          const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+          const recognition = new SpeechRecognition();
+          recognition.lang = 'zh-CN';
+          recognition.interimResults = true;
+          recognition.continuous = true;
+
+          let accumulated = '';
+          recognition.onresult = (event: any) => {
+            let interim = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              const transcript = event.results[i][0].transcript || '';
+              if (event.results[i].isFinal) {
+                accumulated += transcript;
+              } else {
+                interim += transcript;
+              }
+            }
+            const text = (accumulated + interim).trim();
+            if (text) {
+              setMessage(text);
+              setCharCount(text.length);
+            }
+          };
+
+          recognition.onerror = () => {
+            // 忽略识别错误，保留音频文件
+          };
+          recognition.onend = () => {
+            recognitionRef.current = null;
+          };
+          recognition.start();
+          recognitionRef.current = recognition;
+        } catch (e) {
+          // 忽略语音识别启动失败
+        }
+      } else {
+        toast({ title: "提示", description: "当前浏览器不支持语音转文字，将仅保存音频文件" });
+      }
     } catch (error) {
       toast({
         title: "录音失败",
@@ -174,12 +213,18 @@ export function ChatInput({
       mediaRecorderRef.current.stop();
       setIsRecording(false);
 
-      toast({
-        title: "录音完成",
-        description: "语音消息已准备发送",
-      });
+      // 停止语音识别
+      try { recognitionRef.current?.stop?.(); } catch { }
+      toast({ title: "录音完成", description: "识别文本已填入输入框" });
     }
   };
+
+  // 组件卸载时，确保停止识别
+  useEffect(() => {
+    return () => {
+      try { recognitionRef.current?.stop?.(); } catch { }
+    };
+  }, []);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
