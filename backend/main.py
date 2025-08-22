@@ -371,6 +371,13 @@ async def chat_with_dify(request: ChatRequest):
                                                                 if current_task_id:
                                                                     transformed["task_id"] = current_task_id
                                                                 yield f"data: {json.dumps(transformed, ensure_ascii=False)}\n\n"
+                                                                # 同步流式渲染 HTML（忠实渲染，仅样式，不改语义）
+                                                                try:
+                                                                    html_partial = markdown.markdown(full_content, extensions=['extra', 'sane_lists'])
+                                                                    html_evt = {"type": "html_partial", "html": html_partial}
+                                                                    yield f"data: {json.dumps(html_evt, ensure_ascii=False)}\n\n"
+                                                                except Exception as _e:
+                                                                    print(f"流式 HTML 渲染失败: {_e}")
                                                             # 记录会话ID（如有）
                                                             if parsed.get('conversation_id'):
                                                                 dify_conversation_id = parsed['conversation_id']
@@ -437,6 +444,15 @@ async def chat_with_dify(request: ChatRequest):
                                     content=full_content
                                 )
                                 print(f"添加AI回复到数据库: {ai_message_id}")
+
+                            # 在结束前提供 Markdown 渲染后的 HTML（保持内容忠实，仅做渲染）
+                            try:
+                                if full_content and isinstance(full_content, str):
+                                    html_output = markdown.markdown(full_content, extensions=['extra', 'sane_lists'])
+                                    html_event = {"type": "html", "html": html_output}
+                                    yield f"data: {json.dumps(html_event, ensure_ascii=False)}\n\n"
+                            except Exception as _e:
+                                print(f"HTML 渲染失败: {_e}")
                             
                             # 生成文件（如果需要）
                             if request.output_format != "text" and full_content.strip():
@@ -483,16 +499,29 @@ async def chat_with_dify(request: ChatRequest):
                     yield f"data: {json.dumps(error_response)}\n\n"
                     yield "data: [DONE]\n\n"
                 except Exception as e:
-                    print(f"流式处理错误: {str(e)}")
+                    # 打印更完整的错误信息，便于定位
+                    import traceback
+                    print(f"流式处理错误: {repr(e)}")
+                    print(traceback.format_exc())
                     error_response = {
                         "error": {
-                            "message": f"流式处理错误: {str(e)}"
+                            "message": f"流式处理错误: {repr(e)}"
                         }
                     }
                     yield f"data: {json.dumps(error_response)}\n\n"
                     yield "data: [DONE]\n\n"
             
-            return StreamingResponse(generate(), media_type="text/event-stream")
+            # 防止代理/浏览器缓冲：禁用缓存、保持连接
+            return StreamingResponse(
+                generate(),
+                media_type="text/event-stream",
+                headers={
+                    "Cache-Control": "no-cache, no-transform",
+                    "Pragma": "no-cache",
+                    "Connection": "keep-alive",
+                    "X-Accel-Buffering": "no",
+                }
+            )
         
         else:
             # 普通（阻塞）响应
@@ -566,6 +595,13 @@ async def chat_with_dify(request: ChatRequest):
                     "conversation_id": conversation_id,
                     "dify_conversation_id": dify_conversation_id_resp,
                 }
+
+                # 提供 HTML 渲染字段（保持内容忠实，仅渲染样式）
+                try:
+                    if ai_content and isinstance(ai_content, str):
+                        compatible['html'] = markdown.markdown(ai_content, extensions=['extra', 'sane_lists'])
+                except Exception as _e:
+                    print(f"阻塞模式 HTML 渲染失败: {_e}")
 
                 if file_info:
                     compatible['file'] = file_info

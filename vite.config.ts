@@ -5,6 +5,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  // 生产环境采用相对路径，确保作为 Chrome 扩展页面时资源能正确加载
+  base: mode === 'production' ? './' : '/',
   server: {
     host: "localhost",
     port: 8081,
