@@ -14,6 +14,21 @@ async def init_db():
         # 启用外键约束
         await db.execute("PRAGMA foreign_keys = ON")
         
+        # 创建users表
+        await db.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE,
+            phone TEXT UNIQUE,
+            password_hash TEXT NOT NULL,
+            avatar TEXT,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            last_login_at TIMESTAMP
+        )
+        """)
+        
         # 创建conversations表
         await db.execute("""
         CREATE TABLE IF NOT EXISTS conversations (
@@ -22,7 +37,8 @@ async def init_db():
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             user_id TEXT,
-            model TEXT NOT NULL
+            model TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
         )
         """)
         
@@ -253,3 +269,147 @@ async def get_stats() -> Dict[str, Any]:
             "attachments": attachments_count,
             "generated_files": generated_files_count
         }
+
+# 用户操作
+async def create_user(username: str, password_hash: str, email: Optional[str] = None, 
+                     phone: Optional[str] = None, avatar: Optional[str] = None) -> str:
+    """创建用户，返回用户ID"""
+    user_id = str(uuid.uuid4())
+    now = datetime.now().isoformat()
+    
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            """INSERT INTO users (id, username, email, phone, password_hash, avatar, 
+               created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (user_id, username, email, phone, password_hash, avatar, now, now)
+        )
+        await db.commit()
+    
+    return user_id
+
+async def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
+    """根据ID获取用户"""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT * FROM users WHERE id = ?", 
+            (user_id,)
+        )
+        row = await cursor.fetchone()
+        
+        if not row:
+            return None
+        
+        return dict(row)
+
+async def get_user_by_username(username: str) -> Optional[Dict[str, Any]]:
+    """根据用户名获取用户"""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT * FROM users WHERE username = ?", 
+            (username,)
+        )
+        row = await cursor.fetchone()
+        
+        if not row:
+            return None
+        
+        return dict(row)
+
+async def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
+    """根据邮箱获取用户"""
+    if not email:
+        return None
+        
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT * FROM users WHERE email = ?", 
+            (email,)
+        )
+        row = await cursor.fetchone()
+        
+        if not row:
+            return None
+        
+        return dict(row)
+
+async def get_user_by_phone(phone: str) -> Optional[Dict[str, Any]]:
+    """根据手机号获取用户"""
+    if not phone:
+        return None
+        
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT * FROM users WHERE phone = ?", 
+            (phone,)
+        )
+        row = await cursor.fetchone()
+        
+        if not row:
+            return None
+        
+        return dict(row)
+
+async def update_user_last_login(user_id: str) -> bool:
+    """更新用户最后登录时间"""
+    now = datetime.now().isoformat()
+    
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            "UPDATE users SET last_login_at = ?, updated_at = ? WHERE id = ?",
+            (now, now, user_id)
+        )
+        await db.commit()
+        return cursor.rowcount > 0
+
+async def update_user_info(user_id: str, **kwargs) -> bool:
+    """更新用户信息"""
+    if not kwargs:
+        return False
+    
+    # 过滤掉None值和不允许更新的字段
+    allowed_fields = {'username', 'email', 'phone', 'avatar'}
+    updates = {k: v for k, v in kwargs.items() if k in allowed_fields and v is not None}
+    
+    if not updates:
+        return False
+    
+    # 添加更新时间
+    updates['updated_at'] = datetime.now().isoformat()
+    
+    # 构建SQL语句
+    set_clause = ', '.join([f"{k} = ?" for k in updates.keys()])
+    values = list(updates.values()) + [user_id]
+    
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            f"UPDATE users SET {set_clause} WHERE id = ?",
+            values
+        )
+        await db.commit()
+        return cursor.rowcount > 0
+
+async def delete_user(user_id: str) -> bool:
+    """删除用户"""
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            "DELETE FROM users WHERE id = ?",
+            (user_id,)
+        )
+        await db.commit()
+        return cursor.rowcount > 0
+
+async def get_users(limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
+    """获取用户列表"""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT id, username, email, phone, avatar, created_at, updated_at, last_login_at FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            (limit, offset)
+        )
+        
+        rows = await cursor.fetchall()
+        return [dict(row) for row in rows]

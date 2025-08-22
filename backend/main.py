@@ -22,6 +22,10 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import re
 import db  # 导入数据库模块
+from auth import (
+    UserCreate, UserLogin, Token, UserResponse, 
+    register_user, login_user, get_current_user, get_current_user_optional
+)
 
 # 加载环境变量
 load_dotenv()
@@ -87,6 +91,37 @@ UPLOAD_DIR = "uploads"
 GENERATED_DIR = "generated"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(GENERATED_DIR, exist_ok=True)
+
+# ================================
+# 用户认证API
+# ================================
+
+@app.post("/auth/register", response_model=Token, tags=["Authentication"])
+async def register_endpoint(user_data: UserCreate):
+    """用户注册"""
+    return await register_user(user_data)
+
+@app.post("/auth/login", response_model=Token, tags=["Authentication"])
+async def login_endpoint(login_data: UserLogin):
+    """用户登录"""
+    return await login_user(login_data)
+
+@app.get("/auth/me", response_model=UserResponse, tags=["Authentication"])
+async def get_current_user_endpoint(current_user: dict = Depends(get_current_user)):
+    """获取当前用户信息"""
+    return UserResponse(
+        id=str(current_user["id"]),
+        username=current_user["username"],
+        email=current_user["email"],
+        phone=current_user["phone"],
+        avatar=current_user["avatar"],
+        created_at=current_user["created_at"]
+    )
+
+@app.get("/auth/verify", tags=["Authentication"])
+async def verify_token_endpoint(current_user: dict = Depends(get_current_user)):
+    """验证Token有效性"""
+    return {"valid": True, "user_id": current_user["id"]}
 
 # 文件生成函数
 async def generate_markdown_file(content: str, filename: str) -> str:

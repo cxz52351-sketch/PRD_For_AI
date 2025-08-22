@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatSidebar } from "./ChatSidebar";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
+import UserMenu from "./UserMenu";
 import { useToast } from "@/hooks/use-toast";
 import { api, parseStreamResponse, type Message as APIMessage } from "@/lib/api";
 import {
@@ -289,11 +290,11 @@ export function ChatInterface() {
                     msg.id === aiMessageId
                       ? {
                         ...msg,
-                                            generatedFile: {
-                      filename: chunk.filename,
-                      url: chunk.url,
-                      mime_type: chunk.mime_type
-                    }
+                        generatedFile: {
+                          filename: chunk.filename,
+                          url: chunk.url,
+                          mime_type: chunk.mime_type
+                        }
                       }
                       : msg
                   )
@@ -489,7 +490,7 @@ export function ChatInterface() {
       setSelectedModel("deepseek-chat");
       setIsStreaming(true);
       setOutputFormat("text");
-      
+
       toast({
         title: "数据已清除",
         description: "所有聊天记录已被清除",
@@ -554,7 +555,7 @@ export function ChatInterface() {
               {selectedModel === "deepseek-chat" ? "DeepSeek Chat" : "DeepSeek Coder"}
             </Button>
              */}
-            
+
             {/* 开发调试用：清除所有数据按钮 */}
             {process.env.NODE_ENV === 'development' && (
               <Button
@@ -576,6 +577,9 @@ export function ChatInterface() {
               <Download className="h-4 w-4 mr-2" />
               导出对话
             </Button>
+
+            {/* 用户菜单 */}
+            <UserMenu />
           </div>
         </div>
 

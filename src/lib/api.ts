@@ -159,6 +159,36 @@ export interface ConversationDetail {
   }[];
 }
 
+// 认证相关类型
+export interface UserData {
+  id: string;
+  username: string;
+  email?: string;
+  phone?: string;
+  avatar?: string;
+  created_at: string;
+}
+
+export interface LoginRequest {
+  identifier: string;  // 邮箱或手机号
+  password: string;
+  login_type: "email" | "phone";
+}
+
+export interface RegisterRequest {
+  username: string;
+  email?: string;
+  phone?: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  user: UserData;
+}
+
 // API错误类
 export class APIError extends Error {
   constructor(
@@ -171,6 +201,11 @@ export class APIError extends Error {
   }
 }
 
+// 获取认证Token
+function getAuthToken(): string | null {
+  return localStorage.getItem('auth_token');
+}
+
 // 通用请求函数
 async function apiRequest<T>(
   endpoint: string,
@@ -178,9 +213,12 @@ async function apiRequest<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
+  // 添加认证头
+  const token = getAuthToken();
   const defaultOptions: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
       ...options.headers,
     },
   };
@@ -209,9 +247,12 @@ export async function streamRequest(
 ): Promise<ReadableStream<Uint8Array>> {
   const url = `${API_BASE_URL}${endpoint}`;
 
+  // 添加认证头
+  const token = getAuthToken();
   const defaultOptions: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
       ...options.headers,
     },
   };
@@ -237,6 +278,29 @@ export async function streamRequest(
 export const api = {
   // 健康检查
   health: () => apiRequest<{ status: string; timestamp: string }>('/health'),
+
+  // 认证相关API
+  auth: {
+    // 用户注册
+    register: (data: RegisterRequest) =>
+      apiRequest<AuthResponse>('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+
+    // 用户登录  
+    login: (data: LoginRequest) =>
+      apiRequest<AuthResponse>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+
+    // 获取当前用户信息
+    me: () => apiRequest<UserData>('/auth/me'),
+
+    // 验证Token
+    verify: () => apiRequest<{ valid: boolean; user_id: string }>('/auth/verify'),
+  },
 
   // 获取可用模型
   getModels: () => apiRequest<{ models: Model[] }>('/api/models'),

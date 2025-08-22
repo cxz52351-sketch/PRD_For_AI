@@ -1,6 +1,15 @@
 # Indus AI Dialogue Forge
 
-一个基于 Dify 工作流（已替换 DeepSeek 调用）的工业级智能对话系统，提供智能对话、代码生成和文件分析功能。
+一个基于 Dify 工作流的工业级智能对话系统，集成完整的用户认证功能，提供智能对话、代码生成和文件分析功能。
+
+## 🚀 项目特色
+
+- ✅ **完整用户认证系统** - 支持邮箱/手机号注册登录
+- ✅ **路由保护机制** - 智能页面跳转和权限控制  
+- ✅ **现代化UI设计** - 基于 shadcn/ui 的精美界面
+- ✅ **实时流式对话** - 支持打字机效果的AI回复
+- ✅ **多格式文件支持** - 上传分析PDF、Word、图片等
+- ✅ **对话历史管理** - 完整的会话记录和导出功能
 
 ## 项目信息
 
@@ -10,12 +19,23 @@
 
 ### 一键启动 (推荐)
 
-**Windows 用户:**
+**启动后端服务:**
+```bash
+chmod +x start_backend.sh
+./start_backend.sh
+```
+
+**启动前端服务:**
+```bash
+npm run dev
+```
+
+**完整一键启动 (Windows):**
 ```cmd
 start.bat
 ```
 
-**Linux/Mac 用户:**
+**完整一键启动 (Linux/Mac):**
 ```bash
 chmod +x start.sh
 ./start.sh
@@ -53,78 +73,122 @@ chmod +x start.sh
    ```
 
 4. **访问应用**
-   - 前端: http://localhost:8081
+   - 前端: http://localhost:8082 (或 8081，取决于端口占用情况)
    - 后端API: http://localhost:8001
    - API文档: http://localhost:8001/docs
 
-## 📚 详细文档
+## 🔐 用户认证功能
 
-已切换到 Dify 工作流集成。
+### 功能特点
+- **双登录方式**: 支持邮箱或手机号登录
+- **密码强度验证**: 注册时要求密码包含大小写字母、数字，至少8位
+- **安全认证**: 使用JWT Token，支持过期自动处理
+- **路由保护**: 未登录用户自动跳转到登录页
+- **用户界面**: 集成用户头像菜单和退出登录功能
 
-## How can I edit this code?
+### 使用流程
+1. **首次访问**: 未登录用户访问主页 → 自动跳转到登录页
+2. **用户注册**: 填写用户名、邮箱/手机号、密码 → 注册成功后自动登录
+3. **用户登录**: 使用邮箱/手机号和密码登录 → 跳转到主页
+4. **退出登录**: 点击用户头像 → 退出登录 → 返回登录页
 
-There are several ways of editing your application.
+### 测试账户
+- 邮箱: `test123@example.com`
+- 密码: `TestPassword123`
 
-**Use Lovable**
+## 📚 技术架构
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/ffd3923b-c18c-4a40-91d9-229fe1965e7a) and start prompting.
+### 前端技术栈
+- **React 18** - 现代React框架
+- **TypeScript** - 类型安全开发
+- **Tailwind CSS** - 原子化CSS框架
+- **shadcn/ui** - 高质量UI组件库
+- **React Router** - 路由管理
+- **Tanstack Query** - 数据状态管理
 
-Changes made via Lovable will be committed automatically to this repo.
+### 后端技术栈
+- **FastAPI** - 现代Python Web框架
+- **SQLite** - 轻量级数据库
+- **JWT** - 安全认证
+- **bcrypt** - 密码加密
+- **Dify API** - AI对话能力
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### 项目结构
+```
+PRD_For_AI_cc/
+├── src/                    # 前端源代码
+│   ├── components/         # React组件
+│   ├── pages/             # 页面组件
+│   ├── lib/               # 工具库
+│   └── hooks/             # 自定义Hook
+├── backend/               # 后端源代码
+│   ├── main.py           # FastAPI主应用
+│   ├── auth.py           # 认证模块
+│   ├── db.py             # 数据库模块
+│   └── start.py          # 启动脚本
+└── docs/                 # 文档目录
 ```
 
-**Edit a file directly in GitHub**
+## 🛠️ 开发指南
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 本地开发环境
 
-**Use GitHub Codespaces**
+**前端开发**
+```bash
+# 安装依赖
+npm install
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# 启动开发服务器
+npm run dev
 
-## What technologies are used for this project?
+# 构建生产版本
+npm run build
+```
 
-This project is built with:
+**后端开发**
+```bash
+# 进入后端目录
+cd backend
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# 安装Python依赖
+pip install -r requirements.txt
 
-## How can I deploy this project?
+# 启动开发服务器
+python start.py
+```
 
-Simply open [Lovable](https://lovable.dev/projects/ffd3923b-c18c-4a40-91d9-229fe1965e7a) and click on Share -> Publish.
+### 环境配置
 
-## Can I connect a custom domain to my Lovable project?
+**后端环境变量** (在 `backend/.env` 中配置)
+```env
+DIFY_API_BASE=http://teach.excelmaster.ai/v1
+DIFY_API_KEY=your-dify-api-key
+JWT_SECRET_KEY=your-jwt-secret-key
+```
 
-Yes, you can!
+**前端环境变量** (可选)
+```env
+VITE_API_BASE_URL=http://localhost:8001
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🚀 部署指南
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### 使用 Lovable 部署
+1. 访问 [Lovable Project](https://lovable.dev/projects/ffd3923b-c18c-4a40-91d9-229fe1965e7a)
+2. 点击 Share -> Publish 进行部署
+
+### 手动部署
+- **前端**: 可部署到 Vercel、Netlify 等静态站点服务
+- **后端**: 可部署到 Railway、Render、AWS 等云服务
+
+## 📞 技术支持
+
+如遇到问题，请：
+1. 查看控制台错误日志
+2. 检查网络连接和API配置
+3. 验证环境变量设置
+4. 提交 Issue 或联系技术支持
+
+---
+
+**🎉 感谢使用 Indus AI Dialogue Forge！**
