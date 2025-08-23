@@ -660,6 +660,7 @@ export function ChatInterface() {
         <CanvasEdit
           content={canvasEditContent}
           title={canvasEditTitle}
+          messages={activeConversation?.messages || []}
           onClose={handleCloseCanvas}
         />
       )}
