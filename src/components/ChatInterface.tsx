@@ -9,6 +9,7 @@ import { CanvasEdit } from "./CanvasEdit";
 import UserMenu from "./UserMenu";
 import { useToast } from "@/hooks/use-toast";
 import { api, parseStreamResponse, type Message as APIMessage } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -519,9 +520,11 @@ export function ChatInterface() {
     setCanvasEditTitle("");
   };
 
-  return (
-    <>
-      <div className="flex h-screen bg-aurora">
+  // 渲染主界面内容（不包括画布编辑模式）
+  const renderMainInterface = (isCanvasMode = false) => (
+    <div className="flex h-screen bg-aurora">
+      {/* 在画布模式下自动隐藏侧边栏 */}
+      {!isCanvasMode && (
         <ChatSidebar
           conversations={conversations}
           activeConversationId={activeConversationId}
@@ -531,61 +534,64 @@ export function ChatInterface() {
           isCollapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
+      )}
 
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 bg-transparent">
-            <div className="flex items-center gap-3">
-              {/* 移除头部Logo，Logo移至侧边栏 */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 bg-transparent">
+          <div className="flex items-center gap-3">
+            {/* 移除头部Logo，Logo移至侧边栏 */}
 
-            </div>
+          </div>
 
-            <div className="flex gap-2">
-              {/* <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <FileDown className="h-4 w-4 mr-2" />
-                    {outputFormat === "text" ? "纯文本" : outputFormat.toUpperCase()}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => setOutputFormat("text")}>
-                    纯文本
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setOutputFormat("pdf")}>
-                    PDF
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setOutputFormat("docx")}>
-                    Word
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setOutputFormat("markdown")}>
-                    Markdown
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu> */}
+          <div className="flex gap-2">
+            {/* <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <FileDown className="h-4 w-4 mr-2" />
+                  {outputFormat === "text" ? "纯文本" : outputFormat.toUpperCase()}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setOutputFormat("text")}>
+                  纯文本
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setOutputFormat("pdf")}>
+                  PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setOutputFormat("docx")}>
+                  Word
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setOutputFormat("markdown")}>
+                  Markdown
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu> */}
 
-              {/* <Button
+            {/* <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedModel(selectedModel === "deepseek-chat" ? "deepseek-coder" : "deepseek-chat")}
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              {selectedModel === "deepseek-chat" ? "DeepSeek Chat" : "DeepSeek Coder"}
+            </Button>
+             */}
+
+            {/* 开发调试用：清除所有数据按钮 */}
+            {process.env.NODE_ENV === 'development' && (
+              <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setSelectedModel(selectedModel === "deepseek-chat" ? "deepseek-coder" : "deepseek-chat")}
+                onClick={handleClearAllData}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
                 <Settings className="h-4 w-4 mr-2" />
-                {selectedModel === "deepseek-chat" ? "DeepSeek Chat" : "DeepSeek Coder"}
+                清除数据
               </Button>
-               */}
-
-              {/* 开发调试用：清除所有数据按钮 */}
-              {process.env.NODE_ENV === 'development' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleClearAllData}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  清除数据
-                </Button>
-              )}
+            )}
+            
+            {!isCanvasMode && (
               <Button
                 variant="outline"
                 size="sm"
@@ -595,56 +601,61 @@ export function ChatInterface() {
                 <Download className="h-4 w-4 mr-2" />
                 导出对话
               </Button>
+            )}
 
-              {/* 用户菜单 */}
-              <UserMenu />
-            </div>
+            {/* 用户菜单 - 只在非画布模式显示 */}
+            {!isCanvasMode && <UserMenu />}
           </div>
+        </div>
 
-          {/* Messages */}
-          <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
-            <div className="space-y-4 max-w-4xl mx-auto">
-              {activeConversation?.messages.map((message) => (
-                <div key={message.id} className="space-y-2">
-                  <ChatMessage
-                    type={message.type}
-                    content={message.content}
-                    timestamp={message.timestamp}
-                    isError={message.isError}
-                    attachments={message.attachments}
-                    onRetry={message.isError ? handleRetryMessage : undefined}
-                    onEditInCanvas={handleEditInCanvas}
-                  />
-                  {message.generatedFile && (
-                    <div className="flex items-center gap-2 ml-4">
-                      <FileText className="h-4 w-4" />
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="p-0 h-auto"
-                        onClick={() => handleDownloadFile(message.generatedFile!.url)}
-                      >
-                        下载生成的文件：{message.generatedFile.filename}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ))}
+        {/* Messages */}
+        <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
+          <div className={cn(
+            "space-y-4 mx-auto",
+            isCanvasMode ? "max-w-full" : "max-w-4xl"
+          )}>
+            {activeConversation?.messages.map((message) => (
+              <div key={message.id} className="space-y-2">
+                <ChatMessage
+                  type={message.type}
+                  content={message.content}
+                  timestamp={message.timestamp}
+                  isError={message.isError}
+                  attachments={message.attachments}
+                  onRetry={message.isError ? handleRetryMessage : undefined}
+                  onEditInCanvas={!isCanvasMode ? handleEditInCanvas : undefined}
+                />
+                {message.generatedFile && (
+                  <div className="flex items-center gap-2 ml-4">
+                    <FileText className="h-4 w-4" />
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="p-0 h-auto"
+                      onClick={() => handleDownloadFile(message.generatedFile!.url)}
+                    >
+                      下载生成的文件：{message.generatedFile.filename}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))}
 
-              {(isLoading || isGenerating) && (
-                <div className="flex justify-start">
-                  <div className="bg-ai-message rounded-lg p-4 max-w-[80%]">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
-                      <span>{isLoading ? "AI正在思考中..." : "AI正在生成回复..."}</span>
-                    </div>
+            {(isLoading || isGenerating) && (
+              <div className="flex justify-start">
+                <div className="bg-ai-message rounded-lg p-4 max-w-[80%]">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                    <span>{isLoading ? "AI正在思考中..." : "AI正在生成回复..."}</span>
                   </div>
                 </div>
-              )}
-            </div>
-          </ScrollArea>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
 
-          {/* Input */}
+        {/* Input - 只在非画布模式显示 */}
+        {!isCanvasMode && (
           <ChatInput
             onSendMessage={handleSendMessage}
             onStopResponse={handleStopResponse}
@@ -652,17 +663,23 @@ export function ChatInterface() {
             isGenerating={isGenerating}
             placeholder="请说出您的需求"
           />
-        </div>
+        )}
       </div>
+    </div>
+  );
 
-      {/* 画布编辑模式 */}
-      {showCanvasEdit && (
+  return (
+    <>
+      {showCanvasEdit ? (
         <CanvasEdit
           content={canvasEditContent}
           title={canvasEditTitle}
-          messages={activeConversation?.messages || []}
           onClose={handleCloseCanvas}
-        />
+        >
+          {renderMainInterface(true)}
+        </CanvasEdit>
+      ) : (
+        renderMainInterface()
       )}
     </>
   );

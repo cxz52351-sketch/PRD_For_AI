@@ -182,6 +182,14 @@ export interface RegisterRequest {
   password: string;
 }
 
+export interface EmailVerificationRequest {
+  email: string;
+}
+
+export interface VerifyEmailRequest {
+  token: string;
+}
+
 export interface AuthResponse {
   access_token: string;
   token_type: string;
@@ -281,6 +289,20 @@ export const api = {
 
   // 认证相关API
   auth: {
+    // 发送邮箱验证码
+    sendVerification: (data: EmailVerificationRequest) =>
+      apiRequest<{ message: string }>('/auth/send-verification', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+
+    // 验证邮箱
+    verifyEmail: (data: VerifyEmailRequest) =>
+      apiRequest<{ message: string; email: string }>('/auth/verify-email', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+
     // 用户注册
     register: (data: RegisterRequest) =>
       apiRequest<AuthResponse>('/auth/register', {

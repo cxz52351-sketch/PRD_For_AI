@@ -1,37 +1,26 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Copy, Check, X, ArrowLeft, GripVertical } from "lucide-react";
+import { Copy, Check, X, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-
-interface Message {
-  id: string;
-  type: "user" | "ai";
-  content: string;
-  timestamp: Date;
-  isError?: boolean;
-}
 
 interface CanvasEditProps {
   content: string;
   onClose: () => void;
   title?: string;
-  messages?: Message[];
+  children: React.ReactNode; // 用于传递真实的ChatInterface
 }
 
 export function CanvasEdit({ 
   content, 
   onClose, 
   title = "画布编辑",
-  messages = []
+  children
 }: CanvasEditProps) {
   const [editedContent, setEditedContent] = useState(content);
   const [copied, setCopied] = useState(false);
-  const [leftWidth, setLeftWidth] = useState(380); // 初始左侧宽度
+  const [leftWidth, setLeftWidth] = useState(420); // 增加初始左侧宽度
   const [isResizing, setIsResizing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -67,7 +56,7 @@ export function CanvasEdit({
     const newLeftWidth = e.clientX - containerRect.left;
     
     // 限制最小和最大宽度
-    const minWidth = 280;
+    const minWidth = 320;
     const maxWidth = containerRect.width - 400;
     
     if (newLeftWidth >= minWidth && newLeftWidth <= maxWidth) {
@@ -96,104 +85,49 @@ export function CanvasEdit({
     }
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("zh-CN", {
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-  };
-
   return (
     <div ref={containerRef} className="fixed inset-0 bg-background z-50 flex">
-      {/* 左侧对话历史区域 */}
+      {/* 左侧真实对话界面 */}
       <div 
-        className="border-r bg-aurora flex flex-col"
+        className="border-r flex flex-col overflow-hidden"
         style={{ width: leftWidth }}
       >
-        {/* 顶部标题栏 */}
-        <div className="flex items-center justify-between p-4 border-b bg-background/50">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-8 w-8 p-0"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h2 className="font-medium text-sm">PRD For AI</h2>
+        {/* 画布模式指示器 */}
+        <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b">
+          <div className="text-xs text-muted-foreground">
+            画布编辑模式
+          </div>
+          <div className="text-xs text-muted-foreground">
+            宽度: {leftWidth}px
           </div>
         </div>
-
-        {/* 对话历史区域 */}
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <div key={message.id} className={cn(
-                "flex gap-3 p-3",
-                message.type === "user" ? "justify-end" : "justify-start"
-              )}>
-                <div className={cn(
-                  "rounded-lg p-3 max-w-[85%] shadow-sm",
-                  message.type === "user"
-                    ? "bg-ai-message text-foreground ml-auto"
-                    : "bg-transparent border border-border text-foreground"
-                )}>
-                  <div className="prose max-w-none prose-sm prose-p:leading-relaxed prose-zinc dark:prose-invert">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        code({ className, children, ...props }) {
-                          const isInline = !className;
-                          
-                          if (isInline) {
-                            return (
-                              <code className="bg-muted px-1 py-0.5 rounded text-xs" {...props}>
-                                {children}
-                              </code>
-                            );
-                          }
-                          
-                          return (
-                            <pre className="bg-muted p-2 rounded text-xs overflow-x-auto">
-                              <code {...props}>{children}</code>
-                            </pre>
-                          );
-                        },
-                      }}
-                    >
-                      {message.content.length > 200 
-                        ? message.content.substring(0, 200) + "..." 
-                        : message.content
-                      }
-                    </ReactMarkdown>
-                  </div>
-                  
-                  <div className="text-xs mt-2 text-muted-foreground opacity-70">
-                    {message.type === "user" ? "用户" : "AI助手"} • {formatTime(message.timestamp)}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-
-        <div className="p-4 border-t bg-muted/30">
-          <div className="text-xs text-muted-foreground">
-            在右侧画布中编辑完整文档内容
-          </div>
+        
+        {/* 真实的ChatInterface内容 - 使用CSS缩放适应宽度 */}
+        <div 
+          className="flex-1 overflow-hidden"
+          style={{
+            transform: leftWidth < 500 ? `scale(${leftWidth / 500})` : 'scale(1)',
+            transformOrigin: 'top left',
+            width: leftWidth < 500 ? `${500}px` : '100%',
+            height: leftWidth < 500 ? `${100 / (leftWidth / 500)}%` : '100%'
+          }}
+        >
+          {children}
         </div>
       </div>
 
       {/* 拖拽分隔条 */}
       <div
         className={cn(
-          "w-1 bg-border hover:bg-border/80 cursor-col-resize flex items-center justify-center",
+          "w-1 bg-border hover:bg-border/80 cursor-col-resize flex items-center justify-center relative",
           isResizing && "bg-primary"
         )}
         onMouseDown={handleMouseDown}
       >
-        <GripVertical className="h-4 w-4 text-muted-foreground/50" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <GripVertical className="h-4 w-4 text-muted-foreground/50" />
+        </div>
+        <div className="w-2 h-full hover:bg-primary/10 transition-colors" />
       </div>
 
       {/* 右侧画布编辑区域 */}

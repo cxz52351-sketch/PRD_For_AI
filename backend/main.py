@@ -23,8 +23,9 @@ from reportlab.pdfbase.ttfonts import TTFont
 import re
 import db  # 导入数据库模块
 from auth import (
-    UserCreate, UserLogin, Token, UserResponse, 
-    register_user, login_user, get_current_user, get_current_user_optional
+    UserCreate, UserLogin, Token, UserResponse, EmailVerificationRequest, VerifyEmailRequest,
+    register_user, login_user, get_current_user, get_current_user_optional,
+    send_verification_code, verify_email
 )
 
 # 加载环境变量
@@ -95,6 +96,16 @@ os.makedirs(GENERATED_DIR, exist_ok=True)
 # ================================
 # 用户认证API
 # ================================
+
+@app.post("/auth/send-verification", tags=["Authentication"])
+async def send_verification_endpoint(email_data: EmailVerificationRequest):
+    """发送邮箱验证码"""
+    return await send_verification_code(email_data)
+
+@app.post("/auth/verify-email", tags=["Authentication"])
+async def verify_email_endpoint(verify_data: VerifyEmailRequest):
+    """验证邮箱"""
+    return await verify_email(verify_data)
 
 @app.post("/auth/register", response_model=Token, tags=["Authentication"])
 async def register_endpoint(user_data: UserCreate):

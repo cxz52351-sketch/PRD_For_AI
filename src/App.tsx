@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import VerifyEmail from "./pages/VerifyEmail";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -66,6 +67,14 @@ const App = () => (
               element={
                 <ProtectedRoute requireAuth={false}>
                   <Register />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/verify-email"
+              element={
+                <ProtectedRoute requireAuth={false}>
+                  <VerifyEmail />
                 </ProtectedRoute>
               }
             />

@@ -81,6 +81,18 @@ async def init_db():
         )
         """)
         
+        # 创建email_verifications表
+        await db.execute("""
+        CREATE TABLE IF NOT EXISTS email_verifications (
+            id TEXT PRIMARY KEY,
+            email TEXT NOT NULL,
+            token TEXT UNIQUE NOT NULL,
+            is_verified BOOLEAN DEFAULT FALSE,
+            expires_at TIMESTAMP NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+        
         await db.commit()
 
 # 对话操作
@@ -413,3 +425,91 @@ async def get_users(limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
         
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
+
+# 邮箱验证操作
+async def create_email_verification(email: str, token: str, expires_at: datetime) -> str:
+    """创建邮箱验证记录，返回验证ID"""
+    verification_id = str(uuid.uuid4())
+    now = datetime.now().isoformat()
+    expires_at_str = expires_at.isoformat()
+    
+    async with aiosqlite.connect(DB_PATH) as db:
+        # 先删除同一邮箱的未验证记录
+        await db.execute(
+            "DELETE FROM email_verifications WHERE email = ? AND is_verified = FALSE",
+            (email,)
+        )
+        
+        # 创建新的验证记录
+        await db.execute(
+            "INSERT INTO email_verifications (id, email, token, expires_at, created_at) VALUES (?, ?, ?, ?, ?)",
+            (verification_id, email, token, expires_at_str, now)
+        )
+        await db.commit()
+    
+    return verification_id
+
+async def get_email_verification_by_token(token: str) -> Optional[Dict[str, Any]]:
+    """根据token获取邮箱验证记录"""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT * FROM email_verifications WHERE token = ?", 
+            (token,)
+        )
+        row = await cursor.fetchone()
+        
+        if not row:
+            return None
+        
+        verification = dict(row)
+        # 转换expires_at为datetime对象
+        verification["expires_at"] = datetime.fromisoformat(verification["expires_at"])
+        return verification
+
+async def get_verified_email_verification(email: str) -> Optional[Dict[str, Any]]:
+    """获取已验证的邮箱记录"""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT * FROM email_verifications WHERE email = ? AND is_verified = TRUE", 
+            (email,)
+        )
+        row = await cursor.fetchone()
+        
+        if not row:
+            return None
+        
+        return dict(row)
+
+async def mark_email_verified(verification_id: str) -> bool:
+    """标记邮箱为已验证"""
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            "UPDATE email_verifications SET is_verified = TRUE WHERE id = ?",
+            (verification_id,)
+        )
+        await db.commit()
+        return cursor.rowcount > 0
+
+async def delete_email_verification(verification_id: str) -> bool:
+    """删除邮箱验证记录"""
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            "DELETE FROM email_verifications WHERE id = ?",
+            (verification_id,)
+        )
+        await db.commit()
+        return cursor.rowcount > 0
+
+async def cleanup_expired_verifications() -> int:
+    """清理过期的邮箱验证记录"""
+    now = datetime.now().isoformat()
+    
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            "DELETE FROM email_verifications WHERE expires_at < ?",
+            (now,)
+        )
+        await db.commit()
+        return cursor.rowcount

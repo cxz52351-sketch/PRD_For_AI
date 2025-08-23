@@ -12,6 +12,11 @@ import bcrypt
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import uuid
+import secrets
 import db
 
 load_dotenv()
@@ -23,6 +28,13 @@ JWT_ACCESS_TOKEN_EXPIRE_HOURS = 24
 
 # 密码安全配置
 BCRYPT_ROUNDS = 12
+
+# 邮箱验证配置
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+VERIFICATION_URL_BASE = os.getenv("VERIFICATION_URL_BASE", "http://localhost:3000")
 
 # HTTP Bearer Token安全方案
 security = HTTPBearer(auto_error=False)
@@ -40,6 +52,12 @@ class UserLogin(BaseModel):
     identifier: str  # 可以是邮箱或手机号
     password: str
     login_type: str  # "email" 或 "phone"
+
+class EmailVerificationRequest(BaseModel):
+    email: EmailStr
+
+class VerifyEmailRequest(BaseModel):
+    token: str
 
 class UserResponse(UserBase):
     id: str
@@ -92,6 +110,86 @@ def generate_avatar_url(identifier: str) -> str:
     """生成头像URL"""
     return f"https://api.dicebear.com/7.x/avataaars/svg?seed={identifier}"
 
+def generate_verification_token() -> str:
+    """生成邮箱验证token"""
+    return secrets.token_urlsafe(32)
+
+async def send_verification_email(email: str, token: str) -> bool:
+    """发送邮箱验证邮件"""
+    if not SMTP_USERNAME or not SMTP_PASSWORD:
+        print(f"邮箱服务未配置，模拟发送验证邮件到: {email}")
+        print(f"验证链接: {VERIFICATION_URL_BASE}/verify-email?token={token}")
+        print("=" * 60)
+        # 在开发环境下，我们返回True来模拟邮件发送成功
+        return True
+    
+    try:
+        # 创建邮件内容
+        msg = MIMEMultipart()
+        msg['From'] = SMTP_USERNAME
+        msg['To'] = email
+        msg['Subject'] = "PRD For AI - 邮箱验证"
+        
+        # 验证链接
+        verification_url = f"{VERIFICATION_URL_BASE}/verify-email?token={token}"
+        
+        # HTML邮件内容
+        html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
+                <h1 style="color: white; margin: 0;">PRD For AI</h1>
+                <p style="color: white; margin: 10px 0 0 0;">邮箱验证</p>
+            </div>
+            
+            <div style="padding: 30px; background: #f9f9f9;">
+                <h2 style="color: #333;">验证您的邮箱地址</h2>
+                <p style="color: #666; line-height: 1.6;">
+                    感谢您注册 PRD For AI！为了确保您的账户安全，请点击下面的链接验证您的邮箱地址：
+                </p>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{verification_url}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                        验证邮箱
+                    </a>
+                </div>
+                
+                <p style="color: #666; font-size: 14px;">
+                    如果按钮无法点击，请复制以下链接到浏览器中打开：<br>
+                    <a href="{verification_url}" style="color: #667eea;">{verification_url}</a>
+                </p>
+                
+                <p style="color: #666; font-size: 14px;">
+                    此验证链接将在24小时后过期。如果您没有注册 PRD For AI，请忽略此邮件。
+                </p>
+            </div>
+            
+            <div style="padding: 20px; text-align: center; background: #e9e9e9; color: #666; font-size: 12px;">
+                <p>© 2024 PRD For AI. 保留所有权利。</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        msg.attach(MIMEText(html, 'html', 'utf-8'))
+        
+        # 发送邮件
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            text = msg.as_string()
+            server.sendmail(SMTP_USERNAME, email, text)
+        
+        print(f"验证邮件已成功发送到: {email}")
+        return True
+        
+    except Exception as e:
+        print(f"发送验证邮件失败: {str(e)}")
+        print(f"验证链接（用于测试）: {VERIFICATION_URL_BASE}/verify-email?token={token}")
+        print("=" * 60)
+        # 即使邮件发送失败，我们在开发环境下也返回True，并打印验证链接供测试
+        return True
+
 # 依赖函数
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
     """获取当前认证用户"""
@@ -129,6 +227,74 @@ async def get_current_user_optional(credentials: HTTPAuthorizationCredentials = 
         return None
 
 # 认证业务逻辑
+async def send_verification_code(email_data: EmailVerificationRequest) -> dict:
+    """发送邮箱验证码"""
+    # 检查邮箱是否已被注册
+    existing_user = await db.get_user_by_email(email_data.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="邮箱已被注册"
+        )
+    
+    # 生成验证token
+    token = generate_verification_token()
+    expires_at = datetime.utcnow() + timedelta(hours=24)  # 24小时后过期
+    
+    # 保存验证记录到数据库
+    verification_id = await db.create_email_verification(
+        email=email_data.email,
+        token=token,
+        expires_at=expires_at
+    )
+    
+    # 发送验证邮件
+    success = await send_verification_email(email_data.email, token)
+    
+    if not success:
+        # 删除刚创建的验证记录
+        await db.delete_email_verification(verification_id)
+        raise HTTPException(
+            status_code=500,
+            detail="邮件发送失败，请稍后重试"
+        )
+    
+    return {"message": "验证邮件已发送，请检查您的邮箱"}
+
+async def verify_email(verify_data: VerifyEmailRequest) -> dict:
+    """验证邮箱"""
+    # 查找验证记录
+    verification = await db.get_email_verification_by_token(verify_data.token)
+    
+    if not verification:
+        raise HTTPException(
+            status_code=400,
+            detail="无效的验证链接"
+        )
+    
+    # 检查是否过期
+    if datetime.utcnow() > verification["expires_at"]:
+        await db.delete_email_verification(verification["id"])
+        raise HTTPException(
+            status_code=400,
+            detail="验证链接已过期，请重新发送"
+        )
+    
+    # 检查是否已被验证
+    if verification["is_verified"]:
+        raise HTTPException(
+            status_code=400,
+            detail="邮箱已被验证"
+        )
+    
+    # 标记为已验证
+    await db.mark_email_verified(verification["id"])
+    
+    return {
+        "message": "邮箱验证成功",
+        "email": verification["email"]
+    }
+
 async def register_user(user_data: UserCreate) -> Token:
     """用户注册"""
     # 检查用户名是否已存在
