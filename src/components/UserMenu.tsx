@@ -12,10 +12,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, Settings, User } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const UserMenu: React.FC = () => {
   const { user, logout } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
@@ -79,12 +81,18 @@ const UserMenu: React.FC = () => {
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem className="cursor-pointer">
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => navigate('/profile')}
+        >
           <User className="mr-2 h-4 w-4" />
           <span>个人资料</span>
         </DropdownMenuItem>
 
-        <DropdownMenuItem className="cursor-pointer">
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => navigate('/settings')}
+        >
           <Settings className="mr-2 h-4 w-4" />
           <span>设置</span>
         </DropdownMenuItem>
