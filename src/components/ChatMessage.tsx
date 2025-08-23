@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { Copy, Check, Download, AlertTriangle, RotateCcw } from "lucide-react";
+import { Copy, Check, Download, AlertTriangle, RotateCcw, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
@@ -11,6 +11,7 @@ interface ChatMessageProps {
   timestamp: Date;
   isError?: boolean;
   onRetry?: () => void;
+  onEditInCanvas?: (content: string) => void;
   attachments?: Array<{
     name: string;
     type: string;
@@ -24,12 +25,38 @@ export function ChatMessage({
   timestamp,
   isError = false,
   onRetry,
+  onEditInCanvas,
   attachments = []
 }: ChatMessageProps) {
   const [copiedBlocks, setCopiedBlocks] = useState<Set<number>>(new Set());
   const [messageCopied, setMessageCopied] = useState(false);
   const [showCopyBtn, setShowCopyBtn] = useState(false); // 仅用于用户气泡
   const hideCopyTimerRef = useRef<number | null>(null);
+
+  // 判断是否显示"在画布中编辑"按钮
+  const shouldShowEditInCanvas = () => {
+    if (type !== "ai" || isError || !content) return false;
+    
+    // 检查内容是否包含PRD文档的关键特征
+    const prdIndicators = [
+      "产品需求文档",
+      "PRD",
+      "Product Requirements Document",
+      "需求分析",
+      "功能需求",
+      "用户画像",
+      "业务流程",
+      "技术架构"
+    ];
+    
+    const hasStructure = content.includes("#") || content.includes("##") || content.includes("###");
+    const hasPrdContent = prdIndicators.some(indicator => 
+      content.toLowerCase().includes(indicator.toLowerCase())
+    );
+    const isLongContent = content.length > 1000; // 内容足够长
+    
+    return hasStructure && (hasPrdContent || isLongContent);
+  };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString("zh-CN", {
@@ -246,7 +273,7 @@ export function ChatMessage({
           onMouseEnter={type === "user" ? showCopy : undefined}
           onMouseLeave={type === "user" ? hideCopyWithDelay : undefined}
           className={cn(
-            "mt-2 transition-opacity",
+            "mt-2 transition-opacity flex items-center gap-2",
             type === "user"
               ? showCopyBtn
                 ? "opacity-100"
@@ -258,8 +285,7 @@ export function ChatMessage({
             variant="ghost"
             size="sm"
             className={cn(
-              "h-7 px-2 rounded-full border bg-background/60 hover:bg-background text-muted-foreground",
-              type === "user" ? "" : ""
+              "h-7 px-2 rounded-full border bg-background/60 hover:bg-background text-muted-foreground"
             )}
             onClick={copyWholeMessage}
           >
@@ -269,6 +295,19 @@ export function ChatMessage({
               <Copy className="h-3 w-3" />
             )}
           </Button>
+          
+          {/* 在画布中编辑按钮 - 只在AI消息且内容是完整PRD时显示 */}
+          {shouldShowEditInCanvas() && onEditInCanvas && (
+            <Button
+              variant="default"
+              size="sm"
+              className="h-7 px-3 rounded-full bg-black hover:bg-gray-800 text-white text-xs"
+              onClick={() => onEditInCanvas(cleanedContent)}
+            >
+              <Edit className="h-3 w-3 mr-1" />
+              在画布中编辑
+            </Button>
+          )}
         </div>
       </div>
     </div>

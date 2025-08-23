@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatSidebar } from "./ChatSidebar";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
+import { CanvasEdit } from "./CanvasEdit";
 import UserMenu from "./UserMenu";
 import { useToast } from "@/hooks/use-toast";
 import { api, parseStreamResponse, type Message as APIMessage } from "@/lib/api";
@@ -56,6 +57,10 @@ export function ChatInterface() {
   // 停止响应相关状态
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  // 画布编辑相关状态
+  const [showCanvasEdit, setShowCanvasEdit] = useState(false);
+  const [canvasEditContent, setCanvasEditContent] = useState("");
+  const [canvasEditTitle, setCanvasEditTitle] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const { toast } = useToast();
@@ -502,138 +507,162 @@ export function ChatInterface() {
     api.downloadFile(url);
   };
 
+  const handleEditInCanvas = (content: string) => {
+    setCanvasEditContent(content);
+    setCanvasEditTitle(activeConversation?.title || "PRD文档编辑");
+    setShowCanvasEdit(true);
+  };
+
+  const handleCloseCanvas = () => {
+    setShowCanvasEdit(false);
+    setCanvasEditContent("");
+    setCanvasEditTitle("");
+  };
+
   return (
-    <div className="flex h-screen bg-aurora">
-      <ChatSidebar
-        conversations={conversations}
-        activeConversationId={activeConversationId}
-        onSelectConversation={setActiveConversationId}
-        onNewConversation={handleNewConversation}
-        onDeleteConversation={handleDeleteConversation}
-        isCollapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-      />
+    <>
+      <div className="flex h-screen bg-aurora">
+        <ChatSidebar
+          conversations={conversations}
+          activeConversationId={activeConversationId}
+          onSelectConversation={setActiveConversationId}
+          onNewConversation={handleNewConversation}
+          onDeleteConversation={handleDeleteConversation}
+          isCollapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
 
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-transparent">
-          <div className="flex items-center gap-3">
-            {/* 移除头部Logo，Logo移至侧边栏 */}
+        <div className="flex-1 flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 bg-transparent">
+            <div className="flex items-center gap-3">
+              {/* 移除头部Logo，Logo移至侧边栏 */}
 
-          </div>
+            </div>
 
-          <div className="flex gap-2">
-            {/* <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <FileDown className="h-4 w-4 mr-2" />
-                  {outputFormat === "text" ? "纯文本" : outputFormat.toUpperCase()}
+            <div className="flex gap-2">
+              {/* <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <FileDown className="h-4 w-4 mr-2" />
+                    {outputFormat === "text" ? "纯文本" : outputFormat.toUpperCase()}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => setOutputFormat("text")}>
+                    纯文本
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setOutputFormat("pdf")}>
+                    PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setOutputFormat("docx")}>
+                    Word
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setOutputFormat("markdown")}>
+                    Markdown
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu> */}
+
+              {/* <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedModel(selectedModel === "deepseek-chat" ? "deepseek-coder" : "deepseek-chat")}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                {selectedModel === "deepseek-chat" ? "DeepSeek Chat" : "DeepSeek Coder"}
+              </Button>
+               */}
+
+              {/* 开发调试用：清除所有数据按钮 */}
+              {process.env.NODE_ENV === 'development' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearAllData}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  清除数据
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setOutputFormat("text")}>
-                  纯文本
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setOutputFormat("pdf")}>
-                  PDF
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setOutputFormat("docx")}>
-                  Word
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setOutputFormat("markdown")}>
-                  Markdown
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu> */}
-
-            {/* <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedModel(selectedModel === "deepseek-chat" ? "deepseek-coder" : "deepseek-chat")}
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              {selectedModel === "deepseek-chat" ? "DeepSeek Chat" : "DeepSeek Coder"}
-            </Button>
-             */}
-
-            {/* 开发调试用：清除所有数据按钮 */}
-            {process.env.NODE_ENV === 'development' && (
+              )}
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleClearAllData}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={handleExportConversation}
+                disabled={!activeConversation?.messages.length}
               >
-                <Settings className="h-4 w-4 mr-2" />
-                清除数据
+                <Download className="h-4 w-4 mr-2" />
+                导出对话
               </Button>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportConversation}
-              disabled={!activeConversation?.messages.length}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              导出对话
-            </Button>
 
-            {/* 用户菜单 */}
-            <UserMenu />
+              {/* 用户菜单 */}
+              <UserMenu />
+            </div>
           </div>
-        </div>
 
-        {/* Messages */}
-        <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
-          <div className="space-y-4 max-w-4xl mx-auto">
-            {activeConversation?.messages.map((message) => (
-              <div key={message.id} className="space-y-2">
-                <ChatMessage
-                  type={message.type}
-                  content={message.content}
-                  timestamp={message.timestamp}
-                  isError={message.isError}
-                  attachments={message.attachments}
-                  onRetry={message.isError ? handleRetryMessage : undefined}
-                />
-                {message.generatedFile && (
-                  <div className="flex items-center gap-2 ml-4">
-                    <FileText className="h-4 w-4" />
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="p-0 h-auto"
-                      onClick={() => handleDownloadFile(message.generatedFile!.url)}
-                    >
-                      下载生成的文件：{message.generatedFile.filename}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ))}
+          {/* Messages */}
+          <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
+            <div className="space-y-4 max-w-4xl mx-auto">
+              {activeConversation?.messages.map((message) => (
+                <div key={message.id} className="space-y-2">
+                  <ChatMessage
+                    type={message.type}
+                    content={message.content}
+                    timestamp={message.timestamp}
+                    isError={message.isError}
+                    attachments={message.attachments}
+                    onRetry={message.isError ? handleRetryMessage : undefined}
+                    onEditInCanvas={handleEditInCanvas}
+                  />
+                  {message.generatedFile && (
+                    <div className="flex items-center gap-2 ml-4">
+                      <FileText className="h-4 w-4" />
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="p-0 h-auto"
+                        onClick={() => handleDownloadFile(message.generatedFile!.url)}
+                      >
+                        下载生成的文件：{message.generatedFile.filename}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
 
-            {(isLoading || isGenerating) && (
-              <div className="flex justify-start">
-                <div className="bg-ai-message rounded-lg p-4 max-w-[80%]">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
-                    <span>{isLoading ? "AI正在思考中..." : "AI正在生成回复..."}</span>
+              {(isLoading || isGenerating) && (
+                <div className="flex justify-start">
+                  <div className="bg-ai-message rounded-lg p-4 max-w-[80%]">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                      <span>{isLoading ? "AI正在思考中..." : "AI正在生成回复..."}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+              )}
+            </div>
+          </ScrollArea>
 
-        {/* Input */}
-        <ChatInput
-          onSendMessage={handleSendMessage}
-          onStopResponse={handleStopResponse}
-          disabled={isLoading}
-          isGenerating={isGenerating}
-          placeholder="请说出您的需求"
-        />
+          {/* Input */}
+          <ChatInput
+            onSendMessage={handleSendMessage}
+            onStopResponse={handleStopResponse}
+            disabled={isLoading}
+            isGenerating={isGenerating}
+            placeholder="请说出您的需求"
+          />
+        </div>
       </div>
-    </div>
+
+      {/* 画布编辑模式 */}
+      {showCanvasEdit && (
+        <CanvasEdit
+          content={canvasEditContent}
+          title={canvasEditTitle}
+          onClose={handleCloseCanvas}
+        />
+      )}
+    </>
   );
 }
