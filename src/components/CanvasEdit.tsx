@@ -20,7 +20,7 @@ export function CanvasEdit({
 }: CanvasEditProps) {
   const [editedContent, setEditedContent] = useState(content);
   const [copied, setCopied] = useState(false);
-  const [leftWidth, setLeftWidth] = useState(420); // 增加初始左侧宽度
+  const [leftWidth, setLeftWidth] = useState(520); // 增加初始左侧宽度
   const [isResizing, setIsResizing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -89,22 +89,19 @@ export function CanvasEdit({
     <div ref={containerRef} className="fixed inset-0 bg-background z-50 flex">
       {/* 左侧真实对话界面 */}
       <div 
-        className="border-r flex flex-col overflow-hidden"
+        className="border-r flex flex-col overflow-hidden bg-background"
         style={{ width: leftWidth }}
       >
         {/* 画布模式指示器 */}
-        <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b">
+        <div className="flex items-center justify-between px-4 py-2 bg-muted/30 border-b">
           <div className="text-xs text-muted-foreground">
             画布编辑模式
-          </div>
-          <div className="text-xs text-muted-foreground">
-            宽度: {leftWidth}px
           </div>
         </div>
         
         {/* 真实的ChatInterface内容 - 使用CSS缩放适应宽度 */}
         <div 
-          className="flex-1 overflow-hidden"
+          className="flex-1 overflow-hidden relative bg-background"
           style={{
             transform: leftWidth < 500 ? `scale(${leftWidth / 500})` : 'scale(1)',
             transformOrigin: 'top left',
@@ -112,7 +109,9 @@ export function CanvasEdit({
             height: leftWidth < 500 ? `${100 / (leftWidth / 500)}%` : '100%'
           }}
         >
-          {children}
+          <div className="absolute inset-0 bg-background">
+            {children}
+          </div>
         </div>
       </div>
 
