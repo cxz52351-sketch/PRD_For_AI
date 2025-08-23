@@ -15,6 +15,7 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [activeTab, setActiveTab] = useState<'email' | 'phone'>('email'); // 添加活动tab状态
   const [registerData, setRegisterData] = useState({
     username: "",
     email: "",
@@ -25,6 +26,14 @@ const Register = () => {
   const { toast } = useToast();
   const { register, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  // 处理键盘事件
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey) {
+      e.preventDefault();
+      handleRegister(activeTab);
+    }
+  };
 
   const validatePassword = (password: string) => {
     const minLength = password.length >= 8;
@@ -186,7 +195,7 @@ const Register = () => {
             </div>
 
             {/* 邮箱/手机号注册选项卡 */}
-            <Tabs defaultValue="email" className="w-full">
+            <Tabs defaultValue="email" value={activeTab} onValueChange={(value) => setActiveTab(value as 'email' | 'phone')} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/50">
                 <TabsTrigger value="email" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <Mail className="w-4 h-4 mr-2" />
@@ -207,6 +216,7 @@ const Register = () => {
                     placeholder="输入您的用户名"
                     value={registerData.username}
                     onChange={(e) => setRegisterData(prev => ({ ...prev, username: e.target.value }))}
+                    onKeyDown={handleKeyDown}
                     className="bg-background/60 border-border/60 focus:border-primary transition-colors"
                   />
                 </div>
@@ -219,6 +229,7 @@ const Register = () => {
                     placeholder="输入您的邮箱地址"
                     value={registerData.email}
                     onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
+                    onKeyDown={handleKeyDown}
                     className="bg-background/60 border-border/60 focus:border-primary transition-colors"
                   />
                 </div>
@@ -232,6 +243,7 @@ const Register = () => {
                       placeholder="创建一个强密码"
                       value={registerData.password}
                       onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
+                      onKeyDown={handleKeyDown}
                       className="bg-background/60 border-border/60 focus:border-primary transition-colors pr-10"
                     />
                     <Button
@@ -260,6 +272,7 @@ const Register = () => {
                       placeholder="再次输入密码"
                       value={registerData.confirmPassword}
                       onChange={(e) => setRegisterData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      onKeyDown={handleKeyDown}
                       className="bg-background/60 border-border/60 focus:border-primary transition-colors pr-10"
                     />
                     <Button
@@ -307,6 +320,7 @@ const Register = () => {
                     placeholder="输入您的用户名"
                     value={registerData.username}
                     onChange={(e) => setRegisterData(prev => ({ ...prev, username: e.target.value }))}
+                    onKeyDown={handleKeyDown}
                     className="bg-background/60 border-border/60 focus:border-primary transition-colors"
                   />
                 </div>
@@ -319,6 +333,7 @@ const Register = () => {
                     placeholder="输入您的手机号码"
                     value={registerData.phone}
                     onChange={(e) => setRegisterData(prev => ({ ...prev, phone: e.target.value }))}
+                    onKeyDown={handleKeyDown}
                     className="bg-background/60 border-border/60 focus:border-primary transition-colors"
                   />
                 </div>
@@ -332,6 +347,7 @@ const Register = () => {
                       placeholder="创建一个强密码"
                       value={registerData.password}
                       onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
+                      onKeyDown={handleKeyDown}
                       className="bg-background/60 border-border/60 focus:border-primary transition-colors pr-10"
                     />
                     <Button
@@ -360,6 +376,7 @@ const Register = () => {
                       placeholder="再次输入密码"
                       value={registerData.confirmPassword}
                       onChange={(e) => setRegisterData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      onKeyDown={handleKeyDown}
                       className="bg-background/60 border-border/60 focus:border-primary transition-colors pr-10"
                     />
                     <Button

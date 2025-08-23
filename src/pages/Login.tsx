@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/auth";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState<'email' | 'phone'>('email'); // 添加活动tab状态
   const [loginData, setLoginData] = useState({
     email: "",
     phone: "",
@@ -21,6 +22,14 @@ const Login = () => {
   const { login, loginWithPhone, isLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // 处理键盘事件
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey) {
+      e.preventDefault();
+      handleLogin(activeTab);
+    }
+  };
 
   const handleLogin = async (type: "email" | "phone") => {
     try {
@@ -107,7 +116,7 @@ const Login = () => {
             </div>
 
             {/* 邮箱/手机号登录选项卡 */}
-            <Tabs defaultValue="email" className="w-full">
+            <Tabs defaultValue="email" value={activeTab} onValueChange={(value) => setActiveTab(value as 'email' | 'phone')} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/50">
                 <TabsTrigger value="email" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <Mail className="w-4 h-4 mr-2" />
@@ -128,6 +137,7 @@ const Login = () => {
                     placeholder="输入您的邮箱地址"
                     value={loginData.email}
                     onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
+                    onKeyDown={handleKeyDown}
                     className="bg-background/60 border-border/60 focus:border-primary transition-colors"
                   />
                 </div>
@@ -140,6 +150,7 @@ const Login = () => {
                       placeholder="输入您的密码"
                       value={loginData.password}
                       onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+                      onKeyDown={handleKeyDown}
                       className="bg-background/60 border-border/60 focus:border-primary transition-colors pr-10"
                     />
                     <Button
@@ -172,6 +183,7 @@ const Login = () => {
                     placeholder="输入您的手机号码"
                     value={loginData.phone}
                     onChange={(e) => setLoginData(prev => ({ ...prev, phone: e.target.value }))}
+                    onKeyDown={handleKeyDown}
                     className="bg-background/60 border-border/60 focus:border-primary transition-colors"
                   />
                 </div>
@@ -184,6 +196,7 @@ const Login = () => {
                       placeholder="输入您的密码"
                       value={loginData.password}
                       onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+                      onKeyDown={handleKeyDown}
                       className="bg-background/60 border-border/60 focus:border-primary transition-colors pr-10"
                     />
                     <Button

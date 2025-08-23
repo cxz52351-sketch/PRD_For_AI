@@ -1,9 +1,17 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Copy, Check, X, GripVertical } from "lucide-react";
+import { Copy, Check, X, GripVertical, Download, Eye, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface CanvasEditProps {
   content: string;
@@ -22,6 +30,7 @@ export function CanvasEdit({
   const [copied, setCopied] = useState(false);
   const [leftWidth, setLeftWidth] = useState(520); // 增加初始左侧宽度
   const [isResizing, setIsResizing] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(false); // 预览模式状态
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -40,6 +49,43 @@ export function CanvasEdit({
         title: "复制失败",
         description: "无法复制到剪贴板",
         variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownload = (format: string) => {
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const filename = `PRD_${timestamp}`;
+    
+    if (format === 'markdown') {
+      const blob = new Blob([editedContent], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "下载成功",
+        description: "Markdown文件已开始下载",
+      });
+    } else if (format === 'text') {
+      const blob = new Blob([editedContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "下载成功",
+        description: "文本文件已开始下载",
       });
     }
   };
@@ -141,6 +187,47 @@ export function CanvasEdit({
           </div>
           
           <div className="flex items-center gap-2">
+            {/* 预览/编辑切换按钮 */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsPreviewMode(!isPreviewMode)}
+              className="gap-2"
+            >
+              {isPreviewMode ? (
+                <>
+                  <Edit3 className="h-4 w-4" />
+                  编辑
+                </>
+              ) : (
+                <>
+                  <Eye className="h-4 w-4" />
+                  预览
+                </>
+              )}
+            </Button>
+            
+            {/* 下载按钮 */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Download className="h-4 w-4" />
+                  下载
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleDownload('markdown')}>
+                  <Download className="h-4 w-4 mr-2" />
+                  下载为 Markdown (.md)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload('text')}>
+                  <Download className="h-4 w-4 mr-2" />
+                  下载为 文本 (.txt)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            {/* 复制按钮 */}
             <Button
               variant="outline"
               size="sm"
@@ -154,6 +241,8 @@ export function CanvasEdit({
               )}
               {copied ? "已复制" : "复制"}
             </Button>
+            
+            {/* 关闭按钮 */}
             <Button
               variant="ghost"
               size="sm"
@@ -166,28 +255,74 @@ export function CanvasEdit({
         </div>
 
         {/* 编辑区域 */}
-        <div className="flex-1 p-4">
-          <div className="h-full bg-background rounded-lg border">
-            <Textarea
-              ref={textareaRef}
-              value={editedContent}
-              onChange={(e) => setEditedContent(e.target.value)}
-              placeholder="在此编辑文档内容..."
-              className={cn(
-                "w-full h-full resize-none border-0 focus-visible:ring-0 bg-transparent",
-                "text-sm leading-relaxed font-mono"
-              )}
-              style={{
-                minHeight: "100%",
-                padding: "1.5rem",
-              }}
-            />
+        <div className="flex-1 p-4 overflow-hidden">
+          <div className="h-full bg-background rounded-lg border overflow-hidden flex flex-col">
+            {isPreviewMode ? (
+              <div 
+                className={cn(
+                  "flex-1 overflow-y-auto overflow-x-hidden p-6",
+                  "prose prose-slate dark:prose-invert max-w-none",
+                  "prose-headings:text-foreground prose-p:text-foreground",
+                  "prose-strong:text-foreground prose-code:text-foreground",
+                  "prose-pre:bg-muted prose-pre:text-foreground",
+                  "prose-blockquote:text-muted-foreground prose-blockquote:border-l-border"
+                )}
+                style={{ scrollBehavior: 'smooth' }}
+              >
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h1: ({ children }) => <h1 className="text-2xl font-bold mb-4 text-foreground">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-xl font-semibold mb-3 text-foreground">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-lg font-medium mb-2 text-foreground">{children}</h3>,
+                    p: ({ children }) => <p className="mb-3 text-foreground leading-relaxed">{children}</p>,
+                    ul: ({ children }) => <ul className="mb-3 ml-4 text-foreground">{children}</ul>,
+                    ol: ({ children }) => <ol className="mb-3 ml-4 text-foreground">{children}</ol>,
+                    li: ({ children }) => <li className="mb-1">{children}</li>,
+                    code: ({ inline, children, ...props }) => 
+                      inline ? (
+                        <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-foreground" {...props}>
+                          {children}
+                        </code>
+                      ) : (
+                        <code className="block bg-muted p-3 rounded font-mono text-sm text-foreground overflow-x-auto" {...props}>
+                          {children}
+                        </code>
+                      ),
+                    blockquote: ({ children }) => (
+                      <blockquote className="border-l-4 border-border pl-4 italic text-muted-foreground mb-3">
+                        {children}
+                      </blockquote>
+                    ),
+                  }}
+                >
+                  {editedContent}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <Textarea
+                ref={textareaRef}
+                value={editedContent}
+                onChange={(e) => setEditedContent(e.target.value)}
+                placeholder="在此编辑文档内容..."
+                className={cn(
+                  "flex-1 resize-none border-0 focus-visible:ring-0 bg-transparent",
+                  "text-sm leading-relaxed font-mono"
+                )}
+                style={{
+                  padding: "1.5rem",
+                }}
+              />
+            )}
           </div>
         </div>
 
         {/* 底部状态栏 */}
         <div className="flex items-center justify-between p-4 border-t bg-muted/30 text-xs text-muted-foreground">
-          <div>支持Markdown格式</div>
+          <div className="flex items-center gap-4">
+            <span>支持Markdown格式</span>
+            <span>当前模式: {isPreviewMode ? "预览" : "编辑"}</span>
+          </div>
           <div>
             行数: {editedContent.split('\n').length} | 
             字符: {editedContent.length}
