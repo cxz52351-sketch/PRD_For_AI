@@ -373,7 +373,7 @@ async def chat_with_dify(request: ChatRequest):
                                 error_text = (await response.aread()).decode(errors="ignore")
                                 error_msg = f"Dify API错误 (status={response.status_code}): {error_text}"
                                 print(f"API错误: {error_msg}")
-                                yield f"data: {json.dumps({"error": {"message": error_msg}}, ensure_ascii=False)}\n\n"
+                                yield f"data: {json.dumps({'error': {'message': error_msg}}, ensure_ascii=False)}\n\n"
                                 yield "data: [DONE]\n\n"
                                 return
 
