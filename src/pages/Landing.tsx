@@ -71,6 +71,12 @@ const Landing = () => {
               </div>
             </div>
 
+            {/* 产品横幅通知 */}
+            <div className="inline-flex items-center px-4 py-2 mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200/50 rounded-full shadow-sm">
+              <Sparkles className="w-4 h-4 text-yellow-500 mr-2" />
+              <span className="text-sm font-medium text-gray-700">PRD For AI，你的产品加速器</span>
+            </div>
+
             {/* 核心标题 - 强调痛点 */}
             <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
               <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
@@ -81,7 +87,7 @@ const Landing = () => {
             </h1>
 
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8">
-              <strong>PRD For AI</strong>，你的产品加速器。
+              {/* <strong>PRD For AI</strong>，你的产品加速器。 */}
               <br />
               无论你是产品经理、AI产品经理、独立开发者还是设计师，只需一句话或一个网页，即可生成专业的 PRD 文档。
             </p>
