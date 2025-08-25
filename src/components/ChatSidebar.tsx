@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MessageSquare, Trash2, ChevronLeft, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 interface Conversation {
@@ -54,17 +55,35 @@ export function ChatSidebar({
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4">
-        {!isCollapsed && (
-          <img src="/logo-prd-for-ai.svg" alt="PRD For AI" className="h-8 w-8" />
+        {!isCollapsed ? (
+          <Link 
+            to="/" 
+            className="flex items-center hover:opacity-80 transition-opacity"
+            title="返回官网"
+          >
+            <img src="/logo-prd-for-ai.svg" alt="PRD For AI" className="h-8 w-8" />
+          </Link>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleCollapse}
+            className="mx-auto"
+            title="展开侧边栏"
+          >
+            <ChevronLeft className="h-4 w-4 rotate-180" />
+          </Button>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleCollapse}
-          className="ml-auto"
-        >
-          <ChevronLeft className={cn("h-4 w-4 transition-transform", isCollapsed && "rotate-180")} />
-        </Button>
+        {!isCollapsed && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleCollapse}
+            className="ml-auto"
+          >
+            <ChevronLeft className={cn("h-4 w-4 transition-transform", isCollapsed && "rotate-180")} />
+          </Button>
+        )}
       </div>
 
       {/* New Conversation Button */}
@@ -130,6 +149,19 @@ export function ChatSidebar({
           ))}
         </div>
       </ScrollArea>
+
+      {/* Logo at bottom for collapsed state */}
+      {isCollapsed && (
+        <div className="p-2 pb-4">
+          <Link 
+            to="/" 
+            className="flex items-center justify-center hover:opacity-80 transition-opacity"
+            title="返回官网"
+          >
+            <img src="/logo-prd-for-ai.svg" alt="PRD For AI" className="h-6 w-6" />
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

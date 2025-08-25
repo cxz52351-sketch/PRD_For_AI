@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -23,9 +24,12 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* 需要认证的主页 */}
+            {/* 公开的官网首页 */}
+            <Route path="/" element={<Landing />} />
+
+            {/* 需要认证的主应用页面 */}
             <Route
-              path="/"
+              path="/app"
               element={
                 <ProtectedRoute>
                   <Index />
@@ -53,11 +57,11 @@ const App = () => (
               }
             />
 
-            {/* 不需要认证的页面（已登录用户会自动重定向） */}
+            {/* 不需要认证的页面（已登录用户会自动重定向到/app） */}
             <Route
               path="/login"
               element={
-                <ProtectedRoute requireAuth={false}>
+                <ProtectedRoute requireAuth={false} redirectTo="/app">
                   <Login />
                 </ProtectedRoute>
               }
@@ -65,7 +69,7 @@ const App = () => (
             <Route
               path="/register"
               element={
-                <ProtectedRoute requireAuth={false}>
+                <ProtectedRoute requireAuth={false} redirectTo="/app">
                   <Register />
                 </ProtectedRoute>
               }

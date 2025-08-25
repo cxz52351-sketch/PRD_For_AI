@@ -95,7 +95,7 @@ const Register = () => {
       });
 
       // 注册成功后直接登录，跳转到主页
-      navigate('/', { replace: true });
+      navigate('/app', { replace: true });
     } catch (error) {
       toast({
         title: "注册失败",

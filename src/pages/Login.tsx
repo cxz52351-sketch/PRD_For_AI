@@ -44,8 +44,8 @@ const Login = () => {
         description: `使用${type === "email" ? "邮箱" : "手机号"}登录成功`,
       });
 
-      // 获取登录前的路径，如果有的话
-      const from = searchParams.get('from') || '/';
+      // 获取登录前的路径，如果有的话，否则跳转到主应用
+      const from = searchParams.get('from') || '/app';
       navigate(from, { replace: true });
     } catch (error) {
       toast({

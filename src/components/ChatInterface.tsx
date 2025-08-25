@@ -80,6 +80,16 @@ export function ChatInterface() {
 
   const activeConversation = conversations.find(c => c.id === activeConversationId);
 
+  // 将文件转换为base64格式
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
@@ -163,20 +173,57 @@ export function ChatInterface() {
     setIsGenerating(false); // 初始时不生成，等开始流式响应后再设置
     setCurrentTaskId(null);
 
-    // Create user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: "user",
-      content: content,
-      timestamp: new Date(),
-      attachments: files?.map(file => ({
-        name: file.name,
-        type: file.type,
-        url: URL.createObjectURL(file)
-      }))
-    };
-
     try {
+      // 先上传文件（如果有）
+      let uploadedFiles: any[] = [];
+      if (files && files.length > 0) {
+        for (const file of files) {
+          try {
+            // 对于图片文件，需要转换为base64格式发送给Dify
+            if (file.type.startsWith('image/')) {
+              const base64 = await fileToBase64(file);
+              uploadedFiles.push({
+                type: 'image',
+                transfer_method: 'local_file',
+                url: base64,
+                name: file.name,
+                mime_type: file.type
+              });
+            } else {
+              // 其他文件类型先上传到服务器
+              const uploadResult = await api.uploadFile(file);
+              uploadedFiles.push({
+                type: 'file',
+                transfer_method: 'local_file',
+                upload_file_id: uploadResult.file_id,
+                name: file.name,
+                mime_type: file.type
+              });
+            }
+          } catch (error) {
+            console.error('文件上传失败:', file.name, error);
+            toast({
+              title: "文件上传失败",
+              description: `无法上传文件 ${file.name}`,
+              variant: "destructive",
+            });
+          }
+        }
+      }
+
+      // Create user message
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        type: "user",
+        content: content,
+        timestamp: new Date(),
+        attachments: files?.map(file => ({
+          name: file.name,
+          type: file.type,
+          url: URL.createObjectURL(file)
+        }))
+      };
+
       // 构建完整的消息历史（现有历史 + 当前新消息）
       const currentConversation = conversations.find(conv => conv.id === activeConversationId);
       const existingMessages: APIMessage[] = currentConversation?.messages
@@ -247,6 +294,7 @@ export function ChatInterface() {
           output_format: outputFormat,
           conversation_id: activeConversation?.dbConversationId,
           dify_conversation_id: activeConversation?.difyConversationId,
+          files: uploadedFiles.length > 0 ? uploadedFiles : undefined,  // 包含上传的文件
         } as any, abortControllerRef.current.signal);
 
         const parser = parseStreamResponse(stream);
@@ -337,6 +385,7 @@ export function ChatInterface() {
           output_format: outputFormat,
           conversation_id: activeConversation?.dbConversationId,
           dify_conversation_id: activeConversation?.difyConversationId,
+          files: uploadedFiles.length > 0 ? uploadedFiles : undefined,  // 包含上传的文件
         } as any);
 
         // 更新AI消息内容

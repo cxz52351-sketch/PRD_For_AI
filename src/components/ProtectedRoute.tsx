@@ -54,10 +54,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // 不需要认证但用户已登录（如登录页、注册页）
   if (!requireAuth && isAuthenticated) {
-    // 检查是否有from参数，有则返回原路径，否则去首页
+    // 检查是否有from参数，有则返回原路径，否则去应用主页
     const searchParams = new URLSearchParams(location.search);
     const from = searchParams.get('from');
-    return <Navigate to={redirectTo || from || '/'} replace />;
+    return <Navigate to={redirectTo || from || '/app'} replace />;
   }
 
   // 认证状态符合要求，渲染子组件
