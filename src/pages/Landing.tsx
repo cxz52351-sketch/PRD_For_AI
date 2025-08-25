@@ -81,9 +81,9 @@ const Landing = () => {
             </h1>
 
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8">
-              <strong>PRD For AI</strong>，你的AI产品经理。
+              <strong>PRD For AI</strong>，你的产品加速器。
               <br />
-              只需一句话或一个网页，即可生成专业的 PRD 文档。
+              无论你是产品经理、AI产品经理、独立开发者还是设计师，只需一句话或一个网页，即可生成专业的 PRD 文档。
             </p>
 
             {/* 核心价值点 */}
