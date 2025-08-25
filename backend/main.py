@@ -21,6 +21,7 @@ from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import re
+import base64
 import db  # 导入数据库模块
 from auth import (
     UserCreate, UserLogin, Token, UserResponse, EmailVerificationRequest, VerifyEmailRequest,
@@ -54,6 +55,14 @@ class Message(BaseModel):
     role: str
     content: str
 
+class FileInfo(BaseModel):
+    type: str  # 'image' 或 'file'
+    transfer_method: str  # 'local_file' 等
+    url: Optional[str] = None  # base64数据或URL
+    upload_file_id: Optional[str] = None  # 上传文件ID
+    name: Optional[str] = None  # 文件名
+    mime_type: Optional[str] = None  # MIME类型
+
 class ChatRequest(BaseModel):
     messages: List[Message]
     model: str = "deepseek-chat"
@@ -63,6 +72,7 @@ class ChatRequest(BaseModel):
     output_format: str = "text"  # text, pdf, docx, markdown
     conversation_id: Optional[str] = None  # 本地数据库对话ID
     dify_conversation_id: Optional[str] = None  # Dify 会话ID，用于与 Dify 持续对话
+    files: Optional[List[FileInfo]] = None  # 文件列表
 
 class ChatResponse(BaseModel):
     id: str
@@ -79,10 +89,46 @@ DIFY_API_KEY = os.getenv("DIFY_API_KEY", "app-wiFSsheVuALpQ5cN7LrPv5Lb")
 # 优先调用工作流接口（/workflows/run）。如需改为应用聊天接口（/chat-messages），将该值设为 "chat"
 DIFY_API_CHANNEL = os.getenv("DIFY_API_CHANNEL", "workflow")  # workflow | chat
 
-def _dify_endpoint() -> str:
-    if DIFY_API_CHANNEL.lower() == "chat":
-        return f"{DIFY_API_BASE}/chat-messages"
-    return f"{DIFY_API_BASE}/workflows/run"
+async def upload_file_to_dify(file_data: bytes, filename: str, mime_type: str) -> str:
+    """上传文件到 Dify API 并返回 upload_file_id"""
+    try:
+        # 构建 multipart/form-data 请求
+        from io import BytesIO
+        
+        # 创建文件对象
+        file_obj = BytesIO(file_data)
+        
+        # 使用 httpx 发送 multipart 请求，启用重定向跟随
+        async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
+            files = {
+                'file': (filename, file_obj, mime_type)
+            }
+            data = {
+                'user': 'abc-123'
+            }
+            headers = {
+                "Authorization": f"Bearer {DIFY_API_KEY}"
+            }
+            
+            response = await client.post(
+                f"{DIFY_API_BASE}/files/upload",
+                files=files,
+                data=data,
+                headers=headers
+            )
+            
+            print(f"Dify 文件上传响应: {response.status_code}")
+            if response.status_code not in [200, 201]:  # 201 是创建成功的状态码
+                print(f"Dify 文件上传失败: {response.status_code} - {response.text}")
+                return None
+            
+            result = response.json()
+            print(f"Dify 文件上传结果: {result}")
+            return result.get('id')  # 返回 upload_file_id
+            
+    except Exception as e:
+        print(f"上传文件到 Dify 失败: {str(e)}")
+        return None
 
 if not DIFY_API_KEY:
     print("警告: 未设置DIFY_API_KEY环境变量")
@@ -346,6 +392,73 @@ async def chat_with_dify(request: ChatRequest):
             "user": "abc-123",
         }
 
+        # 处理文件（图片）- 先尝试上传到 Dify，然后使用不同方式传递
+        dify_files = []
+        has_images = False
+        
+        if request.files:
+            for file_info in request.files:
+                if file_info.type == 'image' and file_info.url:
+                    has_images = True
+                    # 解码 base64 图片数据
+                    try:
+                        # 解析 data:image/png;base64,xxx 格式
+                        if file_info.url.startswith('data:'):
+                            header, encoded = file_info.url.split(',', 1)
+                            file_data = base64.b64decode(encoded)
+                            
+                            # 尝试上传到 Dify 获取 upload_file_id
+                            upload_file_id = await upload_file_to_dify(
+                                file_data, 
+                                file_info.name or 'image.png', 
+                                file_info.mime_type or 'image/png'
+                            )
+                            
+                            if upload_file_id:
+                                # 成功上传，尝试多种传递方式
+                                print(f"✅ 图片上传成功，upload_file_id: {upload_file_id}")
+                                
+                                # 方式1: files 数组
+                                dify_files.append({
+                                    "type": "image",
+                                    "transfer_method": "local_file", 
+                                    "upload_file_id": upload_file_id
+                                })
+                                
+                                # 方式2: inputs 中的 input_img 必须是文件列表格式
+                                dify_payload["inputs"]["input_img"] = [{
+                                    "type": "image",
+                                    "transfer_method": "local_file",
+                                    "upload_file_id": upload_file_id
+                                }]
+                                
+                            else:
+                                # 上传失败，尝试直接在 inputs 中传递 base64
+                                print("⚠️ 图片上传失败，尝试直接传递 base64 数据")
+                                dify_payload["inputs"]["input_img"] = file_info.url
+                        else:
+                            print(f"❌ 不支持的图片格式: {file_info.url[:50]}...")
+                    except Exception as e:
+                        print(f"❌ 处理图片数据失败: {str(e)}")
+                        
+                elif file_info.type == 'file' and file_info.upload_file_id:
+                    # 其他文件类型
+                    dify_files.append({
+                        "type": "file",
+                        "transfer_method": "local_file",
+                        "upload_file_id": file_info.upload_file_id
+                    })
+            
+            if dify_files:
+                dify_payload["files"] = dify_files
+                print(f"📎 添加文件到 files 数组: {len(dify_files)} 个文件")
+            
+            if "input_img" in dify_payload["inputs"]:
+                print(f"📷 添加图片到 inputs.input_img: {str(dify_payload['inputs']['input_img'])[:50]}...")
+            
+            if has_images and not dify_files and "input_img" not in dify_payload["inputs"]:
+                print("⚠️ 图片处理失败，无法传递给 Dify")
+
         headers = {
             "Authorization": f"Bearer {DIFY_API_KEY}",
             "Content-Type": "application/json"
@@ -547,15 +660,17 @@ async def chat_with_dify(request: ChatRequest):
             
             async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
                 response = await client.post(
-                    _dify_endpoint(),
+                    f"{DIFY_API_BASE}/chat-messages",
                     json=dify_payload,
                     headers=headers,
                 )
                 
                 print(f"收到响应，状态码: {response.status_code}")
                 if response.status_code != 200:
+                    error_text = response.text
+                    print(f"Dify API 错误详情: {error_text}")
                     raise HTTPException(status_code=response.status_code, 
-                                      detail=f"Dify API错误 (status={response.status_code}): {response.text}")
+                                      detail=f"Dify API错误 (status={response.status_code}): {error_text}")
                 
                 dify_data = response.json()
                 print(f"响应数据: {json.dumps(dify_data, ensure_ascii=False, indent=2)}")
