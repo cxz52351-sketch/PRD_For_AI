@@ -62,13 +62,13 @@ const Landing = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <div className="flex items-center justify-center mb-6">
-              <div className="p-3 bg-gradient-to-r from-primary/20 to-purple-600/20 rounded-2xl">
-                {/* <img
+              {/* <div className="p-3 bg-gradient-to-r from-primary/20 to-purple-600/20 rounded-2xl">
+                <img
                   src="/logo-prd-for-ai.svg"
                   alt="PRD For AI"
                   className="h-12 w-12"
-                /> */}
-              </div>
+                />
+              </div> */}
             </div>
 
             {/* 产品横幅通知 */}
