@@ -1,35 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="gold" cx="50%" cy="50%" r="65%">
-      <stop offset="0%" stop-color="#FBBF24"/>
-      <stop offset="40%" stop-color="#F59E0B"/>
-      <stop offset="100%" stop-color="#D97706"/>
+    <radialGradient id="gold" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#FFD76A"/>
+      <stop offset="60%" stop-color="#FFC13A"/>
+      <stop offset="100%" stop-color="#F5A623"/>
     </radialGradient>
-    <linearGradient id="petal" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#DDD6FE"/>
-      <stop offset="50%" stop-color="#C4B5FD"/>
-      <stop offset="100%" stop-color="#8B5CF6"/>
+    <linearGradient id="petal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E9B6D4"/>
+      <stop offset="1" stop-color="#B688CC"/>
     </linearGradient>
   </defs>
   
-  <!-- Transparent background -->
-  <!-- <rect width="32" height="32" rx="4" fill="#ffffff"/> -->
-  
-  <!-- Larger, clearer petals for favicon -->
-  <g transform="translate(16,16) scale(0.12)">
+  <!-- Complete favicon with petals and circuits -->
+  <g transform="translate(16,16) scale(0.08)">
     <g fill="url(#petal)">
-      <path d="M0,-120 C-25,-103 -36,-70 -30,-43 C-23,-12 0,3 0,3 C0,3 23,-12 30,-43 C36,-70 25,-103 0,-120Z"/>
-      <path d="M85,-85 C61,-80 35,-59 27,-33 C18,-5 36,12 36,12 C36,12 59,-3 71,-28 C83,-50 87,-75 85,-85Z" transform="rotate(45)"/>
-      <path d="M120,0 C103,25 70,36 43,30 C12,23 -3,0 -3,0 C-3,0 12,-23 43,-30 C70,-36 103,-25 120,0Z" transform="rotate(90)"/>
-      <path d="M85,85 C80,61 59,35 33,27 C5,18 -12,36 -12,36 C-12,36 3,59 28,71 C50,83 75,87 85,85Z" transform="rotate(135)"/>
-      <path d="M0,120 C25,103 36,70 30,43 C23,12 0,-3 0,-3 C0,-3 -23,12 -30,43 C-36,70 -25,103 0,120Z" transform="rotate(180)"/>
-      <path d="M-85,85 C-61,80 -35,59 -27,33 C-18,5 -36,-12 -36,-12 C-36,-12 -59,3 -71,28 C-83,50 -87,75 -85,85Z" transform="rotate(225)"/>
-      <path d="M-120,0 C-103,-25 -70,-36 -43,-30 C-12,-23 3,0 3,0 C3,0 -12,23 -43,30 C-70,36 -103,25 -120,0Z" transform="rotate(270)"/>
-      <path d="M-85,-85 C-80,-61 -59,-35 -33,-27 C-5,-18 12,-36 12,-36 C12,-36 -3,-59 -28,-71 C-50,-83 -75,-87 -85,-85Z" transform="rotate(315)"/>
+      <path d="M0,-188 C-40,-160 -58,-108 -48,-66 C-36,-16 0,6 0,6 C0,6 36,-16 48,-66 C58,-108 40,-160 0,-188Z"/>
+      <path d="M133,-133 C96,-126 54,-92 42,-52 C28,-6 58,22 58,22 C58,22 96,-2 116,-44 C133,-79 142,-118 133,-133Z" transform="rotate(45)"/>
+      <path d="M188,0 C160,40 108,58 66,48 C16,36 -6,0 -6,0 C-6,0 16,-36 66,-48 C108,-58 160,-40 188,0Z" transform="rotate(90)"/>
+      <path d="M133,133 C126,96 92,54 52,42 C6,28 -22,58 -22,58 C-22,58 2,96 44,116 C79,133 118,142 133,133Z" transform="rotate(135)"/>
+      <path d="M0,188 C40,160 58,108 48,66 C36,16 0,-6 0,-6 C0,-6 -36,16 -48,66 C-58,108 -40,160 0,188Z" transform="rotate(180)"/>
+      <path d="M-133,133 C-96,126 -54,92 -42,52 C-28,6 -58,-22 -58,-22 C-58,-22 -96,2 -116,44 C-133,79 -142,118 -133,133Z" transform="rotate(225)"/>
+      <path d="M-188,0 C-160,-40 -108,-58 -66,-48 C-16,-36 6,0 6,0 C6,0 -16,36 -66,48 C-108,58 -160,40 -188,0Z" transform="rotate(270)"/>
+      <path d="M-133,-133 C-126,-96 -92,-54 -52,-42 C-6,-28 22,-58 22,-58 C22,-58 -2,-96 -44,-116 C-79,-133 -118,-142 -133,-133Z" transform="rotate(315)"/>
     </g>
-    
-    <!-- Larger, more visible core -->
-    <circle r="50" fill="url(#gold)"/>
+
+    <!-- Golden core -->
+    <circle r="78" fill="url(#gold)"/>
+
+    <!-- Circuit traces (simplified for favicon size) -->
+    <g stroke="#F9D36A" stroke-width="4" stroke-linecap="round" fill="none">
+      <path d="M0,-70 v-25"/>
+      <circle cx="0" cy="-105" r="3" fill="#F9D36A"/>
+
+      <path d="M50,-50 l18,-18"/>
+      <circle cx="75" cy="-75" r="3" fill="#F9D36A"/>
+
+      <path d="M70,0 h25"/>
+      <circle cx="105" cy="0" r="3" fill="#F9D36A"/>
+
+      <path d="M50,50 l18,18"/>
+      <circle cx="75" cy="75" r="3" fill="#F9D36A"/>
+
+      <path d="M0,70 v25"/>
+      <circle cx="0" cy="105" r="3" fill="#F9D36A"/>
+
+      <path d="M-50,50 l-18,18"/>
+      <circle cx="-75" cy="75" r="3" fill="#F9D36A"/>
+
+      <path d="M-70,0 h-25"/>
+      <circle cx="-105" cy="0" r="3" fill="#F9D36A"/>
+
+      <path d="M-50,-50 l-18,-18"/>
+      <circle cx="-75" cy="-75" r="3" fill="#F9D36A"/>
+    </g>
   </g>
 </svg>
