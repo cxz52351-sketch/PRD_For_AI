@@ -1,64 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PRD For AI Logo - Floral Circuit">
   <defs>
-    <radialGradient id="gold" cx="50%" cy="50%" r="60%">
-      <stop offset="0%" stop-color="#FFD76A"/>
-      <stop offset="60%" stop-color="#FFC13A"/>
-      <stop offset="100%" stop-color="#F5A623"/>
+    <radialGradient id="gold" cx="50%" cy="50%" r="65%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="40%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
     </radialGradient>
-    <linearGradient id="petal" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#E9B6D4"/>
-      <stop offset="1" stop-color="#B688CC"/>
+    <linearGradient id="petal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#DDD6FE"/>
+      <stop offset="50%" stop-color="#C4B5FD"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
     </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/> 
+      </feMerge>
+    </filter>
     <style>
-      .c{stroke:#F9D36A;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+      .circuit{stroke:#FBBF24;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;filter:url(#glow)}
+      .petal{filter:url(#glow)}
     </style>
   </defs>
 
   <!-- Background transparent -->
   <rect width="512" height="512" rx="32" fill="none"/>
 
-  <!-- Petals (scaled up more) -->
-  <g transform="translate(256,256) scale(1.25)">
-    <g fill="url(#petal)">
-      <path d="M0,-188 C-40,-160 -58,-108 -48,-66 C-36,-16 0,6 0,6 C0,6 36,-16 48,-66 C58,-108 40,-160 0,-188Z"/>
-      <path d="M133,-133 C96,-126 54,-92 42,-52 C28,-6 58,22 58,22 C58,22 96,-2 116,-44 C133,-79 142,-118 133,-133Z" transform="rotate(45)"/>
-      <path d="M188,0 C160,40 108,58 66,48 C16,36 -6,0 -6,0 C-6,0 16,-36 66,-48 C108,-58 160,-40 188,0Z" transform="rotate(90)"/>
-      <path d="M133,133 C126,96 92,54 52,42 C6,28 -22,58 -22,58 C-22,58 2,96 44,116 C79,133 118,142 133,133Z" transform="rotate(135)"/>
-      <path d="M0,188 C40,160 58,108 48,66 C36,16 0,-6 0,-6 C0,-6 -36,16 -48,66 C-58,108 -40,160 0,188Z" transform="rotate(180)"/>
-      <path d="M-133,133 C-96,126 -54,92 -42,52 C-28,6 -58,-22 -58,-22 C-58,-22 -96,2 -116,44 C-133,79 -142,118 -133,133Z" transform="rotate(225)"/>
-      <path d="M-188,0 C-160,-40 -108,-58 -66,-48 C-16,-36 6,0 6,0 C6,0 -16,36 -66,48 C-108,58 -160,40 -188,0Z" transform="rotate(270)"/>
-      <path d="M-133,-133 C-126,-96 -92,-54 -52,-42 C-6,-28 22,-58 22,-58 C22,-58 -2,-96 -44,-116 C-79,-133 -118,-142 -133,-133Z" transform="rotate(315)"/>
+  <!-- Petals with enhanced styling -->
+  <g transform="translate(256,256) scale(1.2)">
+    <g fill="url(#petal)" class="petal">
+      <path d="M0,-180 C-38,-155 -55,-105 -45,-65 C-34,-18 0,4 0,4 C0,4 34,-18 45,-65 C55,-105 38,-155 0,-180Z"/>
+      <path d="M127,-127 C92,-120 52,-88 41,-50 C27,-8 54,18 54,18 C54,18 88,-4 107,-42 C124,-75 131,-112 127,-127Z" transform="rotate(45)"/>
+      <path d="M180,0 C155,38 105,55 65,45 C18,34 -4,0 -4,0 C-4,0 18,-34 65,-45 C105,-55 155,-38 180,0Z" transform="rotate(90)"/>
+      <path d="M127,127 C120,92 88,52 50,41 C8,27 -18,54 -18,54 C-18,54 4,88 42,107 C75,124 112,131 127,127Z" transform="rotate(135)"/>
+      <path d="M0,180 C38,155 55,105 45,65 C34,18 0,-4 0,-4 C0,-4 -34,18 -45,65 C-55,105 -38,155 0,180Z" transform="rotate(180)"/>
+      <path d="M-127,127 C-92,120 -52,88 -41,50 C-27,8 -54,-18 -54,-18 C-54,-18 -88,4 -107,42 C-124,75 -131,112 -127,127Z" transform="rotate(225)"/>
+      <path d="M-180,0 C-155,-38 -105,-55 -65,-45 C-18,-34 4,0 4,0 C4,0 -18,34 -65,45 C-105,55 -155,38 -180,0Z" transform="rotate(270)"/>
+      <path d="M-127,-127 C-120,-92 -88,-52 -50,-41 C-8,-27 18,-54 18,-54 C18,-54 -4,-88 -42,-107 C-75,-124 -112,-131 -127,-127Z" transform="rotate(315)"/>
     </g>
 
-    <!-- Golden core -->
-    <circle r="78" fill="url(#gold)"/>
+    <!-- Enhanced golden core -->
+    <circle r="75" fill="url(#gold)" filter="url(#glow)"/>
 
-    <!-- Circuit traces radiating from core into petals -->
-    <g class="c">
-      <path d="M0,-70 v-32"/>
-      <circle cx="0" cy="-112" r="6" fill="#F9D36A"/>
+    <!-- Circuit traces with enhanced styling -->
+    <g class="circuit">
+      <path d="M0,-68 v-28"/>
+      <circle cx="0" cy="-105" r="5" fill="#FBBF24"/>
 
-      <path d="M50,-50 l22,-22"/>
-      <circle cx="84" cy="-84" r="6" fill="#F9D36A"/>
+      <path d="M48,-48 l20,-20"/>
+      <circle cx="78" cy="-78" r="5" fill="#FBBF24"/>
 
-      <path d="M70,0 h32"/>
-      <circle cx="112" cy="0" r="6" fill="#F9D36A"/>
+      <path d="M68,0 h28"/>
+      <circle cx="105" cy="0" r="5" fill="#FBBF24"/>
 
-      <path d="M50,50 l22,22"/>
-      <circle cx="84" cy="84" r="6" fill="#F9D36A"/>
+      <path d="M48,48 l20,20"/>
+      <circle cx="78" cy="78" r="5" fill="#FBBF24"/>
 
-      <path d="M0,70 v32"/>
-      <circle cx="0" cy="112" r="6" fill="#F9D36A"/>
+      <path d="M0,68 v28"/>
+      <circle cx="0" cy="105" r="5" fill="#FBBF24"/>
 
-      <path d="M-50,50 l-22,22"/>
-      <circle cx="-84" cy="84" r="6" fill="#F9D36A"/>
+      <path d="M-48,48 l-20,20"/>
+      <circle cx="-78" cy="78" r="5" fill="#FBBF24"/>
 
-      <path d="M-70,0 h-32"/>
-      <circle cx="-112" cy="0" r="6" fill="#F9D36A"/>
+      <path d="M-68,0 h-28"/>
+      <circle cx="-105" cy="0" r="5" fill="#FBBF24"/>
 
-      <path d="M-50,-50 l-22,-22"/>
-      <circle cx="-84" cy="-84" r="6" fill="#F9D36A"/>
+      <path d="M-48,-48 l-20,-20"/>
+      <circle cx="-78" cy="-78" r="5" fill="#FBBF24"/>
     </g>
   </g>
 

@@ -144,20 +144,16 @@ const Landing = () => {
   return (
     <div className="min-h-screen w-full mesh-gradient font-sans-premium text-slate-900 antialiased relative overflow-hidden">
       <FontLoader />
-      
+
       {/* Floating background elements */}
       <div className="floating-orb w-72 h-72 bg-gradient-to-r from-purple-300/30 to-pink-300/30 top-10 -left-20 blur-3xl" style={{ animationDelay: '0s' }} />
       <div className="floating-orb w-96 h-96 bg-gradient-to-r from-blue-300/30 to-cyan-300/30 top-1/3 -right-32 blur-3xl" style={{ animationDelay: '2s' }} />
       <div className="floating-orb w-80 h-80 bg-gradient-to-r from-indigo-300/30 to-purple-300/30 bottom-1/4 -left-40 blur-3xl" style={{ animationDelay: '4s' }} />
-      
+
       <header className="sticky top-0 z-40 glass-effect">
         <nav className="mx-auto max-w-7xl flex items-center justify-between py-4 px-6 sm:px-8 lg:px-10">
           <Link to="/" className="flex items-center gap-3 group" aria-label="PRD For AI">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-0.5 premium-shadow hover-lift">
-              <div className="h-full w-full rounded-xl bg-white flex items-center justify-center">
-                <span className="text-sm font-bold gradient-text">PRD</span>
-              </div>
-            </div>
+            <img src="/logo-prd-for-ai.svg" alt="PRD For AI Logo" className="h-10 w-10 hover-lift" />
             <span className="brand-logo text-xl text-slate-900 group-hover:text-indigo-600 transition-colors">PRD For AI</span>
           </Link>
 
@@ -207,18 +203,18 @@ const Landing = () => {
                 <Sparkles className="w-4 h-4 text-indigo-500 mr-2" />
                 PRD For AI，你的产品加速器
               </div>
-              
+
               <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
                 <span className="gradient-text">
                   想法一闪而过？
                 </span>
                 <br />让AI帮你立刻落地
               </h1>
-              
+
               <p className="mx-auto max-w-3xl text-xl text-slate-600 mb-8 leading-relaxed">
                 无论你是产品经理、AI产品经理、独立开发者还是设计师，只需一句话或一个网页，即可生成专业的 PRD 文档。
               </p>
-              
+
               <div className="flex flex-wrap justify-center gap-4 mb-12">
                 <div className="flex items-center px-4 py-2 glass-effect rounded-full text-indigo-700 premium-shadow">
                   <CheckCircle className="w-4 h-4 mr-2" />
@@ -293,7 +289,7 @@ const Landing = () => {
               <h2 className="text-base font-semibold text-indigo-600 mb-2">AI产品经理助手</h2>
               <p className="font-display text-4xl font-bold text-slate-900 mb-6">解放你的大脑，专注创意</p>
               <p className="text-xl text-slate-600 mb-10 leading-relaxed">告别繁琐的文档工作。只需用自然语言描述你的想法，PRD For AI 就能为你自动生成结构化、可编辑的 PRD 文档。</p>
-              
+
               <div className="space-y-6">
                 <div className="flex items-start">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 mr-4 mt-1">
@@ -304,7 +300,7 @@ const Landing = () => {
                     <p className="text-slate-600">支持文字、图片多模态输入</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 mr-4 mt-1">
                     <Target className="h-5 w-5 text-purple-600" />
@@ -314,7 +310,7 @@ const Landing = () => {
                     <p className="text-slate-600">AI引导式需求挖掘</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100 mr-4 mt-1">
                     <CheckCircle className="h-5 w-5 text-green-600" />
@@ -324,7 +320,7 @@ const Landing = () => {
                     <p className="text-slate-600">实时可视化编辑</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 mr-4 mt-1">
                     <Chrome className="h-5 w-5 text-orange-600" />
@@ -336,7 +332,7 @@ const Landing = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="relative">
               <div className="glass-effect rounded-3xl p-8 premium-shadow hover-lift">
                 <div className="aspect-square bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-2xl flex items-center justify-center border border-indigo-100">
@@ -359,7 +355,7 @@ const Landing = () => {
               <h2 className="font-display text-4xl font-bold mb-4 gradient-text">用户都在说什么</h2>
               <p className="text-xl text-slate-600">数千位产品经理、开发者、设计师的真实反馈</p>
             </div>
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="glass-effect rounded-2xl p-8 premium-shadow hover-lift">
                 <div className="flex items-center space-x-1 mb-6">
@@ -378,7 +374,7 @@ const Landing = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="glass-effect rounded-2xl p-8 premium-shadow hover-lift">
                 <div className="flex items-center space-x-1 mb-6">
                   {[1, 2, 3, 4, 5].map((i) => (
@@ -396,7 +392,7 @@ const Landing = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="glass-effect rounded-2xl p-8 premium-shadow hover-lift">
                 <div className="flex items-center space-x-1 mb-6">
                   {[1, 2, 3, 4, 5].map((i) => (
@@ -463,8 +459,8 @@ const Landing = () => {
               我们让 PRD For AI 变得经济实惠，让从工程师到创始人到CPO的每个人都能从AI产品经理中受益。
             </p>
             <div className="mt-12">
-              <Link 
-                to="/register" 
+              <Link
+                to="/register"
                 className="premium-button inline-flex items-center justify-center rounded-2xl px-8 py-4 text-lg font-semibold text-white hover-lift"
               >
                 立即注册
@@ -645,11 +641,7 @@ const Landing = () => {
       <footer className="bg-white border-t border-gray-200">
         <div className="mx-auto max-w-7xl px-6 py-16">
           <div className="flex items-center gap-3 mb-8">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-0.5 premium-shadow">
-              <div className="h-full w-full rounded-xl bg-white flex items-center justify-center">
-                <span className="text-sm font-bold gradient-text">PRD</span>
-              </div>
-            </div>
+            <img src="/logo-prd-for-ai.svg" alt="PRD For AI Logo" className="h-10 w-10" />
             <span className="brand-logo text-xl text-slate-900">PRD For AI</span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-sm mb-12">
