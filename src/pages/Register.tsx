@@ -6,10 +6,136 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Mail, Phone, Eye, EyeOff, ArrowRight, User, Check } from "lucide-react";
+import { Mail, Phone, Eye, EyeOff, ArrowRight, Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
+
+function FontLoader() {
+  return (
+    <style>{`
+      /* === Premium Typography & Advanced Styling === */
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
+      
+      .font-display { 
+        font-family: 'Playfair Display', Georgia, serif;
+        letter-spacing: -0.02em; 
+        font-weight: 600;
+        line-height: 1.2;
+      }
+      
+      .font-sans-premium {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        letter-spacing: -0.01em;
+      }
+      
+      .brand-logo { 
+        font-family: 'Inter', system-ui, sans-serif; 
+        letter-spacing: -0.025em; 
+        font-weight: 800;
+      }
+      
+      .gradient-text {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        background-size: 400% 400%;
+        animation: gradient-shift 6s ease-in-out infinite;
+      }
+      
+      @keyframes gradient-shift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+      }
+      
+      .glass-effect {
+        backdrop-filter: blur(20px) saturate(180%);
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      }
+      
+      .mesh-gradient {
+        background: 
+          radial-gradient(at 40% 20%, hsla(228,100%,74%,0.5) 0px, transparent 50%),
+          radial-gradient(at 80% 0%, hsla(189,100%,56%,0.5) 0px, transparent 50%),
+          radial-gradient(at 0% 50%, hsla(355,100%,93%,0.3) 0px, transparent 50%),
+          radial-gradient(at 80% 50%, hsla(340,100%,76%,0.4) 0px, transparent 50%),
+          radial-gradient(at 0% 100%, hsla(22,100%,77%,0.4) 0px, transparent 50%),
+          radial-gradient(at 80% 100%, hsla(242,100%,70%,0.5) 0px, transparent 50%),
+          radial-gradient(at 0% 0%, hsla(343,100%,76%,0.3) 0px, transparent 50%),
+          linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      }
+      
+      .premium-shadow {
+        box-shadow: 
+          0 0 0 1px rgba(255, 255, 255, 0.05),
+          0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+          0 2px 4px -1px rgba(0, 0, 0, 0.06),
+          0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      }
+      
+      .hover-lift {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      .hover-lift:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+      }
+      
+      .premium-button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+      
+      .premium-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        transition: left 0.6s;
+      }
+      
+      .premium-button:hover::before {
+        left: 100%;
+      }
+      
+      .premium-button:hover {
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      }
+      
+      .floating-orb {
+        position: absolute;
+        border-radius: 50%;
+        opacity: 0.7;
+        animation: float 6s ease-in-out infinite;
+      }
+      
+      @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(180deg); }
+      }
+      
+      .sophisticated-card {
+        background: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.2);
+        box-shadow: 
+          0 8px 32px rgba(31, 38, 135, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      }
+    `}</style>
+  );
+}
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -145,25 +271,35 @@ const Register = () => {
   );
 
   return (
-    <div className="min-h-screen bg-aurora flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo和标题 */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <img
-              src="/logo-prd-for-ai.svg"
-              alt="PRD For AI"
-              className="h-12 w-12"
-            />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">欢迎加入</h1>
-          <p className="text-muted-foreground">创建您的PRD For AI账户</p>
-        </div>
+    <div className="min-h-screen w-full mesh-gradient font-sans-premium text-slate-900 antialiased relative overflow-hidden">
+      <FontLoader />
 
-        <Card className="backdrop-blur-sm bg-card/80 shadow-lg border border-border/50">
+      {/* Floating background elements */}
+      <div className="floating-orb w-72 h-72 bg-gradient-to-r from-purple-300/30 to-pink-300/30 top-10 -left-20 blur-3xl" style={{ animationDelay: '0s' }} />
+      <div className="floating-orb w-96 h-96 bg-gradient-to-r from-blue-300/30 to-cyan-300/30 top-1/3 -right-32 blur-3xl" style={{ animationDelay: '2s' }} />
+      <div className="floating-orb w-80 h-80 bg-gradient-to-r from-indigo-300/30 to-purple-300/30 bottom-1/4 -left-40 blur-3xl" style={{ animationDelay: '4s' }} />
+      
+      <div className="flex items-center justify-center min-h-screen p-4 py-8">
+        <div className="w-full max-w-md">
+          {/* Logo和标题 */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center mb-6">
+              <img
+                src="/logo-prd-for-ai.svg"
+                alt="PRD For AI"
+                className="h-12 w-12 hover-lift"
+              />
+            </div>
+            <h1 className="font-display text-3xl font-bold text-slate-900 mb-3">
+              <span className="gradient-text">欢迎加入</span>
+            </h1>
+            <p className="text-lg text-slate-600 font-sans-premium">创建您的PRD For AI账户</p>
+          </div>
+
+        <Card className="sophisticated-card rounded-2xl premium-shadow hover-lift">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-xl text-center">创建账户</CardTitle>
-            <CardDescription className="text-center">
+            <CardTitle className="font-display text-2xl text-center text-slate-900">创建账户</CardTitle>
+            <CardDescription className="text-center text-slate-600 font-sans-premium">
               选择您偏好的注册方式
             </CardDescription>
           </CardHeader>
@@ -174,7 +310,7 @@ const Register = () => {
               onClick={handleGoogleRegister}
               disabled={isLoading}
               variant="outline"
-              className="w-full h-11 bg-background/50 hover:bg-background/80 border border-border/60 transition-all duration-200 hover:shadow-md"
+              className="w-full h-11 glass-effect hover:shadow-md transition-all duration-300 text-slate-700 font-medium"
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -187,21 +323,21 @@ const Register = () => {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <Separator className="w-full opacity-50" />
+                <Separator className="w-full opacity-30" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">或者</span>
+                <span className="bg-white px-3 text-slate-500 font-medium">或者</span>
               </div>
             </div>
 
             {/* 邮箱/手机号注册选项卡 */}
             <Tabs defaultValue="email" value={activeTab} onValueChange={(value) => setActiveTab(value as 'email' | 'phone')} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/50">
-                <TabsTrigger value="email" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TabsList className="grid w-full grid-cols-2 mb-4 glass-effect rounded-xl">
+                <TabsTrigger value="email" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white rounded-lg font-medium transition-all">
                   <Mail className="w-4 h-4 mr-2" />
                   邮箱
                 </TabsTrigger>
-                <TabsTrigger value="phone" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <TabsTrigger value="phone" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white rounded-lg font-medium transition-all">
                   <Phone className="w-4 h-4 mr-2" />
                   手机
                 </TabsTrigger>
@@ -209,7 +345,7 @@ const Register = () => {
 
               <TabsContent value="email" className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">用户名</Label>
+                  <Label htmlFor="username" className="text-slate-700 font-medium">用户名</Label>
                   <Input
                     id="username"
                     type="text"
@@ -217,12 +353,12 @@ const Register = () => {
                     value={registerData.username}
                     onChange={(e) => setRegisterData(prev => ({ ...prev, username: e.target.value }))}
                     onKeyDown={handleKeyDown}
-                    className="bg-background/60 border-border/60 focus:border-primary transition-colors"
+                    className="glass-effect border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">邮箱地址</Label>
+                  <Label htmlFor="email" className="text-slate-700 font-medium">邮箱地址</Label>
                   <Input
                     id="email"
                     type="email"
@@ -230,12 +366,12 @@ const Register = () => {
                     value={registerData.email}
                     onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
                     onKeyDown={handleKeyDown}
-                    className="bg-background/60 border-border/60 focus:border-primary transition-colors"
+                    className="glass-effect border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">密码</Label>
+                  <Label htmlFor="password" className="text-slate-700 font-medium">密码</Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -244,7 +380,7 @@ const Register = () => {
                       value={registerData.password}
                       onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
                       onKeyDown={handleKeyDown}
-                      className="bg-background/60 border-border/60 focus:border-primary transition-colors pr-10"
+                      className="glass-effect border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all pr-10"
                     />
                     <Button
                       type="button"
@@ -257,7 +393,7 @@ const Register = () => {
                     </Button>
                   </div>
                   {registerData.password && (
-                    <div className="mt-2 p-3 bg-muted/30 rounded-lg">
+                    <div className="mt-2 p-3 glass-effect rounded-lg">
                       <PasswordStrengthIndicator validation={passwordValidation} />
                     </div>
                   )}
@@ -304,7 +440,7 @@ const Register = () => {
                     !passwordValidation.isValid ||
                     registerData.password !== registerData.confirmPassword
                   }
-                  className="w-full btn-gradient-soft group"
+                  className="w-full premium-button group text-white font-semibold py-3 rounded-xl"
                 >
                   {isLoading ? "注册中..." : "注册账户"}
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -361,7 +497,7 @@ const Register = () => {
                     </Button>
                   </div>
                   {registerData.password && (
-                    <div className="mt-2 p-3 bg-muted/30 rounded-lg">
+                    <div className="mt-2 p-3 glass-effect rounded-lg">
                       <PasswordStrengthIndicator validation={passwordValidation} />
                     </div>
                   )}
@@ -421,28 +557,28 @@ const Register = () => {
               <Checkbox
                 id="terms"
                 checked={agreeTerms}
-                onCheckedChange={setAgreeTerms}
-                className="mt-1"
+                onCheckedChange={(checked) => setAgreeTerms(checked === true)}
+                className="mt-1 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
               />
               <div className="space-y-1 leading-none">
                 <Label
                   htmlFor="terms"
-                  className="text-sm font-normal cursor-pointer"
+                  className="text-sm font-normal cursor-pointer text-slate-700"
                 >
                   我同意
-                  <Link to="/terms" className="text-primary hover:underline mx-1">服务条款</Link>
+                  <Link to="/terms" className="text-indigo-600 hover:text-indigo-800 hover:underline mx-1 font-medium transition-colors">服务条款</Link>
                   和
-                  <Link to="/privacy" className="text-primary hover:underline mx-1">隐私政策</Link>
+                  <Link to="/privacy" className="text-indigo-600 hover:text-indigo-800 hover:underline mx-1 font-medium transition-colors">隐私政策</Link>
                 </Label>
               </div>
             </div>
 
             {/* 已有账户链接 */}
             <div className="text-center text-sm">
-              <span className="text-muted-foreground">已有账户？</span>
+              <span className="text-slate-500 font-sans-premium">已有账户？</span>
               <Link
                 to="/login"
-                className="text-primary hover:underline ml-1 transition-colors"
+                className="text-indigo-600 hover:text-indigo-800 hover:underline ml-1 font-medium transition-colors"
               >
                 立即登录
               </Link>
@@ -451,8 +587,9 @@ const Register = () => {
         </Card>
 
         {/* 底部信息 */}
-        <div className="text-center mt-6 text-sm text-muted-foreground">
-          <p>注册后您将能够使用完整的 AI 对话功能</p>
+        <div className="text-center mt-8 text-sm text-slate-500">
+          <p className="font-sans-premium">注册后您将能够使用完整的 AI 对话功能</p>
+        </div>
         </div>
       </div>
     </div>
