@@ -89,10 +89,12 @@ function FontLoader() {
       }
       
       .premium-button {
-        background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
+        background: linear-gradient(135deg, #E9B6D4 0%, #B688CC 50%, #9A6FB8 100%);
         position: relative;
         overflow: hidden;
         transition: all 0.3s ease;
+        color: white;
+        box-shadow: 0 4px 12px rgba(182, 136, 204, 0.3);
       }
       
       .premium-button::before {
@@ -102,7 +104,7 @@ function FontLoader() {
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
         transition: left 0.6s;
       }
       
@@ -111,9 +113,10 @@ function FontLoader() {
       }
       
       .premium-button:hover {
-        background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
+        background: linear-gradient(135deg, #D4A2C7 0%, #A876BA 50%, #8B5FA5 100%);
         transform: translateY(-2px);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 8px 20px rgba(182, 136, 204, 0.5);
+        color: white;
       }
       
       .floating-orb {

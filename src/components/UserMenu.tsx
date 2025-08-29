@@ -33,12 +33,7 @@ const UserMenu: React.FC = () => {
 
   // 获取用户名首字母作为头像回退
   const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+    return name.charAt(0).toUpperCase();
   };
 
   // 格式化显示名称
@@ -61,7 +56,6 @@ const UserMenu: React.FC = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-background/10">
           <Avatar className="h-10 w-10 border-2 border-border/20">
-            <AvatarImage src={user.avatar} alt={getDisplayName()} />
             <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-foreground font-medium">
               {getInitials(getDisplayName())}
             </AvatarFallback>

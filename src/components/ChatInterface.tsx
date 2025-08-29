@@ -627,18 +627,6 @@ export function ChatInterface() {
             </Button>
              */}
 
-            {/* 开发调试用：清除所有数据按钮 */}
-            {process.env.NODE_ENV === 'development' && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleClearAllData}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                清除数据
-              </Button>
-            )}
             
             {!isCanvasMode && (
               <Button

@@ -58,12 +58,7 @@ const Profile = () => {
 
   // 获取用户名首字母作为头像回退
   const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+    return name.charAt(0).toUpperCase();
   };
 
   // 格式化日期
@@ -105,7 +100,6 @@ const Profile = () => {
             <div className="flex flex-col items-center space-y-4">
               <div className="relative">
                 <Avatar className="h-24 w-24 border-4 border-border/20">
-                  <AvatarImage src={user.avatar} alt={user.username} />
                   <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-foreground font-medium text-xl">
                     {getInitials(user.username)}
                   </AvatarFallback>
