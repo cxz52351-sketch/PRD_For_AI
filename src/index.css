@@ -146,20 +146,20 @@ All colors MUST be HSL. Enterprise-grade color palette with industrial aesthetic
   .bg-aurora {
     background-color: hsl(var(--background));
     background-image:
-      radial-gradient(60% 45% at 20% 18%, hsla(330, 80%, 88%, 0.85) 0%, transparent 60%),
-      radial-gradient(55% 40% at 80% 16%, hsla(42, 95%, 75%, 0.65) 0%, transparent 60%),
-      radial-gradient(60% 45% at 76% 78%, hsla(268, 70%, 78%, 0.6) 0%, transparent 60%),
-      radial-gradient(55% 55% at 12% 85%, hsla(268, 45%, 42%, 0.20) 0%, transparent 70%);
+      radial-gradient(60% 45% at 20% 18%, hsla(315, 85%, 88%, 0.4) 0%, transparent 60%),
+      radial-gradient(55% 40% at 80% 16%, hsla(330, 90%, 85%, 0.3) 0%, transparent 60%),
+      radial-gradient(60% 45% at 76% 78%, hsla(290, 75%, 85%, 0.5) 0%, transparent 60%),
+      radial-gradient(55% 55% at 12% 85%, hsla(270, 80%, 82%, 0.3) 0%, transparent 70%);
     background-attachment: fixed;
   }
 
   .dark .bg-aurora {
     background-color: hsl(var(--background));
     background-image:
-      radial-gradient(60% 45% at 20% 18%, hsla(330, 65%, 40%, 0.55) 0%, transparent 60%),
-      radial-gradient(55% 40% at 80% 16%, hsla(42, 90%, 52%, 0.45) 0%, transparent 60%),
-      radial-gradient(60% 45% at 76% 78%, hsla(268, 70%, 55%, 0.45) 0%, transparent 60%),
-      radial-gradient(55% 55% at 12% 85%, hsla(268, 45%, 22%, 0.25) 0%, transparent 70%);
+      radial-gradient(60% 45% at 20% 18%, hsla(315, 70%, 45%, 0.35) 0%, transparent 60%),
+      radial-gradient(55% 40% at 80% 16%, hsla(330, 85%, 55%, 0.25) 0%, transparent 60%),
+      radial-gradient(60% 45% at 76% 78%, hsla(290, 75%, 60%, 0.4) 0%, transparent 60%),
+      radial-gradient(55% 55% at 12% 85%, hsla(270, 60%, 30%, 0.3) 0%, transparent 70%);
   }
 
   /* Brand linear gradients for elements like buttons/cards */
