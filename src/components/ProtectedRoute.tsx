@@ -23,7 +23,7 @@ function LoadingFontLoader() {
       }
       
       .gradient-text {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+        background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 25%, #d946ef 50%, #ec4899 75%, #f472b6 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -36,17 +36,6 @@ function LoadingFontLoader() {
         50% { background-position: 100% 50%; }
       }
       
-      .mesh-gradient {
-        background: 
-          radial-gradient(at 40% 20%, hsla(228,100%,74%,0.5) 0px, transparent 50%),
-          radial-gradient(at 80% 0%, hsla(189,100%,56%,0.5) 0px, transparent 50%),
-          radial-gradient(at 0% 50%, hsla(355,100%,93%,0.3) 0px, transparent 50%),
-          radial-gradient(at 80% 50%, hsla(340,100%,76%,0.4) 0px, transparent 50%),
-          radial-gradient(at 0% 100%, hsla(22,100%,77%,0.4) 0px, transparent 50%),
-          radial-gradient(at 80% 100%, hsla(242,100%,70%,0.5) 0px, transparent 50%),
-          radial-gradient(at 0% 0%, hsla(343,100%,76%,0.3) 0px, transparent 50%),
-          linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      }
       
       .floating-orb {
         position: absolute;
@@ -129,13 +118,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // 加载状态
   if (isLoading) {
     return (
-      <div className="min-h-screen w-full mesh-gradient font-sans-premium text-slate-900 antialiased relative overflow-hidden">
+      <div className="min-h-screen w-full bg-aurora font-sans-premium text-slate-900 antialiased relative overflow-hidden">
         <LoadingFontLoader />
 
         {/* Floating background elements */}
-        <div className="floating-orb w-72 h-72 bg-gradient-to-r from-purple-300/30 to-pink-300/30 top-10 -left-20 blur-3xl" style={{ animationDelay: '0s' }} />
-        <div className="floating-orb w-96 h-96 bg-gradient-to-r from-blue-300/30 to-cyan-300/30 top-1/3 -right-32 blur-3xl" style={{ animationDelay: '2s' }} />
-        <div className="floating-orb w-80 h-80 bg-gradient-to-r from-indigo-300/30 to-purple-300/30 bottom-1/4 -left-40 blur-3xl" style={{ animationDelay: '4s' }} />
+        <div className="floating-orb w-72 h-72 bg-gradient-to-r from-purple-400/40 to-pink-400/40 top-10 -left-20 blur-3xl" style={{ animationDelay: '0s' }} />
+        <div className="floating-orb w-96 h-96 bg-gradient-to-r from-purple-300/30 to-pink-300/30 top-1/3 -right-32 blur-3xl" style={{ animationDelay: '2s' }} />
+        <div className="floating-orb w-80 h-80 bg-gradient-to-r from-violet-300/35 to-fuchsia-300/35 bottom-1/4 -left-40 blur-3xl" style={{ animationDelay: '4s' }} />
         
         <div className="flex items-center justify-center min-h-screen p-4">
           <div className="w-full max-w-md">

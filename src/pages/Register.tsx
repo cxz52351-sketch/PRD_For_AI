@@ -271,7 +271,7 @@ const Register = () => {
   );
 
   return (
-    <div className="min-h-screen w-full mesh-gradient font-sans-premium text-slate-900 antialiased relative overflow-hidden">
+    <div className="min-h-screen w-full bg-aurora font-sans-premium text-slate-900 antialiased relative overflow-hidden">
       <FontLoader />
 
       {/* Floating background elements */}
