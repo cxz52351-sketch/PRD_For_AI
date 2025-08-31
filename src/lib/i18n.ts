@@ -109,10 +109,6 @@ export interface TranslationKeys {
     showActivityStatus: string;
     showOnlineStatus: string;
     dataManagement: string;
-    exportData: string;
-    deleteAccount: string;
-    dataUsageInfo: string;
-    dataUsageDescription: string;
     exportRequestSubmitted: string;
     exportDataDescription: string;
     deleteAccountDeveloping: string;
@@ -120,6 +116,42 @@ export interface TranslationKeys {
     hour: string;
     hours: string;
     neverTimeout: string;
+    // 外观设置
+    interfaceAppearance: string;
+    customizeAppearance: string;
+    themeMode: string;
+    light: string;
+    dark: string;
+    auto: string;
+    fontSize: string;
+    small: string;
+    medium: string;
+    large: string;
+    simplifiedChinese: string;
+    english: string;
+    // 安全设置
+    changePassword: string;
+    changePasswordDescription: string;
+    currentPassword: string;
+    newPassword: string;
+    confirmNewPassword: string;
+    changingPassword: string;
+    accountSecurity: string;
+    manageAccountSecurity: string;
+    twoFactorAuth: string;
+    twoFactorAuthDescription: string;
+    recommended: string;
+    // 隐私设置
+    managePersonalData: string;
+    downloadAllRecords: string;
+    exportData: string;
+    permanentlyDeleteAccount: string;
+    deleteAccount: string;
+    dataUsageInfo: string;
+    dataUsageDescription1: string;
+    dataUsageDescription2: string;
+    dataUsageDescription3: string;
+    dataUsageDescription4: string;
   };
 
   // 导航和菜单
@@ -442,10 +474,6 @@ export const zhTranslations: TranslationKeys = {
     showActivityStatus: '显示活动状态',
     showOnlineStatus: '显示您的在线状态和最后活动时间',
     dataManagement: '数据管理',
-    exportData: '导出数据',
-    deleteAccount: '删除账户',
-    dataUsageInfo: '数据使用说明',
-    dataUsageDescription: '我们仅收集必要的个人信息用于提供服务',
     exportRequestSubmitted: '导出请求已提交',
     exportDataDescription: '我们将在24小时内将您的数据发送到注册邮箱',
     deleteAccountDeveloping: '账户删除功能正在开发中，如需删除账户请联系客服',
@@ -453,6 +481,42 @@ export const zhTranslations: TranslationKeys = {
     hour: '小时',
     hours: '小时',
     neverTimeout: '永不超时',
+    // 外观设置
+    interfaceAppearance: '界面外观',
+    customizeAppearance: '自定义应用的外观和感觉',
+    themeMode: '主题模式',
+    light: '浅色',
+    dark: '深色',
+    auto: '自动',
+    fontSize: '字体大小',
+    small: '小',
+    medium: '中',
+    large: '大',
+    simplifiedChinese: '简体中文',
+    english: 'English',
+    // 安全设置
+    changePassword: '密码修改',
+    changePasswordDescription: '定期更换密码以保护账户安全',
+    currentPassword: '当前密码',
+    newPassword: '新密码',
+    confirmNewPassword: '确认新密码',
+    changingPassword: '修改中...',
+    accountSecurity: '账户安全',
+    manageAccountSecurity: '管理您的账户安全设置',
+    twoFactorAuth: '两步验证',
+    twoFactorAuthDescription: '为您的账户添加额外的安全保护',
+    recommended: '推荐',
+    // 隐私设置
+    managePersonalData: '管理您的个人数据',
+    downloadAllRecords: '下载您的所有对话记录和文件',
+    exportData: '导出',
+    permanentlyDeleteAccount: '永久删除您的账户和所有数据',
+    deleteAccount: '删除',
+    dataUsageInfo: '数据使用说明',
+    dataUsageDescription1: '我们仅收集必要的个人信息用于提供服务',
+    dataUsageDescription2: '您的对话数据会被加密存储，我们不会查看或分享',
+    dataUsageDescription3: '上传的文件仅用于AI分析，处理后会自动删除',
+    dataUsageDescription4: '您可以随时请求删除个人数据',
   },
   nav: {
     home: '首页',
@@ -763,10 +827,6 @@ export const enTranslations: TranslationKeys = {
     showActivityStatus: 'Show Activity Status',
     showOnlineStatus: 'Show your online status and last activity time',
     dataManagement: 'Data Management',
-    exportData: 'Export Data',
-    deleteAccount: 'Delete Account',
-    dataUsageInfo: 'Data Usage Information',
-    dataUsageDescription: 'We only collect necessary personal information to provide services',
     exportRequestSubmitted: 'Export Request Submitted',
     exportDataDescription: 'We will send your data to your registered email within 24 hours',
     deleteAccountDeveloping: 'Account deletion feature is under development, please contact customer service if you need to delete your account',
@@ -774,6 +834,42 @@ export const enTranslations: TranslationKeys = {
     hour: 'hour',
     hours: 'hours',
     neverTimeout: 'Never timeout',
+    // 外观设置
+    interfaceAppearance: 'Interface Appearance',
+    customizeAppearance: 'Customize the appearance and feel of the application',
+    themeMode: 'Theme Mode',
+    light: 'Light',
+    dark: 'Dark',
+    auto: 'Auto',
+    fontSize: 'Font Size',
+    small: 'Small',
+    medium: 'Medium',
+    large: 'Large',
+    simplifiedChinese: '简体中文',
+    english: 'English',
+    // 安全设置
+    changePassword: 'Change Password',
+    changePasswordDescription: 'Regularly change your password to protect account security',
+    currentPassword: 'Current Password',
+    newPassword: 'New Password',
+    confirmNewPassword: 'Confirm New Password',
+    changingPassword: 'Changing...',
+    accountSecurity: 'Account Security',
+    manageAccountSecurity: 'Manage your account security settings',
+    twoFactorAuth: 'Two-Factor Authentication',
+    twoFactorAuthDescription: 'Add extra security protection to your account',
+    recommended: 'Recommended',
+    // 隐私设置
+    managePersonalData: 'Manage your personal data',
+    downloadAllRecords: 'Download all your chat records and files',
+    exportData: 'Export',
+    permanentlyDeleteAccount: 'Permanently delete your account and all data',
+    deleteAccount: 'Delete',
+    dataUsageInfo: 'Data Usage Information',
+    dataUsageDescription1: 'We only collect necessary personal information to provide services',
+    dataUsageDescription2: 'Your conversation data is encrypted and stored, we do not view or share it',
+    dataUsageDescription3: 'Uploaded files are only used for AI analysis and are automatically deleted after processing',
+    dataUsageDescription4: 'You can request deletion of personal data at any time',
   },
   nav: {
     home: 'Home',

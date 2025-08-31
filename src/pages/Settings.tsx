@@ -461,7 +461,7 @@ const Settings = () => {
                   disabled={isLoading}
                   className="w-full btn-gradient-soft"
                 >
-                  {isLoading ? "修改中..." : "修改密码"}
+                  {isLoading ? t.settings.changingPassword : t.settings.changePassword}
                 </Button>
               </CardContent>
             </Card>
@@ -469,18 +469,18 @@ const Settings = () => {
             {/* 账户安全 */}
             <Card className="backdrop-blur-sm bg-card/80 shadow-lg border border-border/50">
               <CardHeader>
-                <CardTitle>账户安全</CardTitle>
+                <CardTitle>{t.settings.accountSecurity}</CardTitle>
                 <CardDescription>
-                  管理您的账户安全设置
+                  {t.settings.manageAccountSecurity}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>两步验证</Label>
+                    <Label>{t.settings.twoFactorAuth}</Label>
                     <p className="text-sm text-muted-foreground">
-                      为您的账户添加额外的安全保护
-                      <Badge variant="outline" className="ml-2">推荐</Badge>
+                      {t.settings.twoFactorAuthDescription}
+                      <Badge variant="outline" className="ml-2">{t.settings.recommended}</Badge>
                     </p>
                   </div>
                   <Switch
@@ -499,17 +499,17 @@ const Settings = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Lock className="h-5 w-5" />
-                  隐私控制
+                  {t.settings.privacyControl}
                 </CardTitle>
                 <CardDescription>
-                  控制您的个人信息可见性
+                  {t.settings.controlVisibility}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>公开个人资料</Label>
-                    <p className="text-sm text-muted-foreground">允许其他用户查看您的基本信息</p>
+                    <Label>{t.settings.publicProfile}</Label>
+                    <p className="text-sm text-muted-foreground">{t.settings.allowOthersView}</p>
                   </div>
                   <Switch
                     checked={settings.profileVisible}
@@ -519,8 +519,8 @@ const Settings = () => {
                 <Separator />
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>显示活动状态</Label>
-                    <p className="text-sm text-muted-foreground">显示您的在线状态和最后活动时间</p>
+                    <Label>{t.settings.showActivityStatus}</Label>
+                    <p className="text-sm text-muted-foreground">{t.settings.showOnlineStatus}</p>
                   </div>
                   <Switch
                     checked={settings.activityVisible}
@@ -533,16 +533,16 @@ const Settings = () => {
             {/* 数据管理 */}
             <Card className="backdrop-blur-sm bg-card/80 shadow-lg border border-border/50">
               <CardHeader>
-                <CardTitle>数据管理</CardTitle>
+                <CardTitle>{t.settings.dataManagement}</CardTitle>
                 <CardDescription>
-                  管理您的个人数据
+                  {t.settings.managePersonalData}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>导出数据</Label>
-                    <p className="text-sm text-muted-foreground">下载您的所有对话记录和文件</p>
+                    <Label>{t.settings.exportData}</Label>
+                    <p className="text-sm text-muted-foreground">{t.settings.downloadAllRecords}</p>
                   </div>
                   <Button
                     variant="outline"
@@ -550,14 +550,14 @@ const Settings = () => {
                     className="hover:bg-background/10"
                   >
                     <Download className="h-4 w-4 mr-2" />
-                    导出
+                    {t.settings.exportData}
                   </Button>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-red-600">删除账户</Label>
-                    <p className="text-sm text-muted-foreground">永久删除您的账户和所有数据</p>
+                    <Label className="text-red-600">{t.settings.deleteAccount}</Label>
+                    <p className="text-sm text-muted-foreground">{t.settings.permanentlyDeleteAccount}</p>
                   </div>
                   <Button
                     variant="destructive"
@@ -565,7 +565,7 @@ const Settings = () => {
                     className="hover:bg-red-600"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    删除
+                    {t.settings.deleteAccount}
                   </Button>
                 </div>
               </CardContent>
@@ -576,14 +576,14 @@ const Settings = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-orange-600">
                   <AlertTriangle className="h-5 w-5" />
-                  数据使用说明
+                  {t.settings.dataUsageInfo}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground space-y-2">
-                <p>• 我们仅收集必要的个人信息用于提供服务</p>
-                <p>• 您的对话数据会被加密存储，我们不会查看或分享</p>
-                <p>• 上传的文件仅用于AI分析，处理后会自动删除</p>
-                <p>• 您可以随时请求删除个人数据</p>
+                <p>• {t.settings.dataUsageDescription1}</p>
+                <p>• {t.settings.dataUsageDescription2}</p>
+                <p>• {t.settings.dataUsageDescription3}</p>
+                <p>• {t.settings.dataUsageDescription4}</p>
               </CardContent>
             </Card>
           </TabsContent>
