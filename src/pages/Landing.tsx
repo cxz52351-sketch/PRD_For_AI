@@ -158,13 +158,15 @@ const Landing = () => {
       <div className="floating-orb w-80 h-80 bg-gradient-to-r from-violet-300/35 to-fuchsia-300/35 bottom-1/4 -left-40 blur-3xl" style={{ animationDelay: '4s' }} />
 
       <header className="sticky top-0 z-40 glass-effect">
-        <nav className="mx-auto max-w-7xl flex items-center justify-between py-4 px-6 sm:px-8 lg:px-10">
-          <Link to="/" className="flex items-center gap-3 group" aria-label="PRD For AI">
+        <nav className="mx-auto max-w-7xl flex items-center justify-between py-4 px-0">
+          {/* 左侧：Logo + 品牌名 - 靠左边界 */}
+          <Link to="/" className="flex items-center gap-3 group pl-2 sm:pl-3 lg:pl-4" aria-label="PRD For AI">
             <img src="/logo-prd-for-ai.svg" alt="PRD For AI Logo" className="h-10 w-10 hover-lift" />
             <span className="brand-logo text-xl text-slate-900 group-hover:text-indigo-600 transition-colors">PRD For AI</span>
           </Link>
 
-          <div className="hidden lg:flex items-center gap-8">
+          {/* 中间：导航链接 - 聚集在页面正中间 */}
+          <div className="hidden lg:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
             <a href="#features" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors relative group">
               {t.nav.features}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
@@ -179,7 +181,8 @@ const Landing = () => {
             </a>
           </div>
 
-          <div className="hidden lg:flex items-center gap-4">
+          {/* 右侧：语言切换器 + 登录 + 注册按钮 - 靠右边界 */}
+          <div className="hidden lg:flex items-center gap-4 pr-0">
             <LanguageSwitcher />
             <Link to="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">{t.common.login}</Link>
             <Link
