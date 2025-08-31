@@ -382,6 +382,10 @@ export interface TranslationKeys {
     stopFailed: string;
     cannotStop: string;
     aborted: string;
+    // 默认对话相关
+    defaultConversationTitle: string;
+    defaultConversationPreview: string;
+    defaultWelcomeMessage: string;
   };
 
   // 用户菜单
@@ -752,6 +756,10 @@ export const zhTranslations: TranslationKeys = {
     exportConversation: '导出对话',
     deleteConversation: '删除对话',
     retryMessage: '重试',
+    // 默认对话相关
+    defaultConversationTitle: 'PRD For AI',
+    defaultConversationPreview: '欢迎使用 PRD For AI 产品设计对话助手',
+    defaultWelcomeMessage: '欢迎使用 PRD For AI！\n\n我是你的产品设计与文档助手，帮助你：\n\n**核心功能:**\n• 🧭 需求澄清与用户画像\n• 🧩 功能拆解与优先级\n• 📄 PRD/BRD/需求文档生成与评审\n• 📎 文件上传与洞察提炼\n• 💬 多轮对话与版本管理\n\n开始对我说：例如"为一个 AI 会议纪要工具产出 PRD 结构"。',
     stopResponse: '停止响应',
     thinking: 'AI正在思考中...',
     generating: 'AI正在生成回复...',
@@ -1141,6 +1149,10 @@ export const enTranslations: TranslationKeys = {
     exportConversation: 'Export Conversation',
     deleteConversation: 'Delete Conversation',
     retryMessage: 'Retry',
+    // 默认对话相关
+    defaultConversationTitle: 'PRD For AI',
+    defaultConversationPreview: 'Welcome to PRD For AI Product Design Chat Assistant',
+    defaultWelcomeMessage: 'Welcome to PRD For AI!\n\nI am your product design and documentation assistant, helping you with:\n\n**Core Features:**\n• 🧭 Requirement clarification and user personas\n• 🧩 Feature breakdown and prioritization\n• 📄 PRD/BRD/requirement document generation and review\n• 📎 File upload and insight extraction\n• 💬 Multi-turn conversations and version management\n\nStart talking to me: For example, "Create a PRD structure for an AI meeting minutes tool."',
     stopResponse: 'Stop Response',
     thinking: 'AI is thinking...',
     generating: 'AI is generating response...',

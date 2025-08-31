@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,14 +33,22 @@ const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, logout } = useAuth();
-  const { t } = useTranslation();
+  const { t, language, setLanguage } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
+
+  // 同步语言状态
+  useEffect(() => {
+    setSettings(prev => ({
+      ...prev,
+      language: language === 'zh' ? 'zh-CN' : 'en-US'
+    }));
+  }, [language]);
 
   // 设置状态
   const [settings, setSettings] = useState({
     // 外观设置
     theme: "auto", // light, dark, auto
-    language: "zh-CN",
+    language: language === 'zh' ? 'zh-CN' : 'en-US', // 转换为设置格式
     fontSize: "medium",
 
     // 通知设置
@@ -76,6 +84,11 @@ const Settings = () => {
 
   const handleSettingChange = (key: string, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
+
+    // 如果是语言设置，同时更新翻译系统
+    if (key === 'language') {
+      setLanguage(value === 'zh-CN' ? 'zh' : 'en');
+    }
 
     // 模拟保存设置
     toast({

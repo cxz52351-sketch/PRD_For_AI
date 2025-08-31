@@ -47,7 +47,7 @@ const STORAGE_KEYS = {
  */
 function safeJSONParse<T>(jsonString: string | null, defaultValue: T): T {
   if (!jsonString) return defaultValue;
-  
+
   try {
     const parsed = JSON.parse(jsonString, (key, value) => {
       // 处理Date对象的反序列化
@@ -87,9 +87,32 @@ export function saveConversations(conversations: Conversation[]): void {
 }
 
 /**
+ * 获取默认对话数据（需要传入翻译函数）
+ */
+export function getDefaultConversations(t: any): Conversation[] {
+  return [
+    {
+      id: "1",
+      title: t.chat.defaultConversationTitle,
+      timestamp: new Date(),
+      preview: t.chat.defaultConversationPreview,
+      messages: [
+        {
+          id: "1",
+          type: "ai",
+          content: t.chat.defaultWelcomeMessage,
+          timestamp: new Date(),
+        }
+      ]
+    }
+  ];
+}
+
+/**
  * 从本地存储加载对话列表
  */
 export function loadConversations(): Conversation[] {
+  // 临时使用硬编码的默认对话，实际使用时应该通过getDefaultConversations获取
   const defaultConversations: Conversation[] = [
     {
       id: "1",
@@ -109,12 +132,12 @@ export function loadConversations(): Conversation[] {
 
   const stored = localStorage.getItem(STORAGE_KEYS.CONVERSATIONS);
   const conversations = safeJSONParse(stored, defaultConversations);
-  
+
   // 验证数据格式，确保数据完整性
   if (!Array.isArray(conversations) || conversations.length === 0) {
     return defaultConversations;
   }
-  
+
   return conversations;
 }
 
@@ -227,11 +250,11 @@ export function clearAllStoredData(): void {
  */
 export function getStorageUsage(): { [key: string]: number } {
   const usage: { [key: string]: number } = {};
-  
+
   Object.entries(STORAGE_KEYS).forEach(([name, key]) => {
     const value = localStorage.getItem(key);
     usage[name] = value ? new Blob([value]).size : 0;
   });
-  
+
   return usage;
 }

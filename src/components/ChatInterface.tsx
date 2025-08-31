@@ -20,6 +20,7 @@ import {
 import {
   saveConversations,
   loadConversations,
+  getDefaultConversations,
   saveActiveConversationId,
   loadActiveConversationId,
   saveSidebarCollapsed,
@@ -40,11 +41,15 @@ type Message = StoredMessage;
 type Conversation = StoredConversation;
 
 export function ChatInterface() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   // 从本地存储初始化状态
   const [conversations, setConversations] = useState<Conversation[]>(() => {
     const loaded = loadConversations();
+    // 如果没有对话数据，使用翻译后的默认对话
+    if (loaded.length === 0 || (loaded.length === 1 && loaded[0].id === "1")) {
+      return getDefaultConversations(t);
+    }
     return loaded;
   });
   const [activeConversationId, setActiveConversationId] = useState<string>(() => {
@@ -61,6 +66,36 @@ export function ChatInterface() {
   // 停止响应相关状态
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // 监听语言变化，更新默认对话
+  useEffect(() => {
+    setConversations(prev => {
+      const updated = prev.map(conv => {
+        if (conv.id === "1") {
+          // 更新默认对话的翻译
+          return {
+            ...conv,
+            title: t.chat.defaultConversationTitle,
+            preview: t.chat.defaultConversationPreview,
+            messages: conv.messages.map(msg => {
+              if (msg.id === "1") {
+                return {
+                  ...msg,
+                  content: t.chat.defaultWelcomeMessage
+                };
+              }
+              return msg;
+            })
+          };
+        }
+        return conv;
+      });
+      // 保存更新后的对话
+      saveConversations(updated);
+      return updated;
+    });
+  }, [language, t]);
+
   // 画布编辑相关状态
   const [showCanvasEdit, setShowCanvasEdit] = useState(false);
   const [canvasEditContent, setCanvasEditContent] = useState("");
