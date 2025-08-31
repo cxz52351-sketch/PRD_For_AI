@@ -13,8 +13,10 @@ import { LogOut, Settings, User } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '@/lib/useLanguage';
 
 const UserMenu: React.FC = () => {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -22,8 +24,8 @@ const UserMenu: React.FC = () => {
   const handleLogout = () => {
     logout();
     toast({
-      title: "已退出登录",
-      description: "您已成功退出登录",
+      title: t.user.logoutSuccess.split('您已成功')[0].trim(),
+      description: t.user.logoutSuccess,
     });
   };
 
@@ -40,8 +42,8 @@ const UserMenu: React.FC = () => {
   const getDisplayName = () => {
     if (user.username) return user.username;
     if (user.email) return user.email.split('@')[0];
-    if (user.phone) return `用户${user.phone.slice(-4)}`;
-    return '用户';
+    if (user.phone) return `${t.user.userPrefix}${user.phone.slice(-4)}`;
+    return t.user.userPrefix;
   };
 
   // 获取联系方式显示
@@ -80,7 +82,7 @@ const UserMenu: React.FC = () => {
           onClick={() => navigate('/profile')}
         >
           <User className="mr-2 h-4 w-4" />
-          <span>个人资料</span>
+          <span>{t.user.profile}</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem
@@ -88,7 +90,7 @@ const UserMenu: React.FC = () => {
           onClick={() => navigate('/settings')}
         >
           <Settings className="mr-2 h-4 w-4" />
-          <span>设置</span>
+          <span>{t.user.settings}</span>
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
@@ -98,7 +100,7 @@ const UserMenu: React.FC = () => {
           onClick={handleLogout}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          <span>退出登录</span>
+          <span>{t.user.logout}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

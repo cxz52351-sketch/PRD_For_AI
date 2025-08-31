@@ -27,11 +27,13 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
+import { useTranslation } from "@/lib/useLanguage";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
 
   // 设置状态
@@ -77,8 +79,8 @@ const Settings = () => {
 
     // 模拟保存设置
     toast({
-      title: "设置已保存",
-      description: "您的偏好设置已自动保存",
+      title: t.settings.saved,
+      description: t.settings.autoSaved,
     });
   };
 
@@ -139,15 +141,15 @@ const Settings = () => {
 
   const handleExportData = () => {
     toast({
-      title: "导出请求已提交",
-      description: "我们将在24小时内将您的数据发送到注册邮箱",
+      title: t.settings.exportRequestSubmitted,
+      description: t.settings.exportDataDescription,
     });
   };
 
   const handleDeleteAccount = () => {
     toast({
-      title: "功能开发中",
-      description: "账户删除功能正在开发中，如需删除账户请联系客服",
+      title: t.common.developing,
+      description: t.settings.deleteAccountDeveloping,
       variant: "destructive",
     });
   };
@@ -164,9 +166,9 @@ const Settings = () => {
             className="hover:bg-background/10"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            返回
+            {t.common.back}
           </Button>
-          <h1 className="text-xl font-semibold">设置</h1>
+          <h1 className="text-xl font-semibold">{t.common.settings}</h1>
         </div>
       </div>
 
@@ -176,19 +178,19 @@ const Settings = () => {
           <TabsList className="grid w-full grid-cols-4 bg-muted/50">
             <TabsTrigger value="general" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Settings2 className="w-4 h-4 mr-2" />
-              通用
+              {t.settings.general}
             </TabsTrigger>
             <TabsTrigger value="appearance" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Palette className="w-4 h-4 mr-2" />
-              外观
+              {t.settings.appearance}
             </TabsTrigger>
             <TabsTrigger value="security" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Shield className="w-4 h-4 mr-2" />
-              安全
+              {t.settings.security}
             </TabsTrigger>
             <TabsTrigger value="privacy" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Lock className="w-4 h-4 mr-2" />
-              隐私
+              {t.settings.privacy}
             </TabsTrigger>
           </TabsList>
 
@@ -199,17 +201,17 @@ const Settings = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Bell className="h-5 w-5" />
-                  通知设置
+                  {t.settings.notificationSettings}
                 </CardTitle>
                 <CardDescription>
-                  管理您接收通知的方式
+                  {t.settings.manageNotifications}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>推送通知</Label>
-                    <p className="text-sm text-muted-foreground">接收应用内推送通知</p>
+                    <Label>{t.settings.pushNotifications}</Label>
+                    <p className="text-sm text-muted-foreground">{t.settings.receivePushNotifications}</p>
                   </div>
                   <Switch
                     checked={settings.pushNotifications}
@@ -219,8 +221,8 @@ const Settings = () => {
                 <Separator />
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>邮件通知</Label>
-                    <p className="text-sm text-muted-foreground">接收重要更新的邮件通知</p>
+                    <Label>{t.settings.emailNotifications}</Label>
+                    <p className="text-sm text-muted-foreground">{t.settings.receiveEmailNotifications}</p>
                   </div>
                   <Switch
                     checked={settings.emailNotifications}
@@ -230,8 +232,8 @@ const Settings = () => {
                 <Separator />
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>声音提示</Label>
-                    <p className="text-sm text-muted-foreground">播放消息提示音</p>
+                    <Label>{t.settings.soundAlerts}</Label>
+                    <p className="text-sm text-muted-foreground">{t.settings.playMessageSounds}</p>
                   </div>
                   <Switch
                     checked={settings.soundEnabled}
@@ -244,16 +246,16 @@ const Settings = () => {
             {/* 聊天设置 */}
             <Card className="backdrop-blur-sm bg-card/80 shadow-lg border border-border/50">
               <CardHeader>
-                <CardTitle>聊天设置</CardTitle>
+                <CardTitle>{t.settings.chatSettings}</CardTitle>
                 <CardDescription>
-                  自定义您的聊天体验
+                  {t.settings.customizeChat}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>自动保存对话</Label>
-                    <p className="text-sm text-muted-foreground">自动保存您的对话记录</p>
+                    <Label>{t.settings.autoSaveConversations}</Label>
+                    <p className="text-sm text-muted-foreground">{t.settings.autoSaveHistory}</p>
                   </div>
                   <Switch
                     checked={settings.autoSave}
@@ -263,8 +265,8 @@ const Settings = () => {
                 <Separator />
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>流式响应</Label>
-                    <p className="text-sm text-muted-foreground">以打字机效果显示AI回复</p>
+                    <Label>{t.settings.streamingResponse}</Label>
+                    <p className="text-sm text-muted-foreground">{t.settings.typewriterEffect}</p>
                   </div>
                   <Switch
                     checked={settings.streamingMode}
@@ -273,17 +275,17 @@ const Settings = () => {
                 </div>
                 <Separator />
                 <div className="space-y-2">
-                  <Label>会话超时时间</Label>
+                  <Label>{t.settings.sessionTimeout}</Label>
                   <Select value={settings.sessionTimeout} onValueChange={(value) => handleSettingChange('sessionTimeout', value)}>
                     <SelectTrigger className="bg-background/60 border-border/60">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="15">15分钟</SelectItem>
-                      <SelectItem value="30">30分钟</SelectItem>
-                      <SelectItem value="60">1小时</SelectItem>
-                      <SelectItem value="120">2小时</SelectItem>
-                      <SelectItem value="0">永不超时</SelectItem>
+                      <SelectItem value="15">15 {t.settings.minutes}</SelectItem>
+                      <SelectItem value="30">30 {t.settings.minutes}</SelectItem>
+                      <SelectItem value="60">1 {t.settings.hour}</SelectItem>
+                      <SelectItem value="120">2 {t.settings.hours}</SelectItem>
+                      <SelectItem value="0">{t.settings.neverTimeout}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -297,20 +299,20 @@ const Settings = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Palette className="h-5 w-5" />
-                  界面外观
+                  {t.settings.interfaceAppearance}
                 </CardTitle>
                 <CardDescription>
-                  自定义应用的外观和感觉
+                  {t.settings.customizeAppearance}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label>主题模式</Label>
+                  <Label>{t.settings.themeMode}</Label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { value: "light", label: "浅色", icon: Sun },
-                      { value: "dark", label: "深色", icon: Moon },
-                      { value: "auto", label: "自动", icon: Settings2 },
+                      { value: "light", label: t.settings.light, icon: Sun },
+                      { value: "dark", label: t.settings.dark, icon: Moon },
+                      { value: "auto", label: t.settings.auto, icon: Settings2 },
                     ].map(({ value, label, icon: Icon }) => (
                       <Button
                         key={value}
@@ -328,7 +330,7 @@ const Settings = () => {
                 <Separator />
 
                 <div className="space-y-2">
-                  <Label>语言</Label>
+                  <Label>{t.common.language}</Label>
                   <Select value={settings.language} onValueChange={(value) => handleSettingChange('language', value)}>
                     <SelectTrigger className="bg-background/60 border-border/60">
                       <SelectValue />
@@ -337,13 +339,13 @@ const Settings = () => {
                       <SelectItem value="zh-CN">
                         <div className="flex items-center gap-2">
                           <Globe className="h-4 w-4" />
-                          简体中文
+                          {t.settings.simplifiedChinese}
                         </div>
                       </SelectItem>
                       <SelectItem value="en-US">
                         <div className="flex items-center gap-2">
                           <Globe className="h-4 w-4" />
-                          English
+                          {t.settings.english}
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -353,12 +355,12 @@ const Settings = () => {
                 <Separator />
 
                 <div className="space-y-2">
-                  <Label>字体大小</Label>
+                  <Label>{t.settings.fontSize}</Label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { value: "small", label: "小" },
-                      { value: "medium", label: "中" },
-                      { value: "large", label: "大" },
+                      { value: "small", label: t.settings.small },
+                      { value: "medium", label: t.settings.medium },
+                      { value: "large", label: t.settings.large },
                     ].map(({ value, label }) => (
                       <Button
                         key={value}
@@ -381,15 +383,15 @@ const Settings = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" />
-                  密码修改
+                  {t.settings.changePassword}
                 </CardTitle>
                 <CardDescription>
-                  定期更换密码以保护账户安全
+                  {t.settings.changePasswordDescription}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="current-password">当前密码</Label>
+                  <Label htmlFor="current-password">{t.settings.currentPassword}</Label>
                   <div className="relative">
                     <Input
                       id="current-password"
@@ -411,7 +413,7 @@ const Settings = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">新密码</Label>
+                  <Label htmlFor="new-password">{t.settings.newPassword}</Label>
                   <div className="relative">
                     <Input
                       id="new-password"
@@ -433,7 +435,7 @@ const Settings = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">确认新密码</Label>
+                  <Label htmlFor="confirm-password">{t.settings.confirmNewPassword}</Label>
                   <div className="relative">
                     <Input
                       id="confirm-password"

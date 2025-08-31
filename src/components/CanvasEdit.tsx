@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "@/lib/useLanguage";
 
 interface CanvasEditProps {
   content: string;
@@ -20,12 +21,13 @@ interface CanvasEditProps {
   children: React.ReactNode; // 用于传递真实的ChatInterface
 }
 
-export function CanvasEdit({ 
-  content, 
-  onClose, 
+export function CanvasEdit({
+  content,
+  onClose,
   title = "画布编辑",
   children
 }: CanvasEditProps) {
+  const { t } = useTranslation();
   const [editedContent, setEditedContent] = useState(content);
   const [copied, setCopied] = useState(false);
   const [leftWidth, setLeftWidth] = useState(520); // 增加初始左侧宽度
@@ -40,14 +42,14 @@ export function CanvasEdit({
       await navigator.clipboard.writeText(editedContent);
       setCopied(true);
       toast({
-        title: "复制成功",
-        description: "内容已复制到剪贴板",
+        title: t.common.success,
+        description: t.common.copy + "成功",
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       toast({
-        title: "复制失败",
-        description: "无法复制到剪贴板",
+        title: t.common.error,
+        description: t.common.copy + "失败",
         variant: "destructive",
       });
     }
@@ -56,7 +58,7 @@ export function CanvasEdit({
   const handleDownload = (format: string) => {
     const timestamp = new Date().toISOString().slice(0, 10);
     const filename = `PRD_${timestamp}`;
-    
+
     if (format === 'markdown') {
       const blob = new Blob([editedContent], { type: 'text/markdown' });
       const url = URL.createObjectURL(blob);
@@ -67,7 +69,7 @@ export function CanvasEdit({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "下载成功",
         description: "Markdown文件已开始下载",
@@ -82,7 +84,7 @@ export function CanvasEdit({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "下载成功",
         description: "文本文件已开始下载",
@@ -100,11 +102,11 @@ export function CanvasEdit({
 
     const containerRect = containerRef.current.getBoundingClientRect();
     const newLeftWidth = e.clientX - containerRect.left;
-    
+
     // 限制最小和最大宽度
     const minWidth = 320;
     const maxWidth = containerRect.width - 400;
-    
+
     if (newLeftWidth >= minWidth && newLeftWidth <= maxWidth) {
       setLeftWidth(newLeftWidth);
     }
@@ -121,7 +123,7 @@ export function CanvasEdit({
       document.addEventListener('mouseup', handleMouseUp);
       document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
-      
+
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
@@ -134,7 +136,7 @@ export function CanvasEdit({
   return (
     <div ref={containerRef} className="fixed inset-0 bg-background z-50 flex">
       {/* 左侧真实对话界面 */}
-      <div 
+      <div
         className="border-r flex flex-col overflow-hidden bg-background"
         style={{ width: leftWidth }}
       >
@@ -144,9 +146,9 @@ export function CanvasEdit({
             画布编辑模式
           </div>
         </div>
-        
+
         {/* 真实的ChatInterface内容 - 使用CSS缩放适应宽度 */}
-        <div 
+        <div
           className="flex-1 overflow-hidden relative bg-background"
           style={{
             transform: leftWidth < 500 ? `scale(${leftWidth / 500})` : 'scale(1)',
@@ -182,10 +184,10 @@ export function CanvasEdit({
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-semibold">{title}</h1>
             <span className="text-sm text-muted-foreground">
-              {editedContent.length} 字符
+              {editedContent.length} {t.common.characters}
             </span>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {/* 预览/编辑切换按钮 */}
             <Button
@@ -197,36 +199,36 @@ export function CanvasEdit({
               {isPreviewMode ? (
                 <>
                   <Edit3 className="h-4 w-4" />
-                  编辑
+                  {t.common.edit}
                 </>
               ) : (
                 <>
                   <Eye className="h-4 w-4" />
-                  预览
+                  {t.common.preview}
                 </>
               )}
             </Button>
-            
+
             {/* 下载按钮 */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Download className="h-4 w-4" />
-                  下载
+                  {t.common.download}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => handleDownload('markdown')}>
                   <Download className="h-4 w-4 mr-2" />
-                  下载为 Markdown (.md)
+                  {t.common.download} Markdown (.md)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleDownload('text')}>
                   <Download className="h-4 w-4 mr-2" />
-                  下载为 文本 (.txt)
+                  {t.common.download} 文本 (.txt)
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            
+
             {/* 复制按钮 */}
             <Button
               variant="outline"
@@ -239,9 +241,9 @@ export function CanvasEdit({
               ) : (
                 <Copy className="h-4 w-4" />
               )}
-              {copied ? "已复制" : "复制"}
+              {copied ? "已" + t.common.copy : t.common.copy}
             </Button>
-            
+
             {/* 关闭按钮 */}
             <Button
               variant="ghost"
@@ -258,7 +260,7 @@ export function CanvasEdit({
         <div className="flex-1 p-4 overflow-hidden">
           <div className="h-full bg-background rounded-lg border overflow-hidden flex flex-col">
             {isPreviewMode ? (
-              <div 
+              <div
                 className={cn(
                   "flex-1 overflow-y-auto overflow-x-hidden p-6",
                   "prose prose-slate dark:prose-invert max-w-none",
@@ -279,7 +281,7 @@ export function CanvasEdit({
                     ul: ({ children }) => <ul className="mb-3 ml-4 text-foreground">{children}</ul>,
                     ol: ({ children }) => <ol className="mb-3 ml-4 text-foreground">{children}</ol>,
                     li: ({ children }) => <li className="mb-1">{children}</li>,
-                    code: ({ inline, children, ...props }) => 
+                    code: ({ inline, children, ...props }) =>
                       inline ? (
                         <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-foreground" {...props}>
                           {children}
@@ -320,12 +322,12 @@ export function CanvasEdit({
         {/* 底部状态栏 */}
         <div className="flex items-center justify-between p-4 border-t bg-muted/30 text-xs text-muted-foreground">
           <div className="flex items-center gap-4">
-            <span>支持Markdown格式</span>
-            <span>当前模式: {isPreviewMode ? "预览" : "编辑"}</span>
+            <span>{t.common.markdownSupport}</span>
+            <span>{t.common.currentMode}: {isPreviewMode ? t.common.preview : t.common.edit}</span>
           </div>
           <div>
-            行数: {editedContent.split('\n').length} | 
-            字符: {editedContent.length}
+            {t.common.lines}: {editedContent.split('\n').length} |
+            {t.common.characters}: {editedContent.length}
           </div>
         </div>
       </div>

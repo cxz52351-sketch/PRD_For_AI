@@ -10,11 +10,13 @@ import { ArrowLeft, Camera, Save, User, Mail, Phone, Calendar } from "lucide-rea
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
+import { useTranslation } from "@/lib/useLanguage";
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t, language } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -33,13 +35,13 @@ const Profile = () => {
 
       setIsEditing(false);
       toast({
-        title: "保存成功",
-        description: "个人资料已更新",
+        title: t.common.success,
+        description: t.profile.saveSuccess,
       });
     } catch (error) {
       toast({
-        title: "保存失败",
-        description: "更新个人资料时出现错误，请重试",
+        title: t.common.error,
+        description: t.profile.saveError,
         variant: "destructive",
       });
     } finally {
@@ -63,7 +65,7 @@ const Profile = () => {
 
   // 格式化日期
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('zh-CN', {
+    return new Date(dateString).toLocaleDateString(language === 'zh' ? 'zh-CN' : 'en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -86,9 +88,9 @@ const Profile = () => {
             className="hover:bg-background/10"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            返回
+            {t.common.back}
           </Button>
-          <h1 className="text-xl font-semibold">个人资料</h1>
+          <h1 className="text-xl font-semibold">{t.common.profile}</h1>
         </div>
       </div>
 
@@ -109,8 +111,8 @@ const Profile = () => {
                   variant="outline"
                   className="absolute -bottom-2 -right-2 rounded-full h-8 w-8 p-0"
                   onClick={() => toast({
-                    title: "功能开发中",
-                    description: "头像上传功能正在开发中",
+                    title: t.common.developing,
+                    description: t.profile.avatarUploadDeveloping,
                   })}
                 >
                   <Camera className="h-3 w-3" />
@@ -120,7 +122,7 @@ const Profile = () => {
                 <h2 className="text-2xl font-bold">{user.username}</h2>
                 <p className="text-muted-foreground">{user.email || user.phone}</p>
                 <Badge variant="outline" className="mt-2">
-                  活跃用户
+                  {t.profile.activeUser}
                 </Badge>
               </div>
             </div>
@@ -134,10 +136,10 @@ const Profile = () => {
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
-                  个人信息
+                  {t.profile.personalInfo}
                 </CardTitle>
                 <CardDescription>
-                  管理您的个人账户信息
+                  {t.profile.manageAccountInfo}
                 </CardDescription>
               </div>
               {!isEditing ? (
@@ -146,7 +148,7 @@ const Profile = () => {
                   onClick={() => setIsEditing(true)}
                   className="hover:bg-background/10"
                 >
-                  编辑
+                  {t.common.edit}
                 </Button>
               ) : (
                 <div className="flex gap-2">
@@ -155,7 +157,7 @@ const Profile = () => {
                     onClick={handleCancel}
                     disabled={isLoading}
                   >
-                    取消
+                    {t.common.cancel}
                   </Button>
                   <Button
                     onClick={handleSave}
@@ -163,7 +165,7 @@ const Profile = () => {
                     className="btn-gradient-soft"
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    {isLoading ? "保存中..." : "保存"}
+                    {isLoading ? t.profile.saving : t.common.save}
                   </Button>
                 </div>
               )}
@@ -174,7 +176,7 @@ const Profile = () => {
             <div className="space-y-2">
               <Label htmlFor="username" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
-                用户名
+                {t.common.username}
               </Label>
               {isEditing ? (
                 <Input
@@ -196,7 +198,7 @@ const Profile = () => {
             <div className="space-y-2">
               <Label htmlFor="email" className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                邮箱地址
+                {t.profile.emailAddress}
               </Label>
               {isEditing ? (
                 <Input
@@ -208,7 +210,7 @@ const Profile = () => {
                 />
               ) : (
                 <div className="p-3 bg-muted/30 rounded-md text-foreground">
-                  {user.email || "未设置"}
+                  {user.email || t.profile.notSet}
                 </div>
               )}
             </div>
@@ -219,7 +221,7 @@ const Profile = () => {
             <div className="space-y-2">
               <Label htmlFor="phone" className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
-                手机号码
+                {t.profile.phoneNumber}
               </Label>
               {isEditing ? (
                 <Input
@@ -231,7 +233,7 @@ const Profile = () => {
                 />
               ) : (
                 <div className="p-3 bg-muted/30 rounded-md text-foreground">
-                  {user.phone || "未设置"}
+                  {user.phone || t.profile.notSet}
                 </div>
               )}
             </div>
@@ -242,7 +244,7 @@ const Profile = () => {
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                注册时间
+                {t.profile.registrationDate}
               </Label>
               <div className="p-3 bg-muted/30 rounded-md text-foreground">
                 {formatDate(user.createdAt)}
@@ -254,28 +256,28 @@ const Profile = () => {
         {/* 统计信息卡片 */}
         <Card className="backdrop-blur-sm bg-card/80 shadow-lg border border-border/50">
           <CardHeader>
-            <CardTitle>使用统计</CardTitle>
+            <CardTitle>{t.profile.usageStats}</CardTitle>
             <CardDescription>
-              您在 Indus AI 中的活动数据
+              {t.profile.activityData}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg">
                 <div className="text-2xl font-bold text-primary">12</div>
-                <div className="text-sm text-muted-foreground">对话次数</div>
+                <div className="text-sm text-muted-foreground">{t.profile.conversationCount}</div>
               </div>
               <div className="text-center p-4 bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-lg">
                 <div className="text-2xl font-bold text-secondary">8</div>
-                <div className="text-sm text-muted-foreground">文件上传</div>
+                <div className="text-sm text-muted-foreground">{t.profile.fileUploads}</div>
               </div>
               <div className="text-center p-4 bg-gradient-to-br from-green-500/10 to-green-500/5 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">5</div>
-                <div className="text-sm text-muted-foreground">导出记录</div>
+                <div className="text-sm text-muted-foreground">{t.profile.exportRecords}</div>
               </div>
               <div className="text-center p-4 bg-gradient-to-br from-orange-500/10 to-orange-500/5 rounded-lg">
                 <div className="text-2xl font-bold text-orange-600">3</div>
-                <div className="text-sm text-muted-foreground">总使用天数</div>
+                <div className="text-sm text-muted-foreground">{t.profile.totalUsageDays}</div>
               </div>
             </div>
           </CardContent>

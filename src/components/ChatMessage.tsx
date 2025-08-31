@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTranslation } from "@/lib/useLanguage";
 
 interface ChatMessageProps {
   type: "user" | "ai";
@@ -28,6 +29,7 @@ export function ChatMessage({
   onEditInCanvas,
   attachments = []
 }: ChatMessageProps) {
+  const { t } = useTranslation();
   const [copiedBlocks, setCopiedBlocks] = useState<Set<number>>(new Set());
   const [messageCopied, setMessageCopied] = useState(false);
   const [showCopyBtn, setShowCopyBtn] = useState(false); // 仅用于用户气泡
@@ -36,7 +38,7 @@ export function ChatMessage({
   // 判断是否显示"在画布中编辑"按钮
   const shouldShowEditInCanvas = () => {
     if (type !== "ai" || isError || !content) return false;
-    
+
     // 检查内容是否包含PRD文档的关键特征
     const prdIndicators = [
       "产品需求文档",
@@ -48,13 +50,13 @@ export function ChatMessage({
       "业务流程",
       "技术架构"
     ];
-    
+
     const hasStructure = content.includes("#") || content.includes("##") || content.includes("###");
-    const hasPrdContent = prdIndicators.some(indicator => 
+    const hasPrdContent = prdIndicators.some(indicator =>
       content.toLowerCase().includes(indicator.toLowerCase())
     );
     const isLongContent = content.length > 1000; // 内容足够长
-    
+
     return hasStructure && (hasPrdContent || isLongContent);
   };
 
@@ -223,49 +225,49 @@ export function ChatMessage({
       "flex gap-4 p-4 max-w-none",
       type === "user" ? "justify-end" : "justify-start"
     )}>
-      <div className={cn("flex flex-col", type === "user" ? "items-end" : "items-start")}> 
+      <div className={cn("flex flex-col", type === "user" ? "items-end" : "items-start")}>
         <div
           onMouseEnter={type === "user" ? showCopy : undefined}
           onMouseLeave={type === "user" ? hideCopyWithDelay : undefined}
           className={cn(
-          // 气泡容器：用户略宽一些
-          "rounded-lg p-4 shadow-sm",
-          type === "user"
-            ? "max-w-[100%] bg-ai-message text-foreground ml-auto"
-            : "max-w-[100%] bg-transparent border border-border text-foreground"
-        )}
+            // 气泡容器：用户略宽一些
+            "rounded-lg p-4 shadow-sm",
+            type === "user"
+              ? "max-w-[100%] bg-ai-message text-foreground ml-auto"
+              : "max-w-[100%] bg-transparent border border-border text-foreground"
+          )}
         >
-        <div className={cn(
-          "prose max-w-none prose-p:leading-relaxed prose-li:leading-relaxed prose-zinc dark:prose-invert prose-headings:text-foreground",
-          type === "ai" ? "prose-sm" : undefined
-        )}>
-          {renderContent()}
-        </div>
-
-        {/* Attachments */}
-        {attachments.length > 0 && (
-          <div className="mt-3 space-y-2">
-            {attachments.map((attachment, index) => (
-              <div key={index} className="flex items-center gap-2 p-2 bg-background/50 rounded border">
-                <span className="text-sm truncate flex-1">{attachment.name}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0"
-                  onClick={() => window.open(attachment.url, '_blank')}
-                >
-                  <Download className="h-3 w-3" />
-                </Button>
-              </div>
-            ))}
+          <div className={cn(
+            "prose max-w-none prose-p:leading-relaxed prose-li:leading-relaxed prose-zinc dark:prose-invert prose-headings:text-foreground",
+            type === "ai" ? "prose-sm" : undefined
+          )}>
+            {renderContent()}
           </div>
-        )}
 
-        <div className={cn(
-          "text-xs mt-3 text-muted-foreground opacity-70"
-        )}>
-          {formatTime(timestamp)}
-        </div>
+          {/* Attachments */}
+          {attachments.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {attachments.map((attachment, index) => (
+                <div key={index} className="flex items-center gap-2 p-2 bg-background/50 rounded border">
+                  <span className="text-sm truncate flex-1">{attachment.name}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() => window.open(attachment.url, '_blank')}
+                  >
+                    <Download className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className={cn(
+            "text-xs mt-3 text-muted-foreground opacity-70"
+          )}>
+            {formatTime(timestamp)}
+          </div>
         </div>
 
         {/* Copy button below bubble */}
@@ -295,7 +297,7 @@ export function ChatMessage({
               <Copy className="h-3 w-3" />
             )}
           </Button>
-          
+
           {/* 在画布中编辑按钮 - 只在AI消息且内容是完整PRD时显示 */}
           {shouldShowEditInCanvas() && onEditInCanvas && (
             <Button
@@ -305,7 +307,7 @@ export function ChatMessage({
               onClick={() => onEditInCanvas(cleanedContent)}
             >
               <Edit className="h-3 w-3 mr-1" />
-              在画布中编辑
+              {t.chat.editInCanvas}
             </Button>
           )}
         </div>

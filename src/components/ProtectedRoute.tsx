@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslation } from '@/lib/useLanguage';
 
 function LoadingFontLoader() {
   return (
@@ -114,6 +115,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
+  const { t } = useTranslation();
 
   // 加载状态
   if (isLoading) {
@@ -125,7 +127,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         <div className="floating-orb w-72 h-72 bg-gradient-to-r from-purple-400/40 to-pink-400/40 top-10 -left-20 blur-3xl" style={{ animationDelay: '0s' }} />
         <div className="floating-orb w-96 h-96 bg-gradient-to-r from-purple-300/30 to-pink-300/30 top-1/3 -right-32 blur-3xl" style={{ animationDelay: '2s' }} />
         <div className="floating-orb w-80 h-80 bg-gradient-to-r from-violet-300/35 to-fuchsia-300/35 bottom-1/4 -left-40 blur-3xl" style={{ animationDelay: '4s' }} />
-        
+
         <div className="flex items-center justify-center min-h-screen p-4">
           <div className="w-full max-w-md">
             {/* Logo和标题 */}
@@ -138,9 +140,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                 />
               </div>
               <h1 className="font-display text-2xl font-bold text-slate-900 mb-3">
-                <span className="gradient-text">正在加载...</span>
+                <span className="gradient-text">{t.common.loading}</span>
               </h1>
-              <p className="text-lg text-slate-600 font-sans-premium">请稍候，我们正在为您准备应用</p>
+              <p className="text-lg text-slate-600 font-sans-premium">{t.common.preparingApp}</p>
             </div>
 
             <Card className="sophisticated-card rounded-2xl premium-shadow">

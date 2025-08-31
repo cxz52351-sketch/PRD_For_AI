@@ -10,6 +10,7 @@ import UserMenu from "./UserMenu";
 import { useToast } from "@/hooks/use-toast";
 import { api, parseStreamResponse, type Message as APIMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/useLanguage";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +40,8 @@ type Message = StoredMessage;
 type Conversation = StoredConversation;
 
 export function ChatInterface() {
+  const { t } = useTranslation();
+
   // 从本地存储初始化状态
   const [conversations, setConversations] = useState<Conversation[]>(() => {
     const loaded = loadConversations();
@@ -71,8 +74,8 @@ export function ChatInterface() {
     const hasStoredData = localStorage.getItem('prd-ai-conversations');
     if (hasStoredData && conversations.length > 1) {
       toast({
-        title: "数据已恢复",
-        description: "您之前的聊天记录已从本地存储恢复",
+        title: t.chat.dataRestored.split('您之前的')[0].trim(),
+        description: t.chat.dataRestored,
         duration: 3000,
       });
     }
@@ -145,19 +148,19 @@ export function ChatInterface() {
         // 已有 Dify 任务ID，调用后端停止
         const response = await api.stopResponse(currentTaskId);
         if (response.success) {
-          toast({ title: "已停止响应", description: "AI响应已成功停止" });
+          toast({ title: t.chat.stopSuccess, description: t.chat.stopSuccess });
         }
       } else if (abortControllerRef.current) {
         // 还没有 task_id，直接中止 fetch 流
         abortControllerRef.current.abort();
-        toast({ title: "已中止", description: "已中止本地流连接" });
+        toast({ title: t.chat.aborted, description: t.chat.aborted });
       } else {
-        toast({ title: "无法停止", description: "没有正在进行的响应任务", variant: "destructive" });
+        toast({ title: t.chat.cannotStop, description: t.chat.cannotStop, variant: "destructive" });
         return;
       }
     } catch (error) {
       console.error("停止响应失败:", error);
-      toast({ title: "停止失败", description: error instanceof Error ? error.message : "停止响应时出现错误", variant: "destructive" });
+      toast({ title: t.chat.stopFailed, description: error instanceof Error ? error.message : t.chat.stopFailed, variant: "destructive" });
     } finally {
       setIsGenerating(false);
       setIsLoading(false);
@@ -203,8 +206,8 @@ export function ChatInterface() {
           } catch (error) {
             console.error('文件上传失败:', file.name, error);
             toast({
-              title: "文件上传失败",
-              description: `无法上传文件 ${file.name}`,
+              title: t.chat.uploadFailed,
+              description: `${t.chat.uploadFailed}: ${file.name}`,
               variant: "destructive",
             });
           }
@@ -357,8 +360,8 @@ export function ChatInterface() {
             ));
 
             toast({
-              title: "文件生成成功",
-              description: `已生成文件：${chunk.filename}`,
+              title: t.chat.fileGenerated,
+              description: `${t.chat.fileGenerated}: ${chunk.filename}`,
             });
           } else if (chunk.type === "conversation") {
             // 更新当前会话的本地与 Dify 会话ID
@@ -411,8 +414,8 @@ export function ChatInterface() {
 
         if (response.file) {
           toast({
-            title: "文件生成成功",
-            description: `已生成文件：${response.file.filename}`,
+            title: t.chat.fileGenerated,
+            description: `${t.chat.fileGenerated}: ${response.file.filename}`,
           });
         }
       }
@@ -436,8 +439,8 @@ export function ChatInterface() {
       ));
 
       toast({
-        title: "发送失败",
-        description: error instanceof Error ? error.message : "网络连接异常，请检查网络后重试",
+        title: t.chat.sendFailed,
+        description: error instanceof Error ? error.message : t.chat.networkError,
         variant: "destructive",
       });
     } finally {
@@ -451,9 +454,9 @@ export function ChatInterface() {
     const newId = Date.now().toString();
     const newConversation: Conversation = {
       id: newId,
-      title: "新对话",
+      title: t.chat.newConversation,
       timestamp: new Date(),
-      preview: "开始新的对话...",
+      preview: t.chat.newConversation + "...",
       messages: []
     };
 
@@ -515,7 +518,7 @@ export function ChatInterface() {
 
     const markdown = `# ${activeConversation.title}\n\n` +
       activeConversation.messages.map(msg =>
-        `## ${msg.type === 'user' ? '用户' : 'AI助手'} (${msg.timestamp.toLocaleString()})\n\n${msg.content}\n`
+        `## ${msg.type === 'user' ? t.chat.user : t.chat.assistant} (${msg.timestamp.toLocaleString()})\n\n${msg.content}\n`
       ).join('\n');
 
     const blob = new Blob([markdown], { type: 'text/markdown' });
@@ -529,13 +532,13 @@ export function ChatInterface() {
     URL.revokeObjectURL(url);
 
     toast({
-      title: "导出成功",
-      description: "对话已导出为Markdown文件",
+      title: t.chat.exportSuccess.split('对话已导出')[0].trim(),
+      description: t.chat.exportSuccess,
     });
   };
 
   const handleClearAllData = () => {
-    if (confirm('确定要清除所有聊天记录吗？此操作不可撤销。')) {
+    if (confirm(t.chat.clearConfirm)) {
       clearAllStoredData();
       // 重新加载默认数据
       const defaultConversations = loadConversations();
@@ -547,8 +550,8 @@ export function ChatInterface() {
       setOutputFormat("text");
 
       toast({
-        title: "数据已清除",
-        description: "所有聊天记录已被清除",
+        title: t.chat.dataCleared.split('所有聊天记录')[0].trim(),
+        description: t.chat.dataCleared,
       });
     }
   };
@@ -559,7 +562,7 @@ export function ChatInterface() {
 
   const handleEditInCanvas = (content: string) => {
     setCanvasEditContent(content);
-    setCanvasEditTitle(activeConversation?.title || "PRD文档编辑");
+    setCanvasEditTitle(activeConversation?.title || t.chat.editInCanvas);
     setShowCanvasEdit(true);
   };
 
@@ -627,7 +630,7 @@ export function ChatInterface() {
             </Button>
              */}
 
-            
+
             {!isCanvasMode && (
               <Button
                 variant="outline"
@@ -636,7 +639,7 @@ export function ChatInterface() {
                 disabled={!activeConversation?.messages.length}
               >
                 <Download className="h-4 w-4 mr-2" />
-                导出对话
+                {t.chat.exportConversation}
               </Button>
             )}
 
@@ -671,7 +674,7 @@ export function ChatInterface() {
                       className="p-0 h-auto"
                       onClick={() => handleDownloadFile(message.generatedFile!.url)}
                     >
-                      下载生成的文件：{message.generatedFile.filename}
+                      {t.chat.downloadFile}：{message.generatedFile.filename}
                     </Button>
                   </div>
                 )}
@@ -683,7 +686,7 @@ export function ChatInterface() {
                 <div className="bg-ai-message rounded-lg p-4 max-w-[80%]">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
-                    <span>{isLoading ? "AI正在思考中..." : "AI正在生成回复..."}</span>
+                    <span>{isLoading ? t.chat.thinking : t.chat.generating}</span>
                   </div>
                 </div>
               </div>
@@ -698,7 +701,7 @@ export function ChatInterface() {
             onStopResponse={handleStopResponse}
             disabled={isLoading}
             isGenerating={isGenerating}
-            placeholder="请说出您的需求"
+            placeholder={t.chat.inputPlaceholder}
           />
         )}
       </div>

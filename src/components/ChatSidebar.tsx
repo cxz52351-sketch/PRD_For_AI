@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/useLanguage";
 
 interface Conversation {
   id: string;
@@ -31,6 +32,7 @@ export function ChatSidebar({
   isCollapsed,
   onToggleCollapse,
 }: ChatSidebarProps) {
+  const { t, language } = useTranslation();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const formatTime = (date: Date) => {
@@ -38,10 +40,17 @@ export function ChatSidebar({
     const diff = now.getTime() - date.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-    if (days === 0) return "今天";
-    if (days === 1) return "昨天";
-    if (days < 7) return `${days}天前`;
-    return date.toLocaleDateString("zh-CN", { month: "short", day: "numeric" });
+    if (language === 'zh') {
+      if (days === 0) return "今天";
+      if (days === 1) return "昨天";
+      if (days < 7) return `${days}天前`;
+      return date.toLocaleDateString("zh-CN", { month: "short", day: "numeric" });
+    } else {
+      if (days === 0) return "Today";
+      if (days === 1) return "Yesterday";
+      if (days < 7) return `${days} days ago`;
+      return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    }
   };
 
   return (
@@ -56,8 +65,8 @@ export function ChatSidebar({
       {/* Header */}
       <div className="flex items-center justify-between p-4">
         {!isCollapsed ? (
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="flex items-center hover:opacity-80 transition-opacity"
             title="返回官网"
           >
@@ -93,7 +102,7 @@ export function ChatSidebar({
           className="w-full btn-gradient-soft text-primary-foreground transition-all rounded-2xl h-11"
         >
           <Plus className="h-4 w-4" />
-          {!isCollapsed && <span className="ml-2">新建对话</span>}
+          {!isCollapsed && <span className="ml-2">{t.chat.newConversation}</span>}
         </Button>
       </div>
 
@@ -153,8 +162,8 @@ export function ChatSidebar({
       {/* Logo at bottom for collapsed state */}
       {isCollapsed && (
         <div className="p-2 pb-4">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="flex items-center justify-center hover:opacity-80 transition-opacity"
             title="返回官网"
           >

@@ -13,6 +13,8 @@ import {
   Target,
   Star
 } from "lucide-react";
+import { useTranslation } from "@/lib/useLanguage";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 function FontLoader() {
   return (
@@ -144,6 +146,8 @@ function FontLoader() {
 }
 
 const Landing = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen w-full bg-aurora font-sans-premium text-slate-900 antialiased relative overflow-hidden">
       <FontLoader />
@@ -162,36 +166,38 @@ const Landing = () => {
 
           <div className="hidden lg:flex items-center gap-8">
             <a href="#features" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors relative group">
-              功能特性
+              {t.nav.features}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </a>
             <a href="#testimonials" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors relative group">
-              用户评价
+              {t.nav.testimonials}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </a>
             <a href="#how-it-works" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors relative group">
-              工作原理
+              {t.nav.howItWorks}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </a>
           </div>
 
           <div className="hidden lg:flex items-center gap-4">
-            <Link to="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">登录</Link>
+            <LanguageSwitcher />
+            <Link to="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">{t.common.login}</Link>
             <Link
               to="/register"
               className="premium-button inline-flex items-center justify-center rounded-xl py-2.5 px-6 text-sm font-semibold text-white"
             >
-              立即注册，免费试用
+              {t.landing.hero.cta}
             </Link>
           </div>
 
           <div className="lg:hidden flex items-center gap-3">
-            <Link to="/login" className="text-sm font-medium text-slate-600">登录</Link>
+            <LanguageSwitcher showText={false} />
+            <Link to="/login" className="text-sm font-medium text-slate-600">{t.common.login}</Link>
             <Link
               to="/register"
               className="premium-button inline-flex items-center justify-center rounded-xl py-2 px-4 text-sm font-semibold text-white"
             >
-              注册
+              {t.common.register}
             </Link>
           </div>
         </nav>
@@ -204,32 +210,32 @@ const Landing = () => {
             <div className="text-center">
               <div className="inline-flex items-center px-4 py-2 mb-8 glass-effect rounded-full text-sm font-medium text-slate-700 premium-shadow">
                 <Sparkles className="w-4 h-4 text-indigo-500 mr-2" />
-                PRD For AI，你的产品加速器
+                {t.landing.hero.badge}
               </div>
 
               <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
                 <span className="gradient-text">
-                  想法一闪而过？
+                  {t.landing.hero.title.split('让AI帮你立刻落地')[0]}
                 </span>
-                <br />让AI帮你立刻落地
+                <br />{t.landing.hero.title.split('？')[1] || 'Let AI Help You Implement Them Instantly'}
               </h1>
 
               <p className="mx-auto max-w-3xl text-xl text-slate-600 mb-8 leading-relaxed">
-                无论你是产品经理、AI产品经理、独立开发者还是设计师，只需一句话或一个网页，即可生成专业的 PRD 文档。
+                {t.landing.hero.description}
               </p>
 
               <div className="flex flex-wrap justify-center gap-4 mb-12">
                 <div className="flex items-center px-4 py-2 glass-effect rounded-full text-indigo-700 premium-shadow">
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  30秒生成专业PRD
+                  {t.landing.hero.features.feature1}
                 </div>
                 <div className="flex items-center px-4 py-2 glass-effect rounded-full text-purple-700 premium-shadow">
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  支持多模态输入
+                  {t.landing.hero.features.feature2}
                 </div>
                 <div className="flex items-center px-4 py-2 glass-effect rounded-full text-pink-700 premium-shadow">
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  Chrome插件+Web版
+                  {t.landing.hero.features.feature3}
                 </div>
               </div>
 
@@ -239,11 +245,11 @@ const Landing = () => {
                   className="premium-button group inline-flex items-center justify-center rounded-2xl py-4 px-8 text-lg font-semibold text-white hover-lift"
                 >
                   <Sparkles className="mr-2 h-5 w-5" />
-                  立即注册，免费试用
+                  {t.landing.hero.cta}
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
-              <div className="text-sm text-slate-500">只需30秒 · 无需信用卡</div>
+              <div className="text-sm text-slate-500">{t.landing.hero.noCreditCard}</div>
             </div>
 
             {/* Product Demo */}
@@ -281,7 +287,7 @@ const Landing = () => {
 
         {/* Trusted By */}
         <div className="relative py-16 px-6 text-center">
-          <h2 className="font-display text-4xl md:text-5xl font-bold mb-4 gradient-text">解放创造力，专注核心价值</h2>
+          <h2 className="font-display text-4xl md:text-5xl font-bold mb-4 gradient-text">{t.landing.hero.subtitle}</h2>
           <p className="text-lg text-slate-600 max-w-3xl mx-auto">打破传统文档创作壁垒，让每个人都能轻松将想法转化为专业PRD</p>
         </div>
 
@@ -289,9 +295,9 @@ const Landing = () => {
         <section id="features" className="py-20 px-6 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-base font-semibold text-indigo-600 mb-2">AI产品经理助手</h2>
-              <p className="font-display text-4xl font-bold text-slate-900 mb-6">解放你的大脑，专注创意</p>
-              <p className="text-xl text-slate-600 mb-10 leading-relaxed">告别繁琐的文档工作。只需用自然语言描述你的想法，PRD For AI 就能为你自动生成结构化、可编辑的 PRD 文档。</p>
+              <h2 className="text-base font-semibold text-indigo-600 mb-2">{t.landing.features.subtitle}</h2>
+              <p className="font-display text-4xl font-bold text-slate-900 mb-6">{t.landing.features.title}</p>
+              <p className="text-xl text-slate-600 mb-10 leading-relaxed">{t.landing.features.description}</p>
 
               <div className="space-y-6">
                 <div className="flex items-start">
@@ -299,8 +305,8 @@ const Landing = () => {
                     <Lightbulb className="h-5 w-5 text-indigo-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-1">支持多模态输入</h3>
-                    <p className="text-slate-600">支持文字、图片多模态输入</p>
+                    <h3 className="font-semibold text-slate-900 mb-1">{t.landing.features.list.multimodal.title}</h3>
+                    <p className="text-slate-600">{t.landing.features.list.multimodal.description}</p>
                   </div>
                 </div>
 
@@ -309,8 +315,8 @@ const Landing = () => {
                     <Target className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-1">AI引导式需求挖掘</h3>
-                    <p className="text-slate-600">AI引导式需求挖掘</p>
+                    <h3 className="font-semibold text-slate-900 mb-1">{t.landing.features.list.aiGuided.title}</h3>
+                    <p className="text-slate-600">{t.landing.features.list.aiGuided.description}</p>
                   </div>
                 </div>
 
@@ -319,8 +325,8 @@ const Landing = () => {
                     <CheckCircle className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-1">实时可视化编辑</h3>
-                    <p className="text-slate-600">实时可视化编辑</p>
+                    <h3 className="font-semibold text-slate-900 mb-1">{t.landing.features.list.realTimeEdit.title}</h3>
+                    <p className="text-slate-600">{t.landing.features.list.realTimeEdit.description}</p>
                   </div>
                 </div>
 
@@ -329,8 +335,8 @@ const Landing = () => {
                     <Chrome className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-1">Chrome插件支持</h3>
-                    <p className="text-slate-600">任意网页一键生成PRD</p>
+                    <h3 className="font-semibold text-slate-900 mb-1">{t.landing.features.list.chromeExtension.title}</h3>
+                    <p className="text-slate-600">{t.landing.features.list.chromeExtension.description}</p>
                   </div>
                 </div>
               </div>
@@ -355,8 +361,8 @@ const Landing = () => {
         <section id="testimonials" className="py-20 px-6 sm:px-8 lg:px-10 bg-gradient-to-r from-slate-50 to-indigo-50">
           <div className="mx-auto max-w-7xl">
             <div className="text-center mb-16">
-              <h2 className="font-display text-4xl font-bold mb-4 gradient-text">用户都在说什么</h2>
-              <p className="text-xl text-slate-600">数千位产品经理、开发者、设计师的真实反馈</p>
+              <h2 className="font-display text-4xl font-bold mb-4 gradient-text">{t.landing.testimonials.title}</h2>
+              <p className="text-xl text-slate-600">{t.landing.testimonials.subtitle}</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -366,14 +372,14 @@ const Landing = () => {
                     <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
-                <p className="text-slate-700 mb-6 leading-relaxed">"用了 PRD For AI，我编写文档的时间减少了80%！特别是Chrome插件功能，分析竞品网站太方便了。"</p>
+                <p className="text-slate-700 mb-6 leading-relaxed">"{t.landing.testimonials.reviews.review1.content}"</p>
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-xl flex items-center justify-center mr-4">
-                    <span className="text-white font-bold">李</span>
+                    <span className="text-white font-bold">{t.landing.testimonials.reviews.review1.author.charAt(0)}</span>
                   </div>
                   <div>
-                    <div className="font-semibold text-slate-900">李明</div>
-                    <div className="text-sm text-slate-500">产品经理</div>
+                    <div className="font-semibold text-slate-900">{t.landing.testimonials.reviews.review1.author}</div>
+                    <div className="text-sm text-slate-500">{t.landing.testimonials.reviews.review1.role}</div>
                   </div>
                 </div>
               </div>
@@ -384,14 +390,14 @@ const Landing = () => {
                     <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
-                <p className="text-slate-700 mb-6 leading-relaxed">"这简直是产品经理的秘密武器！AI生成的PRD结构清晰，而且可以直接编辑，太实用了。"</p>
+                <p className="text-slate-700 mb-6 leading-relaxed">"{t.landing.testimonials.reviews.review2.content}"</p>
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center mr-4">
-                    <span className="text-white font-bold">王</span>
+                    <span className="text-white font-bold">{t.landing.testimonials.reviews.review2.author.charAt(0)}</span>
                   </div>
                   <div>
-                    <div className="font-semibold text-slate-900">王晓</div>
-                    <div className="text-sm text-slate-500">创业者</div>
+                    <div className="font-semibold text-slate-900">{t.landing.testimonials.reviews.review2.author}</div>
+                    <div className="text-sm text-slate-500">{t.landing.testimonials.reviews.review2.role}</div>
                   </div>
                 </div>
               </div>
@@ -402,14 +408,14 @@ const Landing = () => {
                     <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
-                <p className="text-slate-700 mb-6 leading-relaxed">"作为开发者，我用它来快速理解产品需求。特别喜欢多模态输入，上传个截图就能生成对应的PRD。"</p>
+                <p className="text-slate-700 mb-6 leading-relaxed">"{t.landing.testimonials.reviews.review3.content}"</p>
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-pink-600 rounded-xl flex items-center justify-center mr-4">
-                    <span className="text-white font-bold">张</span>
+                    <span className="text-white font-bold">{t.landing.testimonials.reviews.review3.author.charAt(0)}</span>
                   </div>
                   <div>
-                    <div className="font-semibold text-slate-900">张伟</div>
-                    <div className="text-sm text-slate-500">前端开发</div>
+                    <div className="font-semibold text-slate-900">{t.landing.testimonials.reviews.review3.author}</div>
+                    <div className="text-sm text-slate-500">{t.landing.testimonials.reviews.review3.role}</div>
                   </div>
                 </div>
               </div>
@@ -545,8 +551,8 @@ const Landing = () => {
         <section id="how-it-works" className="py-20 px-6 bg-slate-50">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="font-display text-4xl font-bold text-slate-900 mb-4">三步完成专业 PRD</h2>
-              <p className="text-xl text-slate-600">简单几步，从想法到文档</p>
+              <h2 className="font-display text-4xl font-bold text-slate-900 mb-4">{t.landing.howItWorks.title}</h2>
+              <p className="text-xl text-slate-600">{t.landing.howItWorks.subtitle}</p>
             </div>
 
             <div className="space-y-16">
@@ -557,15 +563,14 @@ const Landing = () => {
                   </div>
                 </div>
                 <div className="flex-1 lg:text-left text-center">
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4">输入想法或分析网页</h3>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-4">{t.landing.howItWorks.steps.step1.title}</h3>
                   <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-                    可以用自然语言描述您的产品想法，或使用Chrome插件一键分析任意网页，
-                    支持文字、图片等多种输入方式
+                    {t.landing.howItWorks.steps.step1.description}
                   </p>
                   <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-                    <span className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">文字描述</span>
-                    <span className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">图片上传</span>
-                    <span className="px-4 py-2 bg-pink-100 text-pink-700 rounded-full text-sm font-medium">网页分析</span>
+                    {t.landing.howItWorks.steps.step1.tags.map((tag, index) => (
+                      <span key={index} className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">{tag}</span>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -577,15 +582,14 @@ const Landing = () => {
                   </div>
                 </div>
                 <div className="flex-1 lg:text-left text-center">
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4">AI 智能分析生成</h3>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-4">{t.landing.howItWorks.steps.step2.title}</h3>
                   <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-                    基于您的输入，AI 自动生成结构化的 PRD 文档，包含产品概述、用户分析、
-                    功能规格、用户故事等完整内容
+                    {t.landing.howItWorks.steps.step2.description}
                   </p>
                   <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-                    <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium">需求分析</span>
-                    <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium">功能设计</span>
-                    <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium">用户画像</span>
+                    {t.landing.howItWorks.steps.step2.tags.map((tag, index) => (
+                      <span key={index} className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium">{tag}</span>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -597,15 +601,14 @@ const Landing = () => {
                   </div>
                 </div>
                 <div className="flex-1 lg:text-left text-center">
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4">编辑与导出分享</h3>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-4">{t.landing.howItWorks.steps.step3.title}</h3>
                   <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-                    在可视化画布中编辑文档，支持实时预览，完成后可导出为多种格式分享给团队，
-                    提升协作效率
+                    {t.landing.howItWorks.steps.step3.description}
                   </p>
                   <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-                    <span className="px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">可视化编辑</span>
-                    <span className="px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">多格式导出</span>
-                    <span className="px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">团队分享</span>
+                    {t.landing.howItWorks.steps.step3.tags.map((tag, index) => (
+                      <span key={index} className="px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">{tag}</span>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -617,11 +620,10 @@ const Landing = () => {
         <section className="py-20 px-6 bg-gradient-to-r from-indigo-50 to-purple-50">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-6">
-              开始您的智能文档创作之旅
+              {t.landing.cta.title}
             </h2>
             <p className="text-xl text-slate-700 mb-8 max-w-2xl mx-auto">
-              加入数千位产品经理的选择，让 AI 助力您的产品规划工作。
-              Chrome插件 + Web版双重体验，想法落地从未如此简单。
+              {t.landing.cta.description}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Link
@@ -629,12 +631,12 @@ const Landing = () => {
                 className="premium-button group inline-flex items-center justify-center rounded-2xl py-3 px-6 text-lg font-semibold text-white hover-lift"
               >
                 <Sparkles className="mr-2 h-5 w-5" />
-                立即注册，免费试用
+                {t.landing.cta.button}
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
             <div className="text-sm text-slate-600">
-              💡 30秒完成安装 · 🎯 即刻提升效率 · 🛡️ 数据安全保护
+              {t.landing.cta.benefits}
             </div>
           </div>
         </section>
@@ -649,41 +651,40 @@ const Landing = () => {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-sm mb-12">
             <div>
-              <h4 className="font-semibold text-slate-900 mb-4">产品功能</h4>
+              <h4 className="font-semibold text-slate-900 mb-4">{t.landing.footer.sections.product.title}</h4>
               <ul className="space-y-3 text-slate-600">
-                <li><a href="#" className="hover:text-slate-900 transition-colors">Web版对话生成</a></li>
-                <li><a href="#" className="hover:text-slate-900 transition-colors">Chrome插件分析</a></li>
-                <li><a href="#" className="hover:text-slate-900 transition-colors">多模态输入</a></li>
-                <li><a href="#" className="hover:text-slate-900 transition-colors">可视化编辑</a></li>
+                {t.landing.footer.sections.product.links.map((link, index) => (
+                  <li key={index}><a href="#" className="hover:text-slate-900 transition-colors">{link}</a></li>
+                ))}
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-slate-900 mb-4">帮助支持</h4>
+              <h4 className="font-semibold text-slate-900 mb-4">{t.landing.footer.sections.support.title}</h4>
               <ul className="space-y-3 text-slate-600">
-                <li><a href="#" className="hover:text-slate-900 transition-colors">使用教程</a></li>
-                <li><a href="#" className="hover:text-slate-900 transition-colors">常见问题</a></li>
-                <li><a href="#" className="hover:text-slate-900 transition-colors">联系我们</a></li>
-                <li><a href="#" className="hover:text-slate-900 transition-colors">隐私政策</a></li>
+                {t.landing.footer.sections.support.links.map((link, index) => (
+                  <li key={index}><a href="#" className="hover:text-slate-900 transition-colors">{link}</a></li>
+                ))}
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-slate-900 mb-4">公司信息</h4>
+              <h4 className="font-semibold text-slate-900 mb-4">{t.landing.footer.sections.company.title}</h4>
               <ul className="space-y-3 text-slate-600">
-                <li><a href="#" className="hover:text-slate-900 transition-colors">关于我们</a></li>
-                <li><a href="#" className="hover:text-slate-900 transition-colors">团队介绍</a></li>
+                {t.landing.footer.sections.company.links.map((link, index) => (
+                  <li key={index}><a href="#" className="hover:text-slate-900 transition-colors">{link}</a></li>
+                ))}
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-slate-900 mb-4">学习资源</h4>
+              <h4 className="font-semibold text-slate-900 mb-4">{t.landing.footer.sections.resources.title}</h4>
               <ul className="space-y-3 text-slate-600">
-                <li><a href="#" className="hover:text-slate-900 transition-colors">产品博客</a></li>
-                <li><a href="#" className="hover:text-slate-900 transition-colors">学习资源</a></li>
-                <li><a href="#" className="hover:text-slate-900 transition-colors">模板库</a></li>
+                {t.landing.footer.sections.resources.links.map((link, index) => (
+                  <li key={index}><a href="#" className="hover:text-slate-900 transition-colors">{link}</a></li>
+                ))}
               </ul>
             </div>
           </div>
           <div className="border-t border-gray-200 pt-8">
-            <p className="text-sm text-slate-500">© 2024 PRD For AI. 让产品规划更智能，让创意触手可及。</p>
+            <p className="text-sm text-slate-500">{t.landing.footer.copyright}</p>
           </div>
         </div>
       </footer>
