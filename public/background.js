@@ -6,13 +6,30 @@ chrome.runtime.onInstalled.addListener(() => {
   console.log('[PRD For AI] Extension installed/updated');
 });
 
-// 处理来自sidepanel的消息
+// 处理来自sidepanel和content script的消息
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('[PRD For AI] Background received message:', message);
+  console.log('[Prompt Generator] Background received message:', message);
   
+  // 处理来自sidepanel的消息
   if (message.action === 'getCurrentPageData') {
     getCurrentPageData().then(sendResponse).catch(err => {
-      console.error('[PRD For AI] Error in getCurrentPageData:', err);
+      console.error('[Prompt Generator] Error in getCurrentPageData:', err);
+      sendResponse({ success: false, error: err.message });
+    });
+    return true; // 异步响应
+  }
+  
+  if (message.action === 'enterSelectionMode') {
+    enterSelectionMode().then(sendResponse).catch(err => {
+      console.error('[Prompt Generator] Error in enterSelectionMode:', err);
+      sendResponse({ success: false, error: err.message });
+    });
+    return true; // 异步响应
+  }
+  
+  if (message.action === 'exitSelectionMode') {
+    exitSelectionMode().then(sendResponse).catch(err => {
+      console.error('[Prompt Generator] Error in exitSelectionMode:', err);
       sendResponse({ success: false, error: err.message });
     });
     return true; // 异步响应
@@ -20,7 +37,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   
   if (message.action === 'captureTab') {
     captureCurrentTab().then(sendResponse).catch(err => {
-      console.error('[PRD For AI] Error in captureTab:', err);
+      console.error('[Prompt Generator] Error in captureTab:', err);
       sendResponse({ success: false, error: err.message });
     });
     return true; // 异步响应
@@ -28,14 +45,126 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   
   if (message.action === 'injectContentScript') {
     injectContentScript(message.tabId).then(sendResponse).catch(err => {
-      console.error('[PRD For AI] Error in injectContentScript:', err);
+      console.error('[Prompt Generator] Error in injectContentScript:', err);
       sendResponse({ success: false, error: err.message });
     });
     return true; // 异步响应
   }
+  
+  // 处理来自content script的消息（元素选择）
+  if (message.type === 'ELEMENT_SELECTED') {
+    // 将消息转发给所有sidepanel
+    notifySidepanel(message);
+    sendResponse({ success: true });
+    return true;
+  }
 });
 
-// 获取当前页面数据
+// 进入选择模式
+async function enterSelectionMode() {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const activeTab = tabs[0];
+    
+    if (!activeTab) {
+      throw new Error('No active tab found');
+    }
+    
+    if (!canInjectScript(activeTab.url)) {
+      throw new Error('Cannot enter selection mode on this type of page');
+    }
+    
+    // 发送消息给content script进入选择模式
+    try {
+      const response = await chrome.tabs.sendMessage(activeTab.id, { 
+        action: 'enterSelectionMode' 
+      });
+      
+      if (response && response.success) {
+        console.log('[Prompt Generator] Selection mode activated');
+        return { success: true };
+      }
+    } catch (contentError) {
+      console.log('[Prompt Generator] Content script not available, injecting...');
+      
+      // 注入content script
+      await chrome.scripting.executeScript({
+        target: { tabId: activeTab.id },
+        files: ['content.js']
+      });
+      
+      // 等待初始化
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // 再次尝试
+      const response = await chrome.tabs.sendMessage(activeTab.id, { 
+        action: 'enterSelectionMode' 
+      });
+      
+      if (response && response.success) {
+        console.log('[Prompt Generator] Selection mode activated after injection');
+        return { success: true };
+      }
+    }
+    
+    throw new Error('Failed to enter selection mode');
+    
+  } catch (error) {
+    console.error('[Prompt Generator] Error entering selection mode:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// 退出选择模式  
+async function exitSelectionMode() {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const activeTab = tabs[0];
+    
+    if (!activeTab) {
+      throw new Error('No active tab found');
+    }
+    
+    if (!canInjectScript(activeTab.url)) {
+      return { success: true }; // 如果无法注入脚本，就认为成功退出
+    }
+    
+    try {
+      const response = await chrome.tabs.sendMessage(activeTab.id, { 
+        action: 'exitSelectionMode' 
+      });
+      
+      if (response && response.success) {
+        console.log('[Prompt Generator] Selection mode deactivated');
+        return { success: true };
+      }
+    } catch (contentError) {
+      console.log('[Prompt Generator] Content script not available for exit');
+    }
+    
+    return { success: true };
+    
+  } catch (error) {
+    console.error('[Prompt Generator] Error exiting selection mode:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// 通知sidepanel
+async function notifySidepanel(message) {
+  try {
+    // Chrome扩展API限制，我们无法直接给sidepanel发消息
+    // 所以我们将数据存储到storage中，让sidepanel轮询获取
+    await chrome.storage.session.set({ 
+      'elementSelectedData': message.data,
+      'elementSelectedTimestamp': Date.now()
+    });
+    
+    console.log('[Prompt Generator] Element data stored for sidepanel');
+  } catch (error) {
+    console.error('[Prompt Generator] Error storing element data:', error);
+  }
+}
 async function getCurrentPageData() {
   try {
     // 获取当前活动标签

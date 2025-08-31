@@ -1,368 +1,714 @@
-// content.js - 内容脚本，运行在每个网页上
-console.log('[PRD For AI] Content script loaded');
+// content.js - AI编程提示词生成器内容脚本
+console.log('[Prompt Generator] Content script loaded');
 
-// 提取页面信息的主函数
-function extractPageData() {
-  console.log('[PRD For AI] Extracting page data...');
+// 全局状态管理
+let isSelectionMode = false;
+let highlightedElement = null;
+let currentOverlay = null;
+
+// 样式配置
+const HIGHLIGHT_STYLES = {
+  border: '2px solid #007AFF',
+  backgroundColor: 'rgba(0, 122, 255, 0.1)',
+  cursor: 'crosshair',
+  position: 'relative',
+  zIndex: '9999',
+  boxShadow: '0 0 0 1px rgba(0, 122, 255, 0.3)',
+  transition: 'all 0.2s ease'
+};
+
+// 覆盖层样式
+const OVERLAY_STYLES = {
+  position: 'absolute',
+  backgroundColor: 'rgba(0, 122, 255, 0.2)',
+  border: '2px solid #007AFF',
+  borderRadius: '4px',
+  pointerEvents: 'none',
+  zIndex: '10000',
+  transition: 'all 0.2s ease',
+  boxShadow: '0 4px 12px rgba(0, 122, 255, 0.3)'
+};
+
+// 创建工具提示
+function createTooltip(element, rect) {
+  const tooltip = document.createElement('div');
+  tooltip.id = 'prompt-generator-tooltip';
   
-  try {
-    const pageData = {
-      // 基本页面信息
-      url: window.location.href,
-      title: document.title,
-      domain: window.location.hostname,
-      
-      // HTML源代码
-      htmlSource: document.documentElement.outerHTML,
-      
-      // 页面文本内容
-      textContent: extractTextContent(),
-      
-      // CSS样式信息
-      styles: extractStyles(),
-      
-      // 字体信息
-      fonts: extractFonts(),
-      
-      // 页面元数据
-      metadata: extractMetadata(),
-      
-      // 页面尺寸信息
-      dimensions: {
-        width: document.documentElement.scrollWidth,
-        height: document.documentElement.scrollHeight,
-        viewportWidth: window.innerWidth,
-        viewportHeight: window.innerHeight
-      },
-      
-      // 提取时间
-      extractedAt: new Date().toISOString()
-    };
-    
-    console.log('[PRD For AI] Page data extracted successfully');
-    return pageData;
-  } catch (error) {
-    console.error('[PRD For AI] Error extracting page data:', error);
-    return {
-      error: error.message,
-      url: window.location.href,
-      title: document.title || 'Unknown',
-      extractedAt: new Date().toISOString()
-    };
+  const tagName = element.tagName.toLowerCase();
+  const className = element.className ? `.${element.className.split(' ').join('.')}` : '';
+  const id = element.id ? `#${element.id}` : '';
+  const selector = `${tagName}${id}${className}`;
+  
+  tooltip.innerHTML = `
+    <div style="
+      position: fixed;
+      top: ${rect.top - 30}px;
+      left: ${rect.left}px;
+      background: #333;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: monospace;
+      z-index: 10001;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      pointer-events: none;
+    ">
+      点击选择: ${selector}
+    </div>
+  `;
+  
+  document.body.appendChild(tooltip);
+  return tooltip;
+}
+
+// 清理工具提示
+function removeTooltip() {
+  const existing = document.getElementById('prompt-generator-tooltip');
+  if (existing) {
+    existing.remove();
   }
+}
+
+// 创建覆盖层
+function createOverlay(rect) {
+  const overlay = document.createElement('div');
+  overlay.id = 'prompt-generator-overlay';
+  
+  Object.assign(overlay.style, OVERLAY_STYLES, {
+    top: `${rect.top + window.scrollY}px`,
+    left: `${rect.left + window.scrollX}px`,
+    width: `${rect.width}px`,
+    height: `${rect.height}px`
+  });
+  
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+// 移除覆盖层
+function removeOverlay() {
+  const existing = document.getElementById('prompt-generator-overlay');
+  if (existing) {
+    existing.remove();
+  }
+}
+
+// 高亮元素
+function highlightElement(element) {
+  if (highlightedElement === element) return;
+  
+  // 清理之前的高亮
+  clearHighlight();
+  
+  if (!element || element === document.body || element === document.html) return;
+  
+  highlightedElement = element;
+  
+  // 创建覆盖层而不是直接修改元素样式
+  const rect = element.getBoundingClientRect();
+  currentOverlay = createOverlay(rect);
+  
+  // 创建工具提示
+  createTooltip(element, rect);
+}
+
+// 清除高亮
+function clearHighlight() {
+  if (highlightedElement) {
+    highlightedElement = null;
+  }
+  
+  removeOverlay();
+  removeTooltip();
+}
+
+// 递归提取元素信息
+function extractElementInfo(element, depth = 0, maxDepth = 10) {
+  if (depth > maxDepth || !element) {
+    return null;
+  }
+  
+  const computedStyle = window.getComputedStyle(element);
+  const rect = element.getBoundingClientRect();
+  
+  // 提取重要的CSS属性
+  const importantProps = [
+    'display', 'position', 'width', 'height', 'margin', 'padding',
+    'background-color', 'background-image', 'color', 'font-family', 
+    'font-size', 'font-weight', 'line-height', 'text-align',
+    'border', 'border-radius', 'box-shadow', 'flex-direction',
+    'justify-content', 'align-items', 'gap', 'grid-template-columns',
+    'grid-template-rows', 'z-index', 'opacity', 'transform'
+  ];
+  
+  const styles = {};
+  importantProps.forEach(prop => {
+    const value = computedStyle.getPropertyValue(prop);
+    if (value && value !== 'normal' && value !== 'none' && value !== '0px' && value !== 'auto') {
+      styles[prop] = value;
+    }
+  });
+  
+  // 提取元素属性
+  const attributes = {};
+  for (let i = 0; i < element.attributes.length; i++) {
+    const attr = element.attributes[i];
+    if (attr.name !== 'style') { // 样式通过computedStyle获取，不需要内联样式
+      attributes[attr.name] = attr.value;
+    }
+  }
+  
+  // 提取文本内容（只获取直接文本节点）
+  let directText = '';
+  for (let node of element.childNodes) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent.trim();
+      if (text) directText += text + ' ';
+    }
+  }
+  directText = directText.trim();
+  
+  // 构建元素信息
+  const info = {
+    tagName: element.tagName.toLowerCase(),
+    attributes: attributes,
+    styles: styles,
+    directText: directText,
+    dimensions: {
+      width: rect.width,
+      height: rect.height
+    },
+    children: []
+  };
+  
+  // 递归处理子元素（只处理element节点）
+  for (let child of element.children) {
+    // 跳过隐藏元素和不重要的元素
+    const childStyle = window.getComputedStyle(child);
+    if (childStyle.display !== 'none' && childStyle.visibility !== 'hidden') {
+      const childInfo = extractElementInfo(child, depth + 1, maxDepth);
+      if (childInfo) {
+        info.children.push(childInfo);
+      }
+    }
+  }
+  
+  return info;
+}
+
+// 提取页面数据（用于页面分析功能）
+function extractPageData() {
+  console.log('[Prompt Generator] Extracting comprehensive page data...');
+  
+  const pageData = {
+    // 基本信息
+    url: window.location.href,
+    title: document.title,
+    domain: window.location.hostname,
+    timestamp: new Date().toISOString(),
+    
+    // HTML源码
+    htmlSource: document.documentElement.outerHTML,
+    
+    // 页面文本内容
+    textContent: extractTextContent(),
+    
+    // CSS样式信息
+    styles: extractStylesInfo(),
+    
+    // 字体信息
+    fonts: extractFontsInfo()
+  };
+  
+  console.log('[Prompt Generator] Page data extraction complete');
+  return pageData;
 }
 
 // 提取页面文本内容
 function extractTextContent() {
-  // 移除脚本和样式标签的内容
-  const clone = document.cloneNode(true);
-  const scripts = clone.querySelectorAll('script, style, noscript');
-  scripts.forEach(el => el.remove());
-  
-  return {
-    fullText: clone.body ? clone.body.innerText : '',
-    headings: Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6'))
-      .map(h => ({ tag: h.tagName.toLowerCase(), text: h.textContent.trim() })),
-    paragraphs: Array.from(document.querySelectorAll('p'))
-      .map(p => p.textContent.trim()).filter(text => text.length > 0),
-    links: Array.from(document.querySelectorAll('a[href]'))
-      .map(a => ({ text: a.textContent.trim(), href: a.href }))
+  const textData = {
+    headings: [],
+    paragraphs: [],
+    links: [],
+    fullText: document.body.innerText || document.body.textContent || ''
   };
+  
+  // 提取标题
+  const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  headings.forEach(heading => {
+    const text = heading.textContent.trim();
+    if (text) {
+      textData.headings.push({
+        tag: heading.tagName.toLowerCase(),
+        text: text,
+        level: parseInt(heading.tagName.charAt(1))
+      });
+    }
+  });
+  
+  // 提取段落
+  const paragraphs = document.querySelectorAll('p');
+  paragraphs.forEach(p => {
+    const text = p.textContent.trim();
+    if (text && text.length > 10) { // 过滤过短的段落
+      textData.paragraphs.push(text);
+    }
+  });
+  
+  // 提取链接
+  const links = document.querySelectorAll('a[href]');
+  links.forEach(link => {
+    const text = link.textContent.trim();
+    const href = link.href;
+    if (text && href) {
+      textData.links.push({
+        text: text,
+        href: href,
+        isExternal: !href.startsWith(window.location.origin)
+      });
+    }
+  });
+  
+  return textData;
 }
 
-// 提取CSS样式
-function extractStyles() {
-  const styles = {
-    inlineStyles: [],
+// 提取样式信息
+function extractStylesInfo() {
+  const stylesData = {
     externalStylesheets: [],
-    computedStyles: {},
-    cssVariables: {}
+    inlineStyles: [],
+    cssVariables: {},
+    computedStyles: {}
   };
   
-  try {
-    // 获取外部样式表
-    Array.from(document.styleSheets).forEach((stylesheet, index) => {
-      try {
-        if (stylesheet.href) {
-          styles.externalStylesheets.push({
-            href: stylesheet.href,
-            title: stylesheet.title || `Stylesheet ${index + 1}`
-          });
-        }
-        
-        // 尝试获取CSS规则（可能因CORS被阻止）
-        if (stylesheet.cssRules) {
-          const rules = Array.from(stylesheet.cssRules).map(rule => rule.cssText);
-          if (stylesheet.href) {
-            styles.externalStylesheets[styles.externalStylesheets.length - 1].rules = rules;
-          } else {
-            styles.inlineStyles.push(...rules);
-          }
-        }
-      } catch (e) {
-        console.log('[PRD For AI] Cannot access stylesheet due to CORS:', e.message);
-      }
-    });
-    
-    // 获取内联样式
-    Array.from(document.querySelectorAll('[style]')).forEach(element => {
-      if (element.style.cssText) {
-        styles.inlineStyles.push({
-          element: element.tagName.toLowerCase(),
-          style: element.style.cssText
-        });
-      }
-    });
-    
-    // 获取计算样式（主要元素）
-    const mainElements = document.querySelectorAll('body, main, header, nav, footer, section, article');
-    mainElements.forEach(element => {
-      if (element) {
-        const computedStyle = window.getComputedStyle(element);
-        const elementStyles = {};
-        
-        // 只收集重要的样式属性
-        const importantProps = [
-          'font-family', 'font-size', 'font-weight', 'color', 'background-color',
-          'background-image', 'padding', 'margin', 'border', 'width', 'height',
-          'display', 'position', 'flex', 'grid'
-        ];
-        
-        importantProps.forEach(prop => {
-          const value = computedStyle.getPropertyValue(prop);
-          if (value) elementStyles[prop] = value;
-        });
-        
-        styles.computedStyles[element.tagName.toLowerCase()] = elementStyles;
-      }
-    });
-    
-    // 获取CSS变量
-    const rootStyle = window.getComputedStyle(document.documentElement);
-    for (let i = 0; i < rootStyle.length; i++) {
-      const prop = rootStyle[i];
-      if (prop.startsWith('--')) {
-        styles.cssVariables[prop] = rootStyle.getPropertyValue(prop);
-      }
+  // 提取外部样式表
+  const stylesheets = document.querySelectorAll('link[rel="stylesheet"], style');
+  stylesheets.forEach((sheet, index) => {
+    if (sheet.tagName === 'LINK') {
+      stylesData.externalStylesheets.push({
+        href: sheet.href,
+        title: sheet.title || '',
+        media: sheet.media || 'all'
+      });
+    } else if (sheet.tagName === 'STYLE') {
+      stylesData.inlineStyles.push(sheet.textContent || '');
     }
-    
+  });
+  
+  // 提取CSS变量（从根元素）
+  try {
+    const rootStyle = window.getComputedStyle(document.documentElement);
+    const rootStyleText = rootStyle.cssText || '';
+    const variableMatches = rootStyleText.match(/--[^:]+:[^;]+/g);
+    if (variableMatches) {
+      variableMatches.forEach(variable => {
+        const [name, value] = variable.split(':').map(s => s.trim());
+        if (name && value) {
+          stylesData.cssVariables[name] = value;
+        }
+      });
+    }
   } catch (error) {
-    console.error('[PRD For AI] Error extracting styles:', error);
-    styles.error = error.message;
+    console.log('[Prompt Generator] Failed to extract CSS variables:', error);
   }
   
-  return styles;
+  // 提取主要元素的计算样式
+  const importantSelectors = ['body', 'header', 'main', 'footer', 'nav', '.main', '#main'];
+  importantSelectors.forEach(selector => {
+    const element = document.querySelector(selector);
+    if (element) {
+      const computedStyle = window.getComputedStyle(element);
+      const styles = {};
+      
+      // 只提取重要的样式属性
+      const importantProps = [
+        'background-color', 'color', 'font-family', 'font-size', 
+        'display', 'position', 'width', 'height', 'margin', 'padding'
+      ];
+      
+      importantProps.forEach(prop => {
+        const value = computedStyle.getPropertyValue(prop);
+        if (value && value !== 'normal' && value !== 'none') {
+          styles[prop] = value;
+        }
+      });
+      
+      if (Object.keys(styles).length > 0) {
+        stylesData.computedStyles[selector] = styles;
+      }
+    }
+  });
+  
+  return stylesData;
 }
 
 // 提取字体信息
-function extractFonts() {
-  const fonts = {
-    used: new Set(),
-    available: [],
+function extractFontsInfo() {
+  const fontsData = {
+    used: [],
     webFonts: [],
     fontResources: [],
-    summary: {}
+    summary: {
+      totalUsedFonts: 0,
+      totalWebFonts: 0,
+      totalFontResources: 0,
+      totalFontSize: 0,
+      fontFormats: [],
+      fontDomains: []
+    }
   };
   
-  try {
-    // 检查所有元素的字体使用
-    const allElements = document.querySelectorAll('*');
-    allElements.forEach(element => {
-      const style = window.getComputedStyle(element);
-      const fontFamily = style.getPropertyValue('font-family');
-      if (fontFamily) {
-        fonts.used.add(fontFamily);
-      }
-    });
-    
-    // 转换Set为Array
-    fonts.used = Array.from(fonts.used);
-    
-    // 检查Web字体加载
-    if (document.fonts) {
-      document.fonts.forEach(font => {
-        fonts.webFonts.push({
-          family: font.family,
-          style: font.style,
-          weight: font.weight,
-          status: font.status
-        });
-      });
-    }
-    
-    // 获取字体资源的网络信息
-    const fontResources = [];
-    if (window.performance && window.performance.getEntriesByType) {
-      const resources = window.performance.getEntriesByType('resource');
+  // 提取页面中使用的字体族
+  const usedFonts = new Set();
+  const elements = document.querySelectorAll('*');
+  
+  // 限制检查的元素数量以避免性能问题
+  const elementsToCheck = Math.min(elements.length, 200);
+  for (let i = 0; i < elementsToCheck; i++) {
+    try {
+      const element = elements[i];
+      const computedStyle = window.getComputedStyle(element);
+      const fontFamily = computedStyle.getPropertyValue('font-family');
       
-      resources.forEach(resource => {
-        // 检查是否为字体文件
-        const url = resource.name;
-        const isFontResource = 
-          /\.(woff2|woff|ttf|otf|eot)(\?|$)/i.test(url) ||
-          resource.initiatorType === 'font' ||
-          (resource.responseType && resource.responseType.includes('font'));
-        
-        if (isFontResource) {
-          // 提取文件格式
-          const urlObj = new URL(url);
-          const pathname = urlObj.pathname.toLowerCase();
-          let format = 'unknown';
-          if (pathname.includes('.woff2')) format = 'woff2';
-          else if (pathname.includes('.woff')) format = 'woff';
-          else if (pathname.includes('.ttf')) format = 'truetype';
-          else if (pathname.includes('.otf')) format = 'opentype';
-          else if (pathname.includes('.eot')) format = 'embedded-opentype';
-          
-          // 提取文件名
-          const filename = pathname.split('/').pop() || url.split('/').pop();
-          
-          fontResources.push({
-            name: filename,
-            url: url,
-            domain: urlObj.hostname,
-            format: format,
-            size: resource.transferSize || resource.encodedBodySize || 0,
-            loadTime: resource.duration || 0,
-            status: resource.responseStatus || (resource.transferSize > 0 ? 200 : 'unknown'),
-            initiatorType: resource.initiatorType,
-            startTime: resource.startTime,
-            responseStart: resource.responseStart,
-            responseEnd: resource.responseEnd
-          });
-        }
-      });
+      if (fontFamily && fontFamily !== 'inherit' && fontFamily !== 'initial') {
+        // 解析字体族列表
+        const fonts = fontFamily.split(',').map(f => f.trim().replace(/['"]/g, ''));
+        fonts.forEach(font => {
+          if (font && font !== 'serif' && font !== 'sans-serif' && font !== 'monospace') {
+            usedFonts.add(font);
+          }
+        });
+      }
+    } catch (error) {
+      // 忽略计算样式获取失败的情况
     }
-    
-    fonts.fontResources = fontResources;
-    
-    // 获取@font-face声明
-    Array.from(document.styleSheets).forEach(stylesheet => {
+  }
+  
+  fontsData.used = Array.from(usedFonts);
+  
+  // 提取@font-face声明
+  try {
+    const stylesheets = document.styleSheets;
+    for (let i = 0; i < stylesheets.length; i++) {
       try {
+        const stylesheet = stylesheets[i];
         if (stylesheet.cssRules) {
-          Array.from(stylesheet.cssRules).forEach(rule => {
+          for (let j = 0; j < stylesheet.cssRules.length; j++) {
+            const rule = stylesheet.cssRules[j];
             if (rule.type === CSSRule.FONT_FACE_RULE) {
               const fontFace = {
-                cssText: rule.cssText,
                 family: rule.style.getPropertyValue('font-family').replace(/['"]/g, ''),
                 src: rule.style.getPropertyValue('src'),
-                weight: rule.style.getPropertyValue('font-weight') || 'normal',
-                style: rule.style.getPropertyValue('font-style') || 'normal',
-                display: rule.style.getPropertyValue('font-display') || 'auto'
+                weight: rule.style.getPropertyValue('font-weight'),
+                style: rule.style.getPropertyValue('font-style'),
+                display: rule.style.getPropertyValue('font-display'),
+                cssText: rule.cssText
               };
               
-              // 解析src中的字体URL和格式
+              // 解析字体来源
               if (fontFace.src) {
-                const srcMatches = fontFace.src.match(/url\(['"]?([^'"()]+)['"]?\)(\s+format\(['"]?([^'"()]+)['"]?\))?/g);
-                if (srcMatches) {
-                  fontFace.sources = srcMatches.map(match => {
-                    const urlMatch = match.match(/url\(['"]?([^'"()]+)['"]?\)/);
-                    const formatMatch = match.match(/format\(['"]?([^'"()]+)['"]?\)/);
+                const urlMatches = fontFace.src.match(/url\(['"]?([^'"]+)['"]?\)/g);
+                if (urlMatches) {
+                  fontFace.sources = urlMatches.map(match => {
+                    const url = match.match(/url\(['"]?([^'"]+)['"]?\)/)[1];
+                    const format = fontFace.src.match(new RegExp(`url\\(['"]?${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]?\\)\\s*format\\(['"]?([^'"]+)['"]?\\)`));
                     return {
-                      url: urlMatch ? urlMatch[1] : '',
-                      format: formatMatch ? formatMatch[1] : 'unknown'
+                      url: url,
+                      format: format ? format[1] : 'unknown'
                     };
                   });
                 }
               }
               
-              fonts.webFonts.push(fontFace);
+              fontsData.webFonts.push(fontFace);
             }
-          });
+          }
         }
-      } catch (e) {
-        // CORS错误，忽略
-        console.log('[PRD For AI] Cannot access stylesheet for font-face rules:', e.message);
+      } catch (error) {
+        // 跨域样式表无法访问，忽略
+        console.log('[Prompt Generator] Cannot access stylesheet:', error);
       }
-    });
+    }
+  } catch (error) {
+    console.log('[Prompt Generator] Error extracting @font-face rules:', error);
+  }
+  
+  // 模拟字体资源信息（实际应用中可能需要通过网络请求获取）
+  fontsData.webFonts.forEach(webFont => {
+    if (webFont.sources) {
+      webFont.sources.forEach(source => {
+        try {
+          const url = new URL(source.url, window.location.href);
+          const format = source.format || 'unknown';
+          const domain = url.hostname;
+          
+          fontsData.fontResources.push({
+            name: webFont.family || 'Unknown Font',
+            url: source.url,
+            domain: domain,
+            format: format,
+            size: 0, // 实际大小需要通过网络请求获取
+            status: 'unknown',
+            loadTime: 0
+          });
+          
+          if (!fontsData.summary.fontFormats.includes(format)) {
+            fontsData.summary.fontFormats.push(format);
+          }
+          
+          if (!fontsData.summary.fontDomains.includes(domain)) {
+            fontsData.summary.fontDomains.push(domain);
+          }
+        } catch (error) {
+          console.log('[Prompt Generator] Error parsing font URL:', source.url, error);
+        }
+      });
+    }
+  });
+  
+  // 更新统计信息
+  fontsData.summary.totalUsedFonts = fontsData.used.length;
+  fontsData.summary.totalWebFonts = fontsData.webFonts.length;
+  fontsData.summary.totalFontResources = fontsData.fontResources.length;
+  
+  return fontsData;
+}
+
+// 鼠标移动事件处理
+function handleMouseOver(event) {
+  if (!isSelectionMode) return;
+  
+  event.preventDefault();
+  event.stopPropagation();
+  
+  const element = event.target;
+  highlightElement(element);
+}
+
+// 鼠标离开事件处理
+function handleMouseOut(event) {
+  if (!isSelectionMode) return;
+  
+  // 不立即清除高亮，让用户有时间点击
+}
+
+// 点击事件处理
+function handleClick(event) {
+  if (!isSelectionMode) return;
+  
+  event.preventDefault();
+  event.stopPropagation();
+  
+  const element = event.target;
+  console.log('[Prompt Generator] Element clicked:', element);
+  
+  // 提取元素信息
+  const elementInfo = extractElementInfo(element);
+  
+  if (elementInfo) {
+    console.log('[Prompt Generator] Element info extracted:', elementInfo);
     
-    // 生成字体使用总结
-    fonts.summary = {
-      totalUsedFonts: fonts.used.length,
-      totalWebFonts: fonts.webFonts.length,
-      totalFontResources: fonts.fontResources.length,
-      totalFontSize: fonts.fontResources.reduce((sum, font) => sum + font.size, 0),
-      fontFormats: [...new Set(fonts.fontResources.map(f => f.format))],
-      fontDomains: [...new Set(fonts.fontResources.map(f => f.domain))]
+    // 构建完整的元素数据包
+    const elementData = {
+      element: elementInfo,
+      pageContext: {
+        url: window.location.href,
+        title: document.title,
+        domain: window.location.hostname,
+        timestamp: new Date().toISOString()
+      }
     };
     
-  } catch (error) {
-    console.error('[PRD For AI] Error extracting fonts:', error);
-    fonts.error = error.message;
-  }
-  
-  return fonts;
-}
-
-// 提取页面元数据
-function extractMetadata() {
-  const metadata = {
-    meta: {},
-    openGraph: {},
-    twitter: {},
-    jsonLd: []
-  };
-  
-  try {
-    // 标准meta标签
-    document.querySelectorAll('meta').forEach(meta => {
-      const name = meta.getAttribute('name') || meta.getAttribute('property');
-      const content = meta.getAttribute('content');
-      
-      if (name && content) {
-        if (name.startsWith('og:')) {
-          metadata.openGraph[name] = content;
-        } else if (name.startsWith('twitter:')) {
-          metadata.twitter[name] = content;
-        } else {
-          metadata.meta[name] = content;
-        }
-      }
+    // 将数据存储到session storage，供sidepanel轮询检查
+    chrome.storage.session.set({
+      elementSelectedData: elementData,
+      elementSelectedTimestamp: Date.now()
+    }).then(() => {
+      console.log('[Prompt Generator] Element data saved to session storage');
+    }).catch((error) => {
+      console.error('[Prompt Generator] Failed to save element data:', error);
     });
     
-    // JSON-LD结构化数据
-    document.querySelectorAll('script[type="application/ld+json"]').forEach(script => {
-      try {
-        metadata.jsonLd.push(JSON.parse(script.textContent));
-      } catch (e) {
-        console.log('[PRD For AI] Error parsing JSON-LD:', e);
-      }
+    // 同时通过消息API发送（保持兼容性）
+    chrome.runtime.sendMessage({
+      type: 'ELEMENT_SELECTED',
+      data: elementData
+    }).catch((error) => {
+      console.log('[Prompt Generator] Runtime message failed (expected if no background listener):', error);
     });
     
-  } catch (error) {
-    console.error('[PRD For AI] Error extracting metadata:', error);
-    metadata.error = error.message;
+    // 清除高亮并退出选择模式
+    clearHighlight();
+    exitSelectionMode();
   }
-  
-  return metadata;
 }
 
-// 监听来自background script的消息
+// 进入选择模式
+function enterSelectionMode() {
+  console.log('[Prompt Generator] Entering selection mode');
+  isSelectionMode = true;
+  
+  // 添加事件监听器
+  document.addEventListener('mouseover', handleMouseOver, true);
+  document.addEventListener('mouseout', handleMouseOut, true);
+  document.addEventListener('click', handleClick, true);
+  
+  // 改变鼠标样式
+  document.body.style.cursor = 'crosshair';
+  
+  // 显示提示信息
+  showModeIndicator();
+}
+
+// 退出选择模式
+function exitSelectionMode() {
+  console.log('[Prompt Generator] Exiting selection mode');
+  isSelectionMode = false;
+  
+  // 移除事件监听器
+  document.removeEventListener('mouseover', handleMouseOver, true);
+  document.removeEventListener('mouseout', handleMouseOut, true);
+  document.removeEventListener('click', handleClick, true);
+  
+  // 恢复鼠标样式
+  document.body.style.cursor = '';
+  
+  // 清除高亮
+  clearHighlight();
+  
+  // 移除模式指示器
+  hideModeIndicator();
+}
+
+// 显示模式指示器
+function showModeIndicator() {
+  // 移除已存在的指示器
+  hideModeIndicator();
+  
+  const indicator = document.createElement('div');
+  indicator.id = 'prompt-generator-indicator';
+  indicator.innerHTML = `
+    <div style="
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #007AFF;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 10002;
+      box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+      animation: prompt-generator-fade-in 0.3s ease;
+      cursor: pointer;
+    ">
+      🎯 选择模式激活 - 点击任意元素或按ESC退出
+    </div>
+  `;
+  
+  // 点击指示器也可以退出选择模式
+  indicator.addEventListener('click', exitSelectionMode);
+  
+  // 添加CSS动画
+  if (!document.getElementById('prompt-generator-styles')) {
+    const styles = document.createElement('style');
+    styles.id = 'prompt-generator-styles';
+    styles.textContent = `
+      @keyframes prompt-generator-fade-in {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    `;
+    document.head.appendChild(styles);
+  }
+  
+  document.body.appendChild(indicator);
+}
+
+// 隐藏模式指示器
+function hideModeIndicator() {
+  const existing = document.getElementById('prompt-generator-indicator');
+  if (existing) {
+    existing.remove();
+  }
+}
+
+// ESC键退出选择模式
+function handleKeyDown(event) {
+  if (event.key === 'Escape' && isSelectionMode) {
+    exitSelectionMode();
+  }
+}
+
+// 监听来自background script或sidepanel的消息
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('[PRD For AI] Received message:', message);
+  console.log('[Prompt Generator] Received message:', message);
   
-  if (message.action === 'extractPageData') {
-    const pageData = extractPageData();
-    sendResponse(pageData);
+  switch (message.action) {
+    case 'enterSelectionMode':
+      enterSelectionMode();
+      sendResponse({ success: true });
+      break;
+      
+    case 'exitSelectionMode':
+      exitSelectionMode();
+      sendResponse({ success: true });
+      break;
+      
+    case 'getPageInfo':
+      // 返回基本页面信息
+      sendResponse({
+        success: true,
+        data: {
+          url: window.location.href,
+          title: document.title,
+          domain: window.location.hostname
+        }
+      });
+      break;
+      
+    case 'getCurrentPageData':
+      // 返回详细的页面数据（用于页面分析功能）
+      try {
+        const pageData = extractPageData();
+        sendResponse({
+          success: true,
+          data: pageData
+        });
+      } catch (error) {
+        console.error('[Prompt Generator] Error extracting page data:', error);
+        sendResponse({
+          success: false,
+          error: error.message
+        });
+      }
+      break;
+      
+    default:
+      sendResponse({ success: false, error: 'Unknown action' });
+      break;
   }
   
-  return true; // 保持消息通道开放用于异步响应
+  return true; // 保持消息通道开放
 });
 
-// 页面加载完成时自动提取一次数据并存储
+// 添加全局键盘监听
+document.addEventListener('keydown', handleKeyDown);
+
+// 页面加载完成时的初始化
 if (document.readyState === 'complete') {
-  console.log('[PRD For AI] Page already loaded, extracting data...');
-  setTimeout(() => {
-    const pageData = extractPageData();
-    // 将数据存储到会话存储，供侧边栏使用
-    sessionStorage.setItem('prdForAI_pageData', JSON.stringify(pageData));
-  }, 1000);
+  console.log('[Prompt Generator] Page already loaded, ready for element selection');
 } else {
   window.addEventListener('load', () => {
-    console.log('[PRD For AI] Page loaded, extracting data...');
-    setTimeout(() => {
-      const pageData = extractPageData();
-      sessionStorage.setItem('prdForAI_pageData', JSON.stringify(pageData));
-    }, 1000);
+    console.log('[Prompt Generator] Page loaded, ready for element selection');
   });
 }
+
+// 清理函数，在页面卸载时调用
+window.addEventListener('beforeunload', () => {
+  exitSelectionMode();
+});

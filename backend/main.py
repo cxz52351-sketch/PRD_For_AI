@@ -30,6 +30,10 @@ load_dotenv()
 
 app = FastAPI(title="Indus AI Dialogue Forge API", version="1.0.0")
 
+# API重试配置
+API_RETRY_COUNT = int(os.getenv("API_RETRY_COUNT", "3"))
+API_TIMEOUT = int(os.getenv("API_TIMEOUT", "60"))
+
 # 应用启动时初始化数据库
 @app.on_event("startup")
 async def startup_event():
@@ -61,6 +65,8 @@ class ChatRequest(BaseModel):
     conversation_id: Optional[str] = None  # 本地数据库对话ID
     dify_conversation_id: Optional[str] = None  # Dify 会话ID，用于与 Dify 持续对话
     files: Optional[List[Dict[str, Any]]] = None  # 文件列表
+    workflow_type: str = "prd"  # prd, prompt - 指定使用哪个工作流
+    page_data: Optional[Dict[str, Any]] = None  # 页面数据（用于prompt生成）
 
 class ChatResponse(BaseModel):
     id: str
@@ -71,9 +77,15 @@ class ChatResponse(BaseModel):
     usage: Dict[str, int]
 
 # Dify API 配置（可通过环境变量覆盖），默认指向教研环境网关
-# 如需切换，请在运行环境中设置 DIFY_API_BASE 与 DIFY_API_KEY
+# 如需切换，请在运行环境中设置 DIFY_API_BASE 与相应的 API_KEY
 DIFY_API_BASE = os.getenv("DIFY_API_BASE", "http://teach.excelmaster.ai/v1")
-DIFY_API_KEY = os.getenv("DIFY_API_KEY", "app-wiFSsheVuALpQ5cN7LrPv5Lb")
+
+# PRD生成工作流配置
+DIFY_PRD_API_KEY = os.getenv("DIFY_PRD_API_KEY", "app-wiFSsheVuALpQ5cN7LrPv5Lb")
+
+# Prompt生成工作流配置  
+DIFY_PROMPT_API_KEY = os.getenv("DIFY_PROMPT_API_KEY", "app-6tFKntYIPDWzq2toScD1XIiY")
+
 # 优先调用工作流接口（/workflows/run）。如需改为应用聊天接口（/chat-messages），将该值设为 "chat"
 DIFY_API_CHANNEL = os.getenv("DIFY_API_CHANNEL", "workflow")  # workflow | chat
 
@@ -82,8 +94,55 @@ def _dify_endpoint() -> str:
         return f"{DIFY_API_BASE}/chat-messages"
     return f"{DIFY_API_BASE}/workflows/run"
 
-if not DIFY_API_KEY:
-    print("警告: 未设置DIFY_API_KEY环境变量")
+if not DIFY_PRD_API_KEY:
+    print("警告: 未设置DIFY_PRD_API_KEY环境变量")
+if not DIFY_PROMPT_API_KEY:
+    print("警告: 未设置DIFY_PROMPT_API_KEY环境变量")
+
+# API错误处理函数
+async def handle_dify_api_error(response: httpx.Response, context: str = "") -> str:
+    """
+    处理Dify API错误并返回用户友好的错误信息
+    """
+    try:
+        error_data = response.json()
+        error_message = error_data.get('error', {}).get('message', '')
+        
+        if response.status_code == 403:
+            if 'quota' in error_message.lower():
+                return f"API配额不足，请联系管理员充值或更换API密钥。{context}"
+            else:
+                return f"API访问被拒绝，请检查API密钥是否正确。{context}"
+        elif response.status_code == 429:
+            return f"API请求频率过高，请稍后再试。{context}"
+        elif response.status_code == 401:
+            return f"API密钥无效，请检查配置。{context}"
+        else:
+            return f"API错误 ({response.status_code}): {error_message} {context}"
+    except:
+        return f"API错误 ({response.status_code}): {await response.aread().decode(errors='ignore')} {context}"
+
+# API重试函数
+async def retry_api_call(func, max_retries: int = API_RETRY_COUNT, delay: float = 1.0):
+    """
+    带重试机制的API调用
+    """
+    for attempt in range(max_retries):
+        try:
+            return await func()
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 403 and 'quota' in str(e.response.text):
+                # 配额不足不重试
+                raise
+            if attempt == max_retries - 1:
+                raise
+            print(f"API调用失败 (尝试 {attempt + 1}/{max_retries}): {e}")
+            await asyncio.sleep(delay * (2 ** attempt))  # 指数退避
+        except Exception as e:
+            if attempt == max_retries - 1:
+                raise
+            print(f"API调用失败 (尝试 {attempt + 1}/{max_retries}): {e}")
+            await asyncio.sleep(delay)
 
 # 文件存储目录
 UPLOAD_DIR = "uploads"
@@ -109,7 +168,7 @@ async def upload_file_to_dify(file_data: bytes, filename: str, mime_type: str) -
                 'user': 'abc-123'  # 必需的用户标识
             }
             headers = {
-                "Authorization": f"Bearer {DIFY_API_KEY}"
+                "Authorization": f"Bearer {DIFY_PRD_API_KEY}"  # 默认使用PRD API Key
             }
             
             # 调用Dify文件上传端点，处理可能的重定向问题
@@ -359,15 +418,23 @@ async def health_check():
 @app.post("/api/chat")
 async def chat_with_dify(request: ChatRequest):
     """
-    通过 Dify 工作流进行对话（兼容现有前端协议）。
+    通过 Dify 工作流进行对话，支持PRD生成和Prompt生成两个工作流。
     - 流式：将 Dify SSE 事件转换为 OpenAI/DeepSeek 风格的 delta 流
     - 阻塞：将 Dify 的 answer 映射到 choices[0].message.content
     """
-    if not DIFY_API_KEY:
-        raise HTTPException(status_code=500, detail="Dify API密钥未配置")
+    
+    # 根据workflow_type选择对应的API Key
+    if request.workflow_type == "prompt":
+        api_key = DIFY_PROMPT_API_KEY
+        if not api_key:
+            raise HTTPException(status_code=500, detail="Prompt生成工作流API密钥未配置")
+    else:  # 默认使用PRD工作流
+        api_key = DIFY_PRD_API_KEY
+        if not api_key:
+            raise HTTPException(status_code=500, detail="PRD生成工作流API密钥未配置")
     
     try:
-        print(f"开始处理聊天请求，Dify API Key: {DIFY_API_KEY[:8]}...")
+        print(f"开始处理聊天请求，工作流类型: {request.workflow_type}, API Key: {api_key[:8]}...")
         
         # 从请求中提取用户消息（取最后一个，即当前轮的输入）
         user_messages = [msg for msg in request.messages if msg.role == "user"]
@@ -413,10 +480,10 @@ async def chat_with_dify(request: ChatRequest):
                 else:
                     print(f"文件转换失败: {file_info}")
         
-        # Dify 请求数据
+        # 构建Dify请求数据
         user_query = user_message.content
-        # 工作流通常使用 /workflows/run，输入以 inputs 传递；
-        # 为了最大兼容，inputs 同时包含 query 与 text 两个键。
+        
+        # 基础payload
         dify_payload = {
             "inputs": {"query": user_query, "text": user_query},
             "query": user_query,  # 若对接到 chat-messages 也可工作
@@ -424,6 +491,87 @@ async def chat_with_dify(request: ChatRequest):
             "conversation_id": (request.dify_conversation_id or ""),
             "user": "abc-123",
         }
+        
+        # 根据工作流类型添加特定输入
+        if request.workflow_type == "prompt" and request.page_data:
+            # Prompt生成工作流需要页面数据
+            page_data = request.page_data
+            element_data = page_data.get("element", {})
+            
+            # 构建HTML结构描述
+            element_html = f"<{element_data.get('tagName', 'div')}"
+            if element_data.get('attributes'):
+                for attr, value in element_data.get('attributes', {}).items():
+                    element_html += f' {attr}="{value}"'
+            element_html += f">{element_data.get('directText', '')}</{element_data.get('tagName', 'div')}>"
+            
+            # 构建CSS样式描述  
+            element_css = ""
+            if element_data.get('styles'):
+                # 只选择最重要的CSS属性，减少长度
+                important_props = ['display', 'position', 'width', 'height', 'background-color', 
+                                 'color', 'font-size', 'font-family', 'border', 'border-radius', 
+                                 'padding', 'margin', 'flex-direction', 'justify-content', 'align-items']
+                
+                for prop, value in element_data.get('styles', {}).items():
+                    if prop in important_props:
+                        element_css += f"{prop}: {value}; "
+            
+            # 构建详细的分析查询，包含完整元素信息
+            detailed_query = f"""请基于以下网页元素信息生成详细的编程实现指令：
+
+**元素基本信息**
+- 标签类型: {element_data.get('tagName', 'div')}
+- CSS类名: {element_data.get('attributes', {}).get('class', '无')}
+- ID: {element_data.get('attributes', {}).get('id', '无')}
+- 页面来源: {page_data.get("pageContext", {}).get("domain", "")}
+
+**HTML代码**
+{element_html}
+
+**重要CSS样式**
+{element_css}
+
+**元素属性**"""
+
+            # 添加其他重要属性
+            attrs = element_data.get('attributes', {})
+            for attr, value in attrs.items():
+                if attr not in ['class', 'id']:
+                    detailed_query += f"\n- {attr}: {value}"
+            
+            # 添加尺寸信息
+            dimensions = element_data.get('dimensions', {})
+            if dimensions:
+                detailed_query += f"""
+
+**元素尺寸**
+- 宽度: {dimensions.get('width', '未知')}px
+- 高度: {dimensions.get('height', '未知')}px"""
+
+            detailed_query += """
+
+**请生成包含以下内容的编程指令：**
+1. HTML结构分析和实现方法
+2. CSS样式详细说明和代码
+3. 如果有交互功能，请说明JavaScript实现
+4. 响应式设计建议
+5. 可访问性优化建议
+
+请生成详细、专业的编程实现指令。"""
+            
+            # 为了符合Dify限制，使用简化版本作为实际传递的参数
+            dify_payload["inputs"].update({
+                "query": detailed_query[:2000],  # 限制长度避免超限
+                "text": detailed_query[:2000],
+                "element_type": element_data.get('tagName', 'div')[:20],
+                "page_domain": page_data.get("pageContext", {}).get("domain", "")[:30],
+            })
+            
+            print(f"添加页面数据到Prompt工作流: {page_data.get('pageContext', {}).get('domain', 'unknown')}")
+            print(f"元素类型: {element_data.get('tagName', 'div')}")
+            print(f"查询长度: {len(detailed_query)} 字符")
+            print(f"传递给Dify的查询: {detailed_query[:200]}...")
         
         # 按照经验：如果有图片，添加到inputs.input_img字段（必须是数组格式）
         if dify_files:
@@ -436,7 +584,7 @@ async def chat_with_dify(request: ChatRequest):
         print(f"最终Dify payload: {json.dumps(dify_payload, ensure_ascii=False, indent=2)}")
 
         headers = {
-            "Authorization": f"Bearer {DIFY_API_KEY}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
         
@@ -672,8 +820,11 @@ async def chat_with_dify(request: ChatRequest):
                 
                 print(f"收到响应，状态码: {response.status_code}")
                 if response.status_code != 200:
+                    error_text = await response.aread()
+                    error_text = error_text.decode('utf-8')
+                    print(f"Dify API错误详情: {error_text}")
                     raise HTTPException(status_code=response.status_code, 
-                                      detail=f"Dify API错误 (status={response.status_code}): {response.text}")
+                                      detail=f"Dify API错误 (status={response.status_code}): {error_text}")
                 
                 dify_data = response.json()
                 print(f"响应数据: {json.dumps(dify_data, ensure_ascii=False, indent=2)}")
@@ -755,19 +906,28 @@ async def chat_with_dify(request: ChatRequest):
         raise HTTPException(status_code=500, detail=f"服务器内部错误: {str(e)}")
 
 @app.post("/api/chat/stop/{task_id}")
-async def stop_chat_response(task_id: str):
+async def stop_chat_response(task_id: str, api_key: str = "prd"):
     """
     停止指定的Dify响应任务
+    api_key参数指定使用哪个API Key ("prd" 或 "prompt")
     """
-    if not DIFY_API_KEY:
-        raise HTTPException(status_code=500, detail="Dify API密钥未配置")
+    
+    # 根据api_key参数选择对应的API Key
+    if api_key == "prompt":
+        dify_api_key = DIFY_PROMPT_API_KEY
+        if not dify_api_key:
+            raise HTTPException(status_code=500, detail="Prompt生成工作流API密钥未配置")
+    else:  # 默认使用PRD工作流
+        dify_api_key = DIFY_PRD_API_KEY
+        if not dify_api_key:
+            raise HTTPException(status_code=500, detail="PRD生成工作流API密钥未配置")
     
     try:
         print(f"停止响应任务: {task_id}")
         
         # 调用Dify API停止响应
         headers = {
-            "Authorization": f"Bearer {DIFY_API_KEY}",
+            "Authorization": f"Bearer {dify_api_key}",
             "Content-Type": "application/json"
         }
         

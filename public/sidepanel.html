@@ -3,47 +3,237 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PRD For AI</title>
+  <title>AI 编程助手</title>
   <link rel="stylesheet" href="sidepanel.css">
   <link rel="icon" href="favicon.ico">
   <style>
     /* 关键样式兜底，防止 CSS 未能及时加载时的可用性 */
     body { 
       margin: 0; 
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji"; 
-      background: #F8FAFC !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif; 
+      background: linear-gradient(135deg, #FDF2F8, #F3E8FF) !important;
       color: #1F2937 !important;
+      font-size: 14px;
     }
-    .container { padding: 16px; }
-    textarea { width: 100%; box-sizing: border-box; background: #FFFFFF !important; color: #1F2937 !important; }
-    button { cursor: pointer; }
-    .input-block { background: rgba(255,255,255,0.85) !important; border: 1px solid rgba(0,0,0,0.12) !important; }
+    .container { 
+      padding: 16px; 
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    button { 
+      cursor: pointer; 
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    .primary {
+      background: #A855F7;
+      color: white;
+    }
+    .primary:hover {
+      background: #9333EA;
+    }
+    .ghost {
+      background: transparent;
+      color: #A855F7;
+      border: 1px solid #A855F7;
+    }
+    .ghost:hover {
+      background: rgba(168, 85, 247, 0.1);
+    }
+    .danger {
+      background: #EF4444;
+      color: white;
+    }
+    .danger:hover {
+      background: #DC2626;
+    }
+    .success {
+      background: #10B981;
+      color: white;
+    }
+    .success:hover {
+      background: #059669;
+    }
+    .secondary {
+      background: #EC4899;
+      color: white;
+    }
+    .secondary:hover {
+      background: #DB2777;
+    }
+    .accent {
+      background: #F59E0B;
+      color: white;
+    }
+    .accent:hover {
+      background: #D97706;
+    }
+    
+    /* 选项卡样式 */
+    .tabs {
+      display: flex;
+      background: rgba(255,255,255,0.9);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      padding: 4px;
+    }
+    
+    .tab-button {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      color: #6B7280;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .tab-button.active {
+      background: #A855F7;
+      color: white;
+      box-shadow: 0 1px 3px rgba(168, 85, 247, 0.3);
+    }
+    
+    .tab-button:hover:not(.active) {
+      background: rgba(168, 85, 247, 0.1);
+      color: #A855F7;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* 状态消息样式 */
+    .status-message {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 1000;
+      animation: fadeInOut 3s ease-in-out;
+      max-width: 300px;
+      word-wrap: break-word;
+    }
+    
+    .status-message.info {
+      background: #A855F7;
+    }
+    
+    .status-message.success {
+      background: #10B981;
+    }
+    
+    .status-message.error {
+      background: #EF4444;
+    }
+    
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(-10px); }
+      20% { opacity: 1; transform: translateY(0); }
+      80% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- 头部 -->
     <header class="header">
-      <!-- <img src="logo-prd-for-ai-with-text.svg" class="logo" alt="AI PRD 生成器" /> -->
-      <!-- <h1>PRD For AI</h1> -->
-       <h1>AI Coding的需求扩写小帮手</h1>
-      <!-- <p class="sub">你的AI Coding需求扩写小能手</p> -->
+      <h1>🤖 AI 编程助手</h1>
+      <p class="subtitle">三合一智能编程工具</p>
     </header>
 
-    <section class="input-block">
-      <!-- 当前页面信息显示 -->
-      <div class="page-info-section">
+    <!-- 功能选项卡 -->
+    <div class="tabs">
+      <button class="tab-button active" data-tab="prompt">✨ 智能Prompt</button>
+      <button class="tab-button" data-tab="page">📄 页面分析</button>
+      <button class="tab-button" data-tab="prd">📋 PRD生成</button>
+    </div>
+
+    <!-- 功能1：智能Prompt生成 -->
+    <div class="tab-content active" id="prompt-tab">
+      <!-- 当前页面信息 -->
+      <section class="page-section">
         <div class="section-header">
-          <span class="section-title">🌐 当前页面</span>
+          <h2>🌐 当前页面</h2>
+        </div>
+        <div id="currentPageInfo" class="page-info">
+          <div class="page-info-loading">🔍 正在获取页面信息...</div>
+        </div>
+      </section>
+
+      <!-- 元素选择操作 -->
+      <section class="action-section">
+        <div class="section-header">
+          <h2>🎯 选择元素</h2>
+          <div class="section-description">
+            选择页面中的任意元素，AI将生成精确的编程指令
+          </div>
+        </div>
+        
+        <div class="action-buttons">
+          <button id="selectElementBtn" class="primary">
+            🎯 选择元素
+          </button>
+          <button id="exitSelectionBtn" class="danger" style="display: none;">
+            ❌ 退出选择
+          </button>
+        </div>
+      </section>
+
+      <!-- Prompt输出区域 -->
+      <section class="output-section">
+        <div class="section-header">
+          <h2>📝 生成的AI指令</h2>
+          <div class="section-actions">
+            <button id="copyPromptBtn" class="secondary" style="display: none;">
+              📋 复制指令
+            </button>
+            <button id="clearPromptBtn" class="ghost" style="display: none;">
+              🗑️ 清除
+            </button>
+          </div>
+        </div>
+        
+        <div id="promptOutput" class="prompt-output">
+          <div class="output-placeholder">
+            选择页面元素后，AI生成的编程指令将显示在这里
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 功能2：页面数据提取 -->
+    <div class="tab-content" id="page-tab">
+      <!-- 页面信息显示 -->
+      <section class="page-info-section">
+        <div class="section-header">
+          <h2>🌐 页面信息</h2>
           <div class="section-controls">
             <label class="checkbox-container">
               <input type="checkbox" id="includePageData" checked>
               <span class="checkmark"></span>
-              <span class="checkbox-label">包含页面信息</span>
+              <span class="checkbox-label">自动更新</span>
             </label>
             <button id="refreshPageBtn" class="ghost small">刷新</button>
           </div>
         </div>
-        <div id="pageInfo" class="page-info">
+        <div id="pageInfoDisplay" class="page-info">
           <div class="page-info-loading">🔍 正在获取页面信息...</div>
         </div>
         
@@ -86,32 +276,60 @@
         <div class="page-actions">
           <button id="togglePageDataBtn" class="ghost small" style="display: none;">📋 查看页面数据</button>
         </div>
-      </div>
+      </section>
+    </div>
 
-      <div class="input-row">
-        <label for="ideaInput" class="label">请输入你的应用想法</label>
-        <div class="spacer"></div>
-        <button id="newChatBtn" class="ghost small" title="开始新对话">新对话</button>
+    <!-- 功能3：PRD生成 -->
+    <div class="tab-content" id="prd-tab">
+      <section class="input-block">
+        <div class="input-row">
+          <label for="ideaInput" class="label">请输入你的应用想法</label>
+          <div class="spacer"></div>
+          <button id="newChatBtn" class="ghost small" title="开始新对话">新对话</button>
+        </div>
+        <textarea id="ideaInput" rows="6" placeholder="例如：我想做一个LLM对话应用"></textarea>
+        <div class="actions">
+          <button id="generateBtn" class="accent">生成PRD</button>
+        </div>
+      </section>
+
+      <section id="loading" class="loading" style="display:none;">
+        正在生成，请稍候...
+      </section>
+
+      <section id="output" class="output" aria-live="polite"></section>
+
+      <section class="foot-actions">
+        <button id="copyBtn" class="ghost" style="display:none;">一键复制</button>
+      </section>
+    </div>
+
+    <!-- 帮助信息 -->
+    <section class="help-section">
+      <div class="section-header">
+        <h3>💡 功能说明</h3>
       </div>
-      <textarea id="ideaInput" rows="6" placeholder="例如：我想做一个LLM对话应用"></textarea>
-      <div class="actions">
-        <button id="generateBtn" class="primary">生成PRD</button>
+      <div class="help-content">
+        <div class="help-item">
+          <strong>🎯 智能Prompt：</strong>选择页面元素，AI生成精确的编程指令
+        </div>
+        <div class="help-item">
+          <strong>📄 页面分析：</strong>自动提取页面HTML、CSS和字体信息
+        </div>
+        <div class="help-item">
+          <strong>📋 PRD生成：</strong>输入想法，生成详细的产品需求文档
+        </div>
       </div>
     </section>
 
-    <section id="loading" class="loading" style="display:none;">
-      正在生成，请稍候...
-    </section>
-
-    <section id="output" class="output" aria-live="polite"></section>
-
-    <section class="foot-actions">
-      <button id="copyBtn" class="ghost" style="display:none;">一键复制</button>
-    </section>
+    <!-- 版权信息 -->
+    <footer class="footer">
+      <div class="version-info">
+        版本 1.0.0 | Made with ❤️ for AI Developers
+      </div>
+    </footer>
   </div>
 
   <script src="sidepanel.js"></script>
 </body>
 </html>
-
-

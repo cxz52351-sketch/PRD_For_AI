@@ -1,19 +1,22 @@
 {
   "manifest_version": 3,
-  "name": "PRD For AI",
-  "version": "1.0.0",
-  "description": "AI Coding的需求扩写小帮手",
+  "name": "AI 编程提示词生成器",
+  "version": "2.0.0",
+  "description": "三合一智能编程工具：智能Prompt生成、页面数据提取、PRD生成",
   "permissions": [
     "activeTab",
-    "sidePanel",
+    "sidePanel", 
     "storage",
     "scripting",
-    "tabs"
+    "tabs",
+    "clipboardWrite"
   ],
   "host_permissions": [
-    "http://localhost:8001/*",
-    "http://teach.excelmaster.ai/*",
-    "https://teach.excelmaster.ai/*"
+    "http://localhost:*/*",
+    "https://localhost:*/*",
+    "https://teach.excelmaster.ai/*",
+    "https://mirror.o3pro.pro/*",
+    "https://*.o3pro.pro/*"
   ],
   "side_panel": {
     "default_path": "sidepanel.html"
@@ -32,7 +35,7 @@
     "default_icon": {
       "128": "image.png"
     },
-    "default_title": "打开 PRD For AI"
+    "default_title": "打开 AI 编程提示词生成器"
   },
   "icons": {
     "128": "image.png"
