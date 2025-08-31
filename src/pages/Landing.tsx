@@ -215,9 +215,18 @@ const Landing = () => {
 
               <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
                 <span className="gradient-text">
-                  {t.landing.hero.title.split('让AI帮你立刻落地')[0]}
+                  {t.landing.hero.title.includes('？')
+                    ? t.landing.hero.title.split('？')[0] + '？'
+                    : t.landing.hero.title.split('?')[0] + '?'
+                  }
                 </span>
-                <br />{t.landing.hero.title.split('？')[1] || 'Let AI Help You Implement Them Instantly'}
+                <br />
+                <span className="text-slate-900">
+                  {t.landing.hero.title.includes('？')
+                    ? t.landing.hero.title.split('？')[1]
+                    : t.landing.hero.title.split('?')[1]
+                  }
+                </span>
               </h1>
 
               <p className="mx-auto max-w-3xl text-xl text-slate-600 mb-8 leading-relaxed">
@@ -258,12 +267,12 @@ const Landing = () => {
                 <div className="glass-effect rounded-2xl p-8 premium-shadow hover-lift">
                   <div className="mb-6 flex items-center">
                     <Globe className="h-6 w-6 text-indigo-600 mr-3" />
-                    <span className="font-semibold text-lg">Web版 - AI对话生成</span>
+                    <span className="font-semibold text-lg">{t.landing.hero.webVersion}</span>
                   </div>
                   <div className="aspect-video bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl flex items-center justify-center border border-indigo-100">
                     <div className="text-center">
                       <MessageCircle className="h-16 w-16 text-indigo-500 mx-auto mb-4" />
-                      <p className="text-slate-600">支持文字、图片等多模态输入</p>
+                      <p className="text-slate-600">{t.landing.hero.multimodalInput}</p>
                     </div>
                   </div>
                 </div>
@@ -271,12 +280,12 @@ const Landing = () => {
                 <div className="glass-effect rounded-2xl p-8 premium-shadow hover-lift">
                   <div className="mb-6 flex items-center">
                     <Chrome className="h-6 w-6 text-purple-600 mr-3" />
-                    <span className="font-semibold text-lg">Chrome插件 - 一键分析</span>
+                    <span className="font-semibold text-lg">{t.landing.hero.chromeExtension}</span>
                   </div>
                   <div className="aspect-video bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl flex items-center justify-center border border-purple-100">
                     <div className="text-center">
                       <Target className="h-16 w-16 text-purple-500 mx-auto mb-4" />
-                      <p className="text-slate-600">任意网页一键生成PRD</p>
+                      <p className="text-slate-600">{t.landing.hero.anyWebpageOneClick}</p>
                     </div>
                   </div>
                 </div>
@@ -288,7 +297,7 @@ const Landing = () => {
         {/* Trusted By */}
         <div className="relative py-16 px-6 text-center">
           <h2 className="font-display text-4xl md:text-5xl font-bold mb-4 gradient-text">{t.landing.hero.subtitle}</h2>
-          <p className="text-lg text-slate-600 max-w-3xl mx-auto">打破传统文档创作壁垒，让每个人都能轻松将想法转化为专业PRD</p>
+          <p className="text-lg text-slate-600 max-w-3xl mx-auto">{t.landing.hero.breakBarriers}</p>
         </div>
 
         {/* Features */}
@@ -347,7 +356,7 @@ const Landing = () => {
                 <div className="aspect-square bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-2xl flex items-center justify-center border border-indigo-100">
                   <div className="text-center">
                     <Zap className="h-20 w-20 mx-auto mb-6 text-indigo-500" />
-                    <p className="text-xl font-semibold text-slate-700">AI 多模态分析</p>
+                    <p className="text-xl font-semibold text-slate-700">{t.landing.hero.aiMultimodalAnalysis}</p>
                   </div>
                 </div>
               </div>
@@ -431,7 +440,7 @@ const Landing = () => {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
                     <Users className="h-16 w-16 text-indigo-500 mx-auto mb-4" />
-                    <p className="text-lg text-gray-700">产品演示视频</p>
+                    <p className="text-lg text-gray-700">{t.landing.hero.productDemoVideo}</p>
                   </div>
                 </div>
               </div>
@@ -439,18 +448,18 @@ const Landing = () => {
             <figure className="relative">
               <blockquote className="text-lg sm:text-xl text-gray-900 pt-2">
                 <p>
-                  我不敢相信 PRD For AI 能制作如此出色的 PRD。我很震惊。这是一个游戏规则改变者。
+                  {t.landing.hero.testimonial1}
                   <br />
                   <br />
-                  我对AI文档听起来不够人性化持怀疑态度。PRD For AI 改变了一切。
+                  {t.landing.hero.testimonial2}
                   <br />
                   <br />
-                  这真的感觉像魔法。
+                  {t.landing.hero.testimonial3}
                 </p>
               </blockquote>
               <figcaption className="mt-6">
-                <div className="font-semibold text-gray-900">赵美丽</div>
-                <div className="text-gray-600">首席产品经理</div>
+                <div className="font-semibold text-gray-900">{t.landing.hero.zhaoMeili}</div>
+                <div className="text-gray-600">{t.landing.hero.chiefProductManager}</div>
               </figcaption>
             </figure>
           </div>
@@ -460,19 +469,23 @@ const Landing = () => {
         <section className="bg-slate-900 py-20">
           <div className="mx-auto max-w-4xl text-center px-6">
             <h2 className="font-display text-4xl md:text-5xl font-bold text-white mb-6">
-              成为 <span className="gradient-text">10x</span> 产品经理。
+              {t.landing.hero.become10XProductManager.replace('10X', '').trim()}
+              <span className="gradient-text">10X</span>
+              {t.landing.hero.become10XProductManager.split('10X')[1]}
               <br />
-              只需 <span className="gradient-text">每月几杯咖啡</span> 的价格。
+              {t.landing.hero.justNeedPrice.split('{price}')[0]}
+              <span className="gradient-text">{t.landing.hero.justFewCupsCoffee}</span>
+              {t.landing.hero.justNeedPrice.split('{price}')[1]}
             </h2>
             <p className="mt-8 max-w-2xl mx-auto text-xl text-slate-300">
-              我们让 PRD For AI 变得经济实惠，让从工程师到创始人到CPO的每个人都能从AI产品经理中受益。
+              {t.landing.hero.weMakePRDAffordable}
             </p>
             <div className="mt-12">
               <Link
                 to="/register"
                 className="premium-button inline-flex items-center justify-center rounded-2xl px-8 py-4 text-lg font-semibold text-white hover-lift"
               >
-                立即注册
+                {t.landing.hero.registerNow}
               </Link>
             </div>
           </div>
@@ -481,16 +494,16 @@ const Landing = () => {
         {/* Everything You Need */}
         <section className="py-16 border-t">
           <div className="mx-auto max-w-7xl px-6 text-center">
-            <h2 className="text-base font-semibold text-indigo-600">为什么选择 PRD For AI？</h2>
-            <p className="font-display text-3xl sm:text-4xl font-bold mt-2 mb-6">AI 为你和你的团队工作</p>
-            <p className="text-lg mb-12">PRD For AI 针对你的角色、公司和团队进行了定制，因此你可以在几分钟内获得高质量的产品输出。</p>
+            <h2 className="text-base font-semibold text-indigo-600">{t.landing.hero.whyChoosePRD}</h2>
+            <p className="font-display text-3xl sm:text-4xl font-bold mt-2 mb-6">{t.landing.hero.aiWorksForYou}</p>
+            <p className="text-lg mb-12">{t.landing.hero.prdCustomizedForYou}</p>
           </div>
           <div className="relative overflow-hidden pt-12">
             <div className="mx-auto max-w-7xl px-6">
               <div className="glass-effect rounded-xl premium-shadow w-full aspect-video bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center">
                 <div className="text-center">
                   <Target className="h-20 w-20 text-indigo-500 mx-auto mb-4" />
-                  <p className="text-xl text-gray-700">产品功能截图</p>
+                  <p className="text-xl text-gray-700">{t.landing.hero.productFeatureScreenshots}</p>
                 </div>
               </div>
             </div>
@@ -505,43 +518,43 @@ const Landing = () => {
                 <div className="absolute left-1 top-1 h-5 w-5 text-indigo-500">
                   <CheckCircle />
                 </div>
-                <dt className="inline font-semibold text-gray-900">AI 多模态分析。</dt>{' '}
-                <dd className="inline text-gray-700">结合网页代码、截图和 AI 的多模态分析，结果更准确、更完整</dd>
+                <dt className="inline font-semibold text-gray-900">{t.landing.hero.aiMultimodalAnalysis}。</dt>{' '}
+                <dd className="inline text-gray-700">{t.landing.hero.combineWebpageCode}</dd>
               </div>
               <div className="relative pl-9">
                 <div className="absolute left-1 top-1 h-5 w-5 text-indigo-500">
                   <CheckCircle />
                 </div>
-                <dt className="inline font-semibold text-gray-900">数据安全私密。</dt>{' '}
-                <dd className="inline text-gray-700">所有数据仅用于处理你的请求，不会被长期存储，保护用户隐私</dd>
+                <dt className="inline font-semibold text-gray-900">{t.landing.hero.dataSecurityPrivacy}</dt>{' '}
+                <dd className="inline text-gray-700">{t.landing.hero.allDataOnlyForProcessing}</dd>
               </div>
               <div className="relative pl-9">
                 <div className="absolute left-1 top-1 h-5 w-5 text-indigo-500">
                   <CheckCircle />
                 </div>
-                <dt className="inline font-semibold text-gray-900">自定义配置。</dt>{' '}
-                <dd className="inline text-gray-700">保存有关您公司、角色和产品领域的信息，以便 PRD For AI 每次都能完美处理</dd>
+                <dt className="inline font-semibold text-gray-900">{t.landing.hero.customConfiguration}</dt>{' '}
+                <dd className="inline text-gray-700">{t.landing.hero.saveCompanyRoleInfo}</dd>
               </div>
               <div className="relative pl-9">
                 <div className="absolute left-1 top-1 h-5 w-5 text-indigo-500">
                   <CheckCircle />
                 </div>
-                <dt className="inline font-semibold text-gray-900">自定义文档模板。</dt>{' '}
-                <dd className="inline text-gray-700">使用您自己的PRD模板？将自定义模板添加到您的账户</dd>
+                <dt className="inline font-semibold text-gray-900">{t.landing.hero.customDocumentTemplates}</dt>{' '}
+                <dd className="inline text-gray-700">{t.landing.hero.useYourOwnTemplates}</dd>
               </div>
               <div className="relative pl-9">
                 <div className="absolute left-1 top-1 h-5 w-5 text-indigo-500">
                   <CheckCircle />
                 </div>
-                <dt className="inline font-semibold text-gray-900">在线客服与社区支持。</dt>{' '}
-                <dd className="inline text-gray-700">我们的团队和社区帮助您从产品中获得最大收益</dd>
+                <dt className="inline font-semibold text-gray-900">{t.landing.hero.onlineCustomerService}</dt>{' '}
+                <dd className="inline text-gray-700">{t.landing.hero.ourTeamAndCommunity}</dd>
               </div>
               <div className="relative pl-9">
                 <div className="absolute left-1 top-1 h-5 w-5 text-indigo-500">
                   <CheckCircle />
                 </div>
-                <dt className="inline font-semibold text-gray-900">团队账户。</dt>{' '}
-                <dd className="inline text-gray-700">集中计费、共享模板和团队协作功能</dd>
+                <dt className="inline font-semibold text-gray-900">{t.landing.hero.teamAccount}</dt>{' '}
+                <dd className="inline text-gray-700">{t.landing.hero.centralizedBilling}</dd>
               </div>
             </div>
           </div>

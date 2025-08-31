@@ -185,6 +185,42 @@ export interface TranslationKeys {
         feature3: string;
       };
       noCreditCard: string;
+      // 新增的翻译键值
+      webVersion: string;
+      chromeExtension: string;
+      oneClickAnalysis: string;
+      anyWebpageOneClick: string;
+      breakBarriers: string;
+      multimodalInput: string;
+      // 产品功能截图部分
+      aiMultimodalAnalysis: string;
+      combineWebpageCode: string;
+      customDocumentTemplates: string;
+      useYourOwnTemplates: string;
+      dataSecurityPrivacy: string;
+      allDataOnlyForProcessing: string;
+      onlineCustomerService: string;
+      ourTeamAndCommunity: string;
+      customConfiguration: string;
+      saveCompanyRoleInfo: string;
+      teamAccount: string;
+      centralizedBilling: string;
+      // 更多遗漏的翻译
+      productDemoVideo: string;
+      testimonial1: string;
+      testimonial2: string;
+      testimonial3: string;
+      zhaoMeili: string;
+      chiefProductManager: string;
+      become10XProductManager: string;
+      justFewCupsCoffee: string;
+      justNeedPrice: string;
+      weMakePRDAffordable: string;
+      whyChoosePRD: string;
+      aiWorksForYou: string;
+      prdCustomizedForYou: string;
+      productFeatureScreenshots: string;
+      registerNow: string;
     };
     features: {
       title: string;
@@ -546,6 +582,42 @@ export const zhTranslations: TranslationKeys = {
         feature3: 'Chrome插件+Web版',
       },
       noCreditCard: '只需30秒 · 无需信用卡',
+      // 新增的翻译键值
+      webVersion: 'Web版 - AI对话生成',
+      chromeExtension: 'Chrome插件 - 一键分析',
+      oneClickAnalysis: '一键分析',
+      anyWebpageOneClick: '任意网页一键生成PRD',
+      breakBarriers: '打破传统文档创作壁垒，让每个人都能轻松将想法转化为专业PRD',
+      multimodalInput: '支持文字、图片等多模态输入',
+      // 产品功能截图部分
+      aiMultimodalAnalysis: 'AI 多模态分析',
+      combineWebpageCode: '结合网页代码、截图和 AI 的多模态分析，结果更准确、更完整',
+      customDocumentTemplates: '自定义文档模板。',
+      useYourOwnTemplates: '使用您自己的PRD模板？将自定义模板添加到您的账户',
+      dataSecurityPrivacy: '数据安全私密。',
+      allDataOnlyForProcessing: '所有数据仅用于处理你的请求，不会被长期存储，保护用户隐私',
+      onlineCustomerService: '在线客服与社区支持。',
+      ourTeamAndCommunity: '我们的团队和社区帮助您从产品中获得最大收益',
+      customConfiguration: '自定义配置。',
+      saveCompanyRoleInfo: '保存有关您公司、角色和产品领域的信息，以便 PRD For AI 每次都能完美处理',
+      teamAccount: '团队账户。',
+      centralizedBilling: '集中计费、共享模板和团队协作功能',
+      // 更多遗漏的翻译
+      productDemoVideo: '产品演示视频',
+      testimonial1: '我不敢相信 PRD For AI 能制作如此出色的 PRD。我很震惊。这是一个游戏规则改变者。',
+      testimonial2: '我对AI文档听起来不够人性化持怀疑态度。PRD For AI 改变了一切。',
+      testimonial3: '这真的感觉像魔法。',
+      zhaoMeili: '赵美丽',
+      chiefProductManager: '首席产品经理',
+      become10XProductManager: '成为 10X 产品经理。',
+      justFewCupsCoffee: '每月几杯咖啡',
+      justNeedPrice: '只需 {price} 的价格。',
+      weMakePRDAffordable: '我们让 PRD For AI 变得经济实惠，让从工程师到创始人到CPO的每个人都能从AI产品经理中受益。',
+      whyChoosePRD: '为什么选择 PRD For AI？',
+      aiWorksForYou: 'AI 为你和你的团队工作',
+      prdCustomizedForYou: 'PRD For AI 针对你的角色、公司和团队进行了定制，因此你可以在几分钟内获得高质量的产品输出。',
+      productFeatureScreenshots: '产品功能截图',
+      registerNow: '立即注册',
     },
     features: {
       title: '解放你的大脑，专注创意',
@@ -899,6 +971,42 @@ export const enTranslations: TranslationKeys = {
         feature3: 'Chrome Extension + Web Version',
       },
       noCreditCard: 'Just 30 seconds · No credit card required',
+      // 新增的翻译键值
+      webVersion: 'Web Version - AI Conversation Generation',
+      chromeExtension: 'Chrome Extension - One-click Analysis',
+      oneClickAnalysis: 'One-click Analysis',
+      anyWebpageOneClick: 'One-click PRD generation from any webpage',
+      breakBarriers: 'Break down traditional document creation barriers, allowing everyone to easily transform ideas into professional PRDs',
+      multimodalInput: 'Supports multi-modal input such as text and images',
+      // 产品功能截图部分
+      aiMultimodalAnalysis: 'AI Multi-modal Analysis',
+      combineWebpageCode: 'Combines webpage code, screenshots, and AI multi-modal analysis for more accurate and complete results',
+      customDocumentTemplates: 'Custom Document Templates.',
+      useYourOwnTemplates: 'Use your own PRD templates? Add custom templates to your account',
+      dataSecurityPrivacy: 'Data Security and Privacy.',
+      allDataOnlyForProcessing: 'All data is only used to process your requests, will not be stored long-term, protecting user privacy',
+      onlineCustomerService: 'Online Customer Service and Community Support.',
+      ourTeamAndCommunity: 'Our team and community help you get the most out of the product',
+      customConfiguration: 'Custom Configuration.',
+      saveCompanyRoleInfo: 'Save information about your company, roles, and product areas, so PRD For AI can perfectly handle each time',
+      teamAccount: 'Team Account.',
+      centralizedBilling: 'Centralized billing, shared templates, and team collaboration features',
+      // 更多遗漏的翻译
+      productDemoVideo: 'Product Demo Video',
+      testimonial1: 'I can\'t believe PRD For AI can produce such excellent PRDs. I\'m shocked. This is a game-changer.',
+      testimonial2: 'I was skeptical that AI documents sounded not human enough. PRD For AI changed everything.',
+      testimonial3: 'This really feels like magic.',
+      zhaoMeili: 'Zhao Meili',
+      chiefProductManager: 'Chief Product Manager',
+      become10XProductManager: 'Become a 10X Product Manager.',
+      justFewCupsCoffee: 'a few cups of coffee per month',
+      justNeedPrice: 'For the price of just {price}.',
+      weMakePRDAffordable: 'We make PRD For AI affordable, allowing everyone from engineers to founders to CPOs to benefit from AI Product Manager.',
+      whyChoosePRD: 'Why choose PRD For AI?',
+      aiWorksForYou: 'AI works for you and your team',
+      prdCustomizedForYou: 'PRD For AI is customized for your role, company, and team, so you can get high-quality product output in minutes.',
+      productFeatureScreenshots: 'Product Feature Screenshots',
+      registerNow: 'Register Now',
     },
     features: {
       title: 'Free Your Mind, Focus on Creativity',
