@@ -10,13 +10,15 @@
   --muted: #6B7280 !important;
   --border: rgba(0,0,0,0.06) !important;
   
-  /* 新的粉紫色主题 */
-  --primary: #A855F7 !important;           /* 主紫色 */
-  --primary-press: #9333EA !important;      /* 按下的紫色 */
-  --secondary: #EC4899 !important;          /* 粉色 */
-  --secondary-press: #DB2777 !important;    /* 按下的粉色 */
-  --accent: #F59E0B !important;             /* 金色 */
-  --accent-press: #D97706 !important;       /* 按下的金色 */
+  /* 新的紫色系主题 */
+  --primary: #9A6FB8 !important;            /* 深紫色 - 主色 */
+  --primary-press: #8A5FA8 !important;      /* 按下的深紫色 */
+  --secondary: #B688CC !important;          /* 中紫色 - 次要色 */
+  --secondary-press: #A678BC !important;    /* 按下的中紫色 */
+  --accent: #E9B6D4 !important;             /* 浅紫色 - 强调色 */
+  --accent-press: #D9A6C4 !important;       /* 按下的浅紫色 */
+  --gold: #D4AF37 !important;               /* 金色 */
+  --gold-press: #B8941F !important;         /* 按下的金色 */
   
   --success: #10B981 !important;            /* 保留绿色作为成功色 */
   --success-press: #059669 !important;
@@ -24,24 +26,26 @@
   --danger-press: #DC2626 !important;
   
   --panel-surface: rgba(255,255,255,0.9) !important;
-  --panel-border: rgba(168, 85, 247, 0.08) !important;
-  --panel-border-strong: rgba(168, 85, 247, 0.12) !important;
+  --panel-border: rgba(154, 111, 184, 0.08) !important;
+  --panel-border-strong: rgba(154, 111, 184, 0.12) !important;
   
   /* 渐变色定义 */
-  --gradient-primary: linear-gradient(135deg, #A855F7, #EC4899) !important;
-  --gradient-secondary: linear-gradient(135deg, #EC4899, #F59E0B) !important;
-  --gradient-bg: linear-gradient(135deg, #FDF2F8, #F3E8FF) !important;
+  --gradient-primary: linear-gradient(135deg, #9A6FB8, #B688CC) !important;
+  --gradient-secondary: linear-gradient(135deg, #B688CC, #E9B6D4) !important;
+  --gradient-gold: linear-gradient(135deg, #D4AF37, #F4D03F) !important;
+  --gradient-bg: linear-gradient(135deg, #F8F4FF, #F0E6FF) !important;
 }
 
 * { 
   box-sizing: border-box; 
 }
 
-/* 柔和渐变背景 - 粉紫色主题 */
+/* 柔和渐变背景 - 紫色系主题 */
 body {
   background:
-    radial-gradient(1200px 800px at 80% 8%, rgba(168, 85, 247, 0.08) 0%, rgba(255,255,255,0) 60%),
-    radial-gradient(900px 700px at 20% 85%, rgba(236, 72, 153, 0.06) 0%, rgba(255,255,255,0) 60%),
+    radial-gradient(1200px 800px at 80% 8%, rgba(154, 111, 184, 0.08) 0%, rgba(255,255,255,0) 60%),
+    radial-gradient(900px 700px at 20% 85%, rgba(182, 136, 204, 0.06) 0%, rgba(255,255,255,0) 60%),
+    radial-gradient(600px 500px at 50% 50%, rgba(233, 182, 212, 0.04) 0%, rgba(255,255,255,0) 70%),
     var(--gradient-bg) !important;
   color: var(--text) !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif !important;
@@ -81,6 +85,32 @@ body {
   color: var(--muted);
   font-size: 13px;
   opacity: 0.8;
+}
+
+/* 头部装饰元素 */
+.header-decoration {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  opacity: 0.6;
+}
+
+.gold-dot {
+  color: var(--gold);
+  font-size: 8px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.purple-dot {
+  color: var(--primary);
+  font-size: 8px;
+  animation: pulse 2s ease-in-out infinite 0.5s;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.2); }
 }
 
 /* 通用区域样式 */
@@ -291,17 +321,57 @@ button:disabled {
   box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
 }
 
-/* 新增：金色按钮样式 */
+/* 新增：浅紫色按钮样式 */
 .accent {
   background: var(--accent);
   color: white;
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 2px 8px rgba(233, 182, 212, 0.3);
 }
 
 .accent:hover:not(:disabled) {
   background: var(--accent-press);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+  box-shadow: 0 4px 12px rgba(233, 182, 212, 0.4);
+}
+
+/* 新增：金色按钮样式 */
+.gold {
+  background: var(--gold);
+  color: white;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.gold::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.gold:hover::before {
+  left: 100%;
+}
+
+.gold:hover:not(:disabled) {
+  background: var(--gold-press);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+}
+
+/* 金色边框装饰 */
+.gold-border {
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.2), 0 2px 8px rgba(154, 111, 184, 0.3) !important;
+}
+
+.gold-border:hover:not(:disabled) {
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.4), 0 4px 12px rgba(154, 111, 184, 0.4) !important;
 }
 
 /* 输入区域样式 */
@@ -493,7 +563,7 @@ button.tiny {
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background: rgba(168, 85, 247, 0.05);
+  background: rgba(154, 111, 184, 0.05);
   border-bottom: 1px solid var(--panel-border);
 }
 
@@ -532,10 +602,10 @@ button.tiny {
 .page-stats span {
   font-size: 10px;
   color: var(--muted);
-  background: rgba(168, 85, 247, 0.05);
+  background: rgba(154, 111, 184, 0.05);
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(154, 111, 184, 0.1);
 }
 
 /* 复选框样式 */
@@ -588,8 +658,8 @@ button.tiny {
 }
 
 .tips {
-  background: rgba(168, 85, 247, 0.05);
-  border: 1px solid rgba(168, 85, 247, 0.2);
+  background: rgba(154, 111, 184, 0.05);
+  border: 1px solid rgba(154, 111, 184, 0.2);
   border-radius: 8px;
   padding: 12px;
   margin-top: 12px;
@@ -613,6 +683,16 @@ button.tiny {
   font-size: 11px;
   color: var(--muted);
   opacity: 0.7;
+}
+
+.gold-heart {
+  color: var(--gold);
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 /* 响应式调整 */

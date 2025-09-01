@@ -11,7 +11,7 @@
     body { 
       margin: 0; 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif; 
-      background: linear-gradient(135deg, #FDF2F8, #F3E8FF) !important;
+      background: linear-gradient(135deg, #F8F4FF, #F0E6FF) !important;
       color: #1F2937 !important;
       font-size: 14px;
     }
@@ -31,19 +31,19 @@
       transition: all 0.2s ease;
     }
     .primary {
-      background: #A855F7;
+      background: #9A6FB8;
       color: white;
     }
     .primary:hover {
-      background: #9333EA;
+      background: #8A5FA8;
     }
     .ghost {
       background: transparent;
-      color: #A855F7;
-      border: 1px solid #A855F7;
+      color: #9A6FB8;
+      border: 1px solid #9A6FB8;
     }
     .ghost:hover {
-      background: rgba(168, 85, 247, 0.1);
+      background: rgba(154, 111, 184, 0.1);
     }
     .danger {
       background: #EF4444;
@@ -60,18 +60,25 @@
       background: #059669;
     }
     .secondary {
-      background: #EC4899;
+      background: #B688CC;
       color: white;
     }
     .secondary:hover {
-      background: #DB2777;
+      background: #A678BC;
     }
     .accent {
-      background: #F59E0B;
+      background: #E9B6D4;
       color: white;
     }
     .accent:hover {
-      background: #D97706;
+      background: #D9A6C4;
+    }
+    .gold {
+      background: #D4AF37;
+      color: white;
+    }
+    .gold:hover {
+      background: #B8941F;
     }
     
     /* 选项卡样式 */
@@ -97,14 +104,14 @@
     }
     
     .tab-button.active {
-      background: #A855F7;
+      background: #9A6FB8;
       color: white;
-      box-shadow: 0 1px 3px rgba(168, 85, 247, 0.3);
+      box-shadow: 0 1px 3px rgba(154, 111, 184, 0.3);
     }
     
     .tab-button:hover:not(.active) {
-      background: rgba(168, 85, 247, 0.1);
-      color: #A855F7;
+      background: rgba(154, 111, 184, 0.1);
+      color: #9A6FB8;
     }
     
     .tab-content {
@@ -131,7 +138,7 @@
     }
     
     .status-message.info {
-      background: #A855F7;
+      background: #9A6FB8;
     }
     
     .status-message.success {
@@ -156,6 +163,11 @@
     <header class="header">
       <h1>🤖 AI 编程助手</h1>
       <p class="subtitle">三合一智能编程工具</p>
+      <div class="header-decoration">
+        <span class="gold-dot">●</span>
+        <span class="purple-dot">●</span>
+        <span class="gold-dot">●</span>
+      </div>
     </header>
 
     <!-- 功能选项卡 -->
@@ -289,7 +301,7 @@
         </div>
         <textarea id="ideaInput" rows="6" placeholder="例如：我想做一个LLM对话应用"></textarea>
         <div class="actions">
-          <button id="generateBtn" class="accent">生成PRD</button>
+          <button id="generateBtn" class="primary">生成PRD</button>
         </div>
       </section>
 
@@ -325,7 +337,7 @@
     <!-- 版权信息 -->
     <footer class="footer">
       <div class="version-info">
-        版本 1.0.0 | Made with ❤️ for AI Developers
+        版本 1.0.0 | Made with <span class="gold-heart">❤️</span> for AI Developers
       </div>
     </footer>
   </div>
