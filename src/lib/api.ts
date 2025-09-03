@@ -1,5 +1,8 @@
 // API配置
-const API_BASE_URL = 'http://localhost:8001';
+// 根据环境自动选择API地址
+const API_BASE_URL = import.meta.env.PROD 
+  ? 'https://prd-for-ai.onrender.com'  // 生产环境 
+  : 'http://localhost:8001';           // 开发环境
 
 // 类型定义
 export interface Message {
