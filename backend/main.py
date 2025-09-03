@@ -989,10 +989,24 @@ async def get_available_models():
     }
 
 @app.get("/api/conversations")
-async def get_conversations(limit: int = 20, offset: int = 0):
-    """获取对话列表"""
+async def get_conversations(
+    limit: int = 20, 
+    offset: int = 0,
+    current_user: Optional[dict] = Depends(get_current_user_optional)
+):
+    """获取对话列表 - 只返回当前用户的对话"""
     try:
-        conversations = await db.get_conversations(limit=limit, offset=offset)
+        # 如果用户已登录，只返回该用户的对话
+        if current_user:
+            conversations = await db.get_conversations(
+                user_id=current_user.get("id"), 
+                limit=limit, 
+                offset=offset
+            )
+        else:
+            # 如果用户未登录，返回空列表
+            conversations = []
+            
         return {"conversations": conversations}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取对话列表失败: {str(e)}")

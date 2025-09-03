@@ -35,6 +35,7 @@ import {
   type Conversation as StoredConversation,
   type Message as StoredMessage
 } from "@/lib/storage";
+import { useAuth } from "@/lib/auth";
 
 // 使用存储模块中的类型定义
 type Message = StoredMessage;
@@ -42,6 +43,7 @@ type Conversation = StoredConversation;
 
 export function ChatInterface() {
   const { t, language } = useTranslation();
+  const { user } = useAuth();
 
   // 从本地存储初始化状态
   const [conversations, setConversations] = useState<Conversation[]>(() => {
@@ -95,6 +97,47 @@ export function ChatInterface() {
       return updated;
     });
   }, [language, t]);
+
+  // 🔥 用户登录后从服务器获取对话列表
+  useEffect(() => {
+    const loadUserConversations = async () => {
+      if (user) {
+        try {
+          console.log('🔄 用户已登录，从服务器加载对话列表...');
+          const response = await api.getConversations(100, 0);
+          const serverConversations = response.conversations;
+          
+          if (serverConversations && serverConversations.length > 0) {
+            const convertedConversations = serverConversations.map(conv => ({
+              id: conv.id,
+              title: conv.title,
+              timestamp: new Date(conv.updated_at),
+              preview: conv.title,
+              messages: []
+            }));
+            
+            console.log(`✅ 从服务器加载了 ${convertedConversations.length} 个对话`);
+            setConversations(convertedConversations);
+            
+            if (convertedConversations.length > 0) {
+              setActiveConversationId(convertedConversations[0].id);
+            }
+          } else {
+            console.log('📝 用户暂无对话记录，使用默认对话');
+            setConversations(getDefaultConversations(t));
+          }
+        } catch (error) {
+          console.error('❌ 加载用户对话失败:', error);
+          setConversations(getDefaultConversations(t));
+        }
+      } else {
+        console.log('👤 用户未登录，使用默认对话');
+        setConversations(getDefaultConversations(t));
+      }
+    };
+
+    loadUserConversations();
+  }, [user, t]);
 
   // 画布编辑相关状态
   const [showCanvasEdit, setShowCanvasEdit] = useState(false);
