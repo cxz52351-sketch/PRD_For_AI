@@ -106,7 +106,7 @@ export function ChatInterface() {
           console.log('🔄 用户已登录，从服务器加载对话列表...');
           const response = await api.getConversations(100, 0);
           const serverConversations = response.conversations;
-          
+
           if (serverConversations && serverConversations.length > 0) {
             const convertedConversations = serverConversations.map(conv => ({
               id: conv.id,
@@ -115,10 +115,10 @@ export function ChatInterface() {
               preview: conv.title,
               messages: []
             }));
-            
+
             console.log(`✅ 从服务器加载了 ${convertedConversations.length} 个对话`);
             setConversations(convertedConversations);
-            
+
             if (convertedConversations.length > 0) {
               setActiveConversationId(convertedConversations[0].id);
             }
@@ -138,6 +138,61 @@ export function ChatInterface() {
 
     loadUserConversations();
   }, [user, t]);
+
+  // 🔥 监听活跃对话切换，从服务器加载对话消息
+  useEffect(() => {
+    const loadConversationMessages = async () => {
+      if (user && activeConversationId && activeConversationId !== "1") {
+        // 跳过默认对话（ID为"1"）
+        try {
+          console.log(`🔄 加载对话消息: ${activeConversationId}`);
+          const response = await api.getConversation(activeConversationId);
+
+          if (response.messages && response.messages.length > 0) {
+            // 转换API消息格式为前端格式
+            const convertedMessages = response.messages.map((msg: any, index: number) => ({
+              id: msg.id || `msg-${index}`,
+              type: (msg.role === 'assistant' ? 'ai' : 'user') as 'user' | 'ai',
+              content: msg.content,
+              timestamp: new Date(msg.timestamp || new Date().toISOString()),
+              attachments: msg.files ? msg.files.map((file: any) => ({
+                name: file.name || 'file',
+                type: file.type || 'unknown',
+                url: file.url || ''
+              })) : []
+            }));
+
+            // 更新对话的消息内容
+            setConversations(prevConversations => {
+              return prevConversations.map(conv => {
+                if (conv.id === activeConversationId) {
+                  return {
+                    ...conv,
+                    messages: convertedMessages
+                  };
+                }
+                return conv;
+              });
+            });
+
+            console.log(`✅ 成功加载 ${convertedMessages.length} 条消息`);
+          } else {
+            console.log('📝 这是一个空对话');
+          }
+        } catch (error) {
+          console.error('❌ 加载对话消息失败:', error);
+          toast({
+            title: "加载失败",
+            description: "无法加载对话消息内容",
+            variant: "destructive",
+            duration: 3000,
+          });
+        }
+      }
+    };
+
+    loadConversationMessages();
+  }, [activeConversationId, user]);
 
   // 画布编辑相关状态
   const [showCanvasEdit, setShowCanvasEdit] = useState(false);
