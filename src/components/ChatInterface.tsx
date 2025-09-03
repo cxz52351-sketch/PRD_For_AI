@@ -602,22 +602,57 @@ export function ChatInterface() {
     setActiveConversationId(newId);
   };
 
-  const handleDeleteConversation = (id: string) => {
-    setConversations(prev => {
-      const updated = prev.filter(conv => conv.id !== id);
-      // 立即保存到本地存储
-      saveConversations(updated);
-      return updated;
-    });
+  const handleDeleteConversation = async (id: string) => {
+    // 跳过删除默认对话
+    if (id === "1") {
+      toast({
+        title: "无法删除",
+        description: "默认对话无法删除",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
 
-    // If deleting active conversation, switch to another one
-    if (id === activeConversationId) {
-      const remaining = conversations.filter(conv => conv.id !== id);
-      if (remaining.length > 0) {
-        setActiveConversationId(remaining[0].id);
-      } else {
-        handleNewConversation();
+    try {
+      // 如果用户已登录，调用后端API删除
+      if (user) {
+        console.log(`🗑️ 删除对话: ${id}`);
+        await api.deleteConversation(id);
+        console.log(`✅ 成功删除对话: ${id}`);
+        
+        toast({
+          title: "删除成功",
+          description: "对话已永久删除",
+          duration: 2000,
+        });
       }
+
+      // 无论是否登录，都从前端状态中删除
+      setConversations(prev => {
+        const updated = prev.filter(conv => conv.id !== id);
+        // 立即保存到本地存储
+        saveConversations(updated);
+        return updated;
+      });
+
+      // If deleting active conversation, switch to another one
+      if (id === activeConversationId) {
+        const remaining = conversations.filter(conv => conv.id !== id);
+        if (remaining.length > 0) {
+          setActiveConversationId(remaining[0].id);
+        } else {
+          handleNewConversation();
+        }
+      }
+    } catch (error) {
+      console.error('❌ 删除对话失败:', error);
+      toast({
+        title: "删除失败",
+        description: "无法删除对话，请稍后重试",
+        variant: "destructive",
+        duration: 3000,
+      });
     }
   };
 
