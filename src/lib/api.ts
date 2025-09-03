@@ -1,5 +1,5 @@
 // API配置
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+const API_BASE_URL = 'http://localhost:8001';
 
 // 类型定义
 export interface Message {
@@ -417,6 +417,17 @@ export const api = {
   // 获取统计信息
   getStats: () =>
     apiRequest<{ conversations: number, messages: number, attachments: number, generated_files: number }>('/api/stats'),
+
+  // 管理员功能
+  admin: {
+    // 获取用户列表
+    getUsers: (limit: number = 50, offset: number = 0) =>
+      apiRequest<{ users: UserData[], limit: number, offset: number }>(`/api/admin/users?limit=${limit}&offset=${offset}`),
+
+    // 获取用户详情
+    getUserDetail: (userId: string) =>
+      apiRequest<{ user: UserData, stats: { conversations: number, messages: number }, conversations: Conversation[] }>(`/api/admin/users/${userId}`),
+  },
 };
 
 // 流式响应解析器

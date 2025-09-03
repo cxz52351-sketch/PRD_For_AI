@@ -46,8 +46,8 @@ All colors MUST be HSL. Enterprise-grade color palette with industrial aesthetic
     --ai-message: 275 45% 97%;
     --user-message: 268 45% 46%;
     --user-message-foreground: 0 0% 98%;
-    /* 柔和浅紫，用于代码/mermaid 背景，确保在浅色主题下线条可见 */
-    --code-background: 268 40% 96%;
+    /* 代码背景与muted保持一致，确保与画布预览统一 */
+    --code-background: 330 40% 96%;
     --success: 145 60% 40%;
     --warning: 42 90% 55%;
 
@@ -113,8 +113,8 @@ All colors MUST be HSL. Enterprise-grade color palette with industrial aesthetic
     --ai-message: 268 22% 14%;
     --user-message: 268 65% 32%;
     --user-message-foreground: 0 0% 96%;
-    /* 深色主题下略提亮，保证线条与网格可见 */
-    --code-background: 268 25% 16%;
+    /* 深色主题下代码背景与muted保持一致 */
+    --code-background: 268 20% 16%;
     --success: 145 60% 45%;
     --warning: 42 90% 60%;
 

@@ -26,7 +26,7 @@ import db  # 导入数据库模块
 from auth import (
     UserCreate, UserLogin, Token, UserResponse, EmailVerificationRequest, VerifyEmailRequest,
     register_user, login_user, get_current_user, get_current_user_optional,
-    send_verification_code, verify_email
+    send_verification_code, verify_email, get_admin_user
 )
 
 # 加载环境变量
@@ -336,7 +336,7 @@ async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 @app.post("/api/chat")
-async def chat_with_dify(request: ChatRequest):
+async def chat_with_dify(request: ChatRequest, current_user: dict = Depends(get_current_user_optional)):
     """
     通过 Dify 工作流进行对话（兼容现有前端协议）。
     - 流式：将 Dify SSE 事件转换为 OpenAI/DeepSeek 风格的 delta 流
@@ -363,7 +363,19 @@ async def chat_with_dify(request: ChatRequest):
         if not conversation_id:
             # 创建新对话
             title = user_message.content[:30] + "..." if len(user_message.content) > 30 else user_message.content
-            conversation_id = await db.create_conversation(title=title, model=request.model)
+            # 若已登录，则把会话归属到当前用户
+            user_id_for_conversation = None
+            try:
+                if current_user and current_user.get("id"):
+                    user_id_for_conversation = current_user["id"]
+            except Exception:
+                user_id_for_conversation = None
+
+            conversation_id = await db.create_conversation(
+                title=title,
+                model=request.model,
+                user_id=user_id_for_conversation
+            )
             print(f"创建新对话: {conversation_id}")
         else:
             # 验证对话是否存在
@@ -1037,6 +1049,43 @@ async def get_stats():
         return stats
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取统计信息失败: {str(e)}")
+
+# ================================
+# 管理员/运营辅助接口：用户与会话
+# ================================
+
+@app.get("/api/admin/users", tags=["Admin"])
+async def admin_get_users(limit: int = 50, offset: int = 0, admin_user: dict = Depends(get_admin_user)):
+    """获取用户列表（仅限管理员：490429443@qq.com）"""
+    try:
+        users = await db.get_users(limit=limit, offset=offset)
+        return {"users": users, "limit": limit, "offset": offset}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取用户列表失败: {str(e)}")
+
+@app.get("/api/admin/users/{user_id}", tags=["Admin"])
+async def admin_get_user_detail(user_id: str, admin_user: dict = Depends(get_admin_user)):
+    """获取单个用户详情及其对话统计（仅限管理员：490429443@qq.com）"""
+    try:
+        user = await db.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="用户不存在")
+
+        conversations = await db.get_conversations(user_id=user_id, limit=1000, offset=0)
+        total_messages = 0
+        for c in conversations:
+            msgs = await db.get_messages(c["id"])  # 每个会话的消息
+            total_messages += len(msgs)
+
+        return {
+            "user": user,
+            "stats": {"conversations": len(conversations), "messages": total_messages},
+            "conversations": conversations,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取用户详情失败: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

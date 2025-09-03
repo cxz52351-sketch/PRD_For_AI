@@ -414,3 +414,15 @@ async def login_user(login_data: UserLogin) -> Token:
             created_at=user["created_at"]
         )
     )
+
+async def get_admin_user(current_user: dict = Depends(get_current_user)) -> dict:
+    """验证管理员权限 - 只有特定邮箱的用户才能访问管理功能"""
+    ADMIN_EMAIL = "490429443@qq.com"
+    
+    if not current_user.get("email") or current_user["email"] != ADMIN_EMAIL:
+        raise HTTPException(
+            status_code=403,
+            detail="权限不足：只有管理员可以访问此功能"
+        )
+    
+    return current_user

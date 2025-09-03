@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, Settings, User } from 'lucide-react';
+import { LogOut, Settings, User, Shield } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -53,6 +53,9 @@ const UserMenu: React.FC = () => {
     return 'ID: ' + user.id.slice(-8);
   };
 
+  // 检查是否为管理员
+  const isAdmin = user.email === "490429443@qq.com";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -92,6 +95,17 @@ const UserMenu: React.FC = () => {
           <Settings className="mr-2 h-4 w-4" />
           <span>{t.user.settings}</span>
         </DropdownMenuItem>
+
+        {/* 管理员菜单项 */}
+        {isAdmin && (
+          <DropdownMenuItem
+            className="cursor-pointer text-purple-600 focus:text-purple-600 focus:bg-purple-50"
+            onClick={() => navigate('/admin')}
+          >
+            <Shield className="mr-2 h-4 w-4" />
+            <span>用户管理</span>
+          </DropdownMenuItem>
+        )}
 
         <DropdownMenuSeparator />
 
