@@ -271,7 +271,7 @@
     }, 500); // 每500ms检查一次
   }
   
-  // 生成AI指令（使用Dify工作流）
+  // 生成AI指令（使用OpenRouter API）
   async function generatePromptWithAI(elementData) {
     if (!elementData || !promptOutput) return;
     
@@ -281,12 +281,11 @@
       // 构建请求数据
       const requestData = {
         messages: [{ role: 'user', content: `请分析这个网页元素并生成编程指令` }],
-        workflow_type: 'prompt',
         stream: false,
         page_data: elementData
       };
       
-      const response = await fetch(`${API_BASE_URL}/api/chat`, {
+      const response = await fetch(`${API_BASE_URL}/api/prompt`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -309,6 +308,7 @@
             <div class="prompt-meta">
               <span class="prompt-source">来源: ${elementData.pageContext.domain}</span>
               <span class="prompt-time">${new Date().toLocaleTimeString()}</span>
+              <span class="prompt-model">模型: GPT-4o Mini</span>
             </div>
           </div>
           <div class="prompt-content">

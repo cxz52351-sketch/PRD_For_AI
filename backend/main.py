@@ -86,6 +86,10 @@ DIFY_PRD_API_KEY = os.getenv("DIFY_PRD_API_KEY", "app-wiFSsheVuALpQ5cN7LrPv5Lb")
 # Prompt生成工作流配置  
 DIFY_PROMPT_API_KEY = os.getenv("DIFY_PROMPT_API_KEY", "app-6tFKntYIPDWzq2toScD1XIiY")
 
+# OpenRouter API 配置
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+
 # 优先调用工作流接口（/workflows/run）。如需改为应用聊天接口（/chat-messages），将该值设为 "chat"
 DIFY_API_CHANNEL = os.getenv("DIFY_API_CHANNEL", "workflow")  # workflow | chat
 
@@ -414,6 +418,286 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+@app.post("/api/prompt")
+async def generate_prompt_with_openrouter(request: ChatRequest):
+    """
+    使用OpenRouter API生成编程prompt，专门用于智能Prompt功能
+    """
+    try:
+        print(f"开始处理OpenRouter prompt生成请求...")
+        
+        # 从请求中提取用户消息和页面数据
+        user_messages = [msg for msg in request.messages if msg.role == "user"]
+        if not user_messages:
+            raise HTTPException(status_code=400, detail="请求中必须包含用户消息")
+        
+        user_message = user_messages[-1]
+        page_data = request.page_data
+        
+        if not page_data:
+            raise HTTPException(status_code=400, detail="缺少页面数据")
+        
+        # 构建详细的prompt
+        element_data = page_data.get("element", {})
+        page_context = page_data.get("pageContext", {})
+        
+        # 构建HTML结构描述
+        element_html = f"<{element_data.get('tagName', 'div')}"
+        if element_data.get('attributes'):
+            for attr, value in element_data.get('attributes', {}).items():
+                element_html += f' {attr}="{value}"'
+        element_html += f">{element_data.get('directText', '')}</{element_data.get('tagName', 'div')}>"
+        
+        # 构建CSS样式描述  
+        element_css = ""
+        if element_data.get('styles'):
+            important_props = ['display', 'position', 'width', 'height', 'background-color', 
+                             'color', 'font-size', 'font-family', 'border', 'border-radius', 
+                             'padding', 'margin', 'flex-direction', 'justify-content', 'align-items']
+            
+            for prop, value in element_data.get('styles', {}).items():
+                if prop in important_props:
+                    element_css += f"{prop}: {value}; "
+        
+        # 构建详细的系统prompt
+        system_prompt = """你是一个专业的编程助手，专门帮助开发者分析网页元素并生成详细的编程实现指令。
+
+请根据提供的网页元素信息，生成包含以下内容的专业编程指令：
+
+1. **HTML结构分析**：分析元素的HTML结构，说明如何实现
+2. **CSS样式实现**：提供完整的CSS代码，包括布局、样式、响应式设计
+3. **JavaScript交互**：如果有交互功能，提供JavaScript实现代码
+4. **响应式设计**：提供移动端适配建议
+5. **可访问性优化**：提供无障碍访问优化建议
+6. **最佳实践**：提供代码优化和性能建议
+
+请确保生成的指令详细、准确、可执行，适合开发者直接使用。"""
+
+        # 构建用户查询
+        user_query = f"""请分析以下网页元素并生成详细的编程实现指令：
+
+**元素基本信息**
+- 标签类型: {element_data.get('tagName', 'div')}
+- CSS类名: {element_data.get('attributes', {}).get('class', '无')}
+- ID: {element_data.get('attributes', {}).get('id', '无')}
+- 页面来源: {page_context.get('domain', '')}
+
+**HTML代码**
+{element_html}
+
+**重要CSS样式**
+{element_css}
+
+**元素属性**"""
+
+        # 添加其他重要属性
+        attrs = element_data.get('attributes', {})
+        for attr, value in attrs.items():
+            if attr not in ['class', 'id']:
+                user_query += f"\n- {attr}: {value}"
+        
+        # 添加尺寸信息
+        dimensions = element_data.get('dimensions', {})
+        if dimensions:
+            user_query += f"""
+
+**元素尺寸**
+- 宽度: {dimensions.get('width', '未知')}px
+- 高度: {dimensions.get('height', '未知')}px"""
+
+        user_query += """
+
+请生成包含HTML结构、CSS样式、JavaScript交互（如有）、响应式设计和可访问性优化的完整编程实现指令。"""
+
+        # 构建OpenRouter请求
+        openrouter_payload = {
+            "model": "openai/gpt-4o-mini",
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_query}
+            ],
+            "temperature": 0.7,
+            "max_tokens": 4000,
+            "stream": request.stream
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://chrome-extension-ai-assistant.com",
+            "X-Title": "AI Programming Assistant"
+        }
+        
+        print(f"发送请求到OpenRouter: {openrouter_payload['model']}")
+        print(f"查询长度: {len(user_query)} 字符")
+        
+        if request.stream:
+            # 流式响应
+            async def generate():
+                full_content = ""
+                
+                try:
+                    async with httpx.AsyncClient(timeout=60.0) as client:
+                        async with client.stream(
+                            "POST",
+                            f"{OPENROUTER_BASE_URL}/chat/completions",
+                            json=openrouter_payload,
+                            headers={**headers, "Accept": "text/event-stream"},
+                        ) as response:
+                            if response.status_code != 200:
+                                error_text = (await response.aread()).decode(errors="ignore")
+                                error_msg = f"OpenRouter API错误 (status={response.status_code}): {error_text}"
+                                print(f"API错误: {error_msg}")
+                                yield f"data: {json.dumps({'error': {'message': error_msg}}, ensure_ascii=False)}\n\n"
+                                yield "data: [DONE]\n\n"
+                                return
+
+                            print("开始接收 OpenRouter 流式数据...")
+                            buffer = ""
+                            async for chunk in response.aiter_text():
+                                if chunk:
+                                    buffer += chunk
+                                    # 处理完整的行
+                                    while '\n' in buffer:
+                                        line, buffer = buffer.split('\n', 1)
+                                        if line.strip():
+                                            if line.startswith('data: '):
+                                                try:
+                                                    data = line[6:].strip()
+                                                    if not data or data == '[DONE]':
+                                                        pass
+                                                    else:
+                                                        parsed = json.loads(data)
+                                                        if 'choices' in parsed and len(parsed['choices']) > 0:
+                                                            delta = parsed['choices'][0].get('delta', {})
+                                                            if 'content' in delta:
+                                                                delta_text = delta['content']
+                                                                full_content += delta_text
+                                                                transformed = {
+                                                                    "choices": [
+                                                                        {"delta": {"content": delta_text}}
+                                                                    ]
+                                                                }
+                                                                yield f"data: {json.dumps(transformed, ensure_ascii=False)}\n\n"
+                                                except Exception as e:
+                                                    print(f"解析OpenRouter流式数据行失败: {e}")
+                                                    pass
+                            
+                            # 处理剩余的buffer
+                            if buffer.strip():
+                                try:
+                                    if buffer.startswith('data: '):
+                                        data = buffer[6:].strip()
+                                        if data and data != '[DONE]':
+                                            parsed = json.loads(data)
+                                            if 'choices' in parsed and len(parsed['choices']) > 0:
+                                                delta = parsed['choices'][0].get('delta', {})
+                                                if 'content' in delta:
+                                                    delta_text = delta['content']
+                                                    full_content += delta_text
+                                                    transformed = {"choices": [{"delta": {"content": delta_text}}]}
+                                                    yield f"data: {json.dumps(transformed, ensure_ascii=False)}\n\n"
+                                except Exception:
+                                    pass
+                            
+                            # 提供 HTML 渲染
+                            try:
+                                if full_content and isinstance(full_content, str):
+                                    html_output = markdown.markdown(full_content, extensions=['extra', 'sane_lists'])
+                                    html_event = {"type": "html", "html": html_output}
+                                    yield f"data: {json.dumps(html_event, ensure_ascii=False)}\n\n"
+                            except Exception as _e:
+                                print(f"HTML 渲染失败: {_e}")
+                            
+                            yield "data: [DONE]\n\n"
+                            
+                except Exception as e:
+                    print(f"OpenRouter流式处理错误: {repr(e)}")
+                    import traceback
+                    print(traceback.format_exc())
+                    error_response = {
+                        "error": {
+                            "message": f"OpenRouter流式处理错误: {repr(e)}"
+                        }
+                    }
+                    yield f"data: {json.dumps(error_response)}\n\n"
+                    yield "data: [DONE]\n\n"
+            
+            return StreamingResponse(
+                generate(),
+                media_type="text/event-stream",
+                headers={
+                    "Cache-Control": "no-cache, no-transform",
+                    "Pragma": "no-cache",
+                    "Connection": "keep-alive",
+                    "X-Accel-Buffering": "no",
+                }
+            )
+        
+        else:
+            # 阻塞响应
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.post(
+                    f"{OPENROUTER_BASE_URL}/chat/completions",
+                    json=openrouter_payload,
+                    headers=headers,
+                )
+                
+                if response.status_code != 200:
+                    error_text = await response.aread()
+                    error_text = error_text.decode('utf-8')
+                    print(f"OpenRouter API错误详情: {error_text}")
+                    raise HTTPException(status_code=response.status_code, 
+                                      detail=f"OpenRouter API错误 (status={response.status_code}): {error_text}")
+                
+                openrouter_data = response.json()
+                print(f"OpenRouter响应数据: {json.dumps(openrouter_data, ensure_ascii=False, indent=2)}")
+
+                # 提取AI回复内容
+                ai_content = ""
+                if 'choices' in openrouter_data and len(openrouter_data['choices']) > 0:
+                    ai_content = openrouter_data['choices'][0].get('message', {}).get('content', '')
+
+                # 构造兼容的返回体
+                compatible = {
+                    "id": openrouter_data.get('id', str(uuid.uuid4())),
+                    "object": "chat.completion",
+                    "created": int(datetime.now().timestamp()),
+                    "model": "openai/gpt-4o-mini",
+                    "choices": [
+                        {
+                            "index": 0,
+                            "message": {"role": "assistant", "content": ai_content},
+                            "finish_reason": "stop",
+                        }
+                    ],
+                    "usage": openrouter_data.get('usage', {
+                        "prompt_tokens": 0,
+                        "completion_tokens": 0,
+                        "total_tokens": 0,
+                    }),
+                }
+
+                # 提供 HTML 渲染字段
+                try:
+                    if ai_content and isinstance(ai_content, str):
+                        compatible['html'] = markdown.markdown(ai_content, extensions=['extra', 'sane_lists'])
+                except Exception as _e:
+                    print(f"阻塞模式 HTML 渲染失败: {_e}")
+
+                return compatible
+                
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=408, detail="请求超时")
+    except httpx.RequestError as e:
+        print(f"网络请求错误: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"网络请求错误: {str(e)}")
+    except Exception as e:
+        print(f"服务器内部错误: {str(e)}")
+        import traceback
+        print(f"错误堆栈: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"服务器内部错误: {str(e)}")
 
 @app.post("/api/chat")
 async def chat_with_dify(request: ChatRequest):

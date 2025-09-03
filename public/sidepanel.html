@@ -161,20 +161,20 @@
   <div class="container">
     <!-- 头部 -->
     <header class="header">
-      <h1>🤖 AI 编程助手</h1>
-      <p class="subtitle">三合一智能编程工具</p>
+      <h1>AI 编程助手</h1>
+      <!-- <p class="subtitle">三合一智能编程工具</p>
       <div class="header-decoration">
         <span class="gold-dot">●</span>
         <span class="purple-dot">●</span>
         <span class="gold-dot">●</span>
-      </div>
+      </div> -->
     </header>
 
     <!-- 功能选项卡 -->
     <div class="tabs">
-      <button class="tab-button active" data-tab="prompt">✨ 智能Prompt</button>
-      <button class="tab-button" data-tab="page">📄 页面分析</button>
-      <button class="tab-button" data-tab="prd">📋 PRD生成</button>
+      <button class="tab-button active" data-tab="prompt"> 智能Prompt</button>
+      <button class="tab-button" data-tab="page">页面分析</button>
+      <button class="tab-button" data-tab="prd">PRD生成</button>
     </div>
 
     <!-- 功能1：智能Prompt生成 -->
@@ -182,17 +182,17 @@
       <!-- 当前页面信息 -->
       <section class="page-section">
         <div class="section-header">
-          <h2>🌐 当前页面</h2>
+          <h2>当前页面</h2>
         </div>
         <div id="currentPageInfo" class="page-info">
-          <div class="page-info-loading">🔍 正在获取页面信息...</div>
+          <div class="page-info-loading">正在获取页面信息...</div>
         </div>
       </section>
 
       <!-- 元素选择操作 -->
       <section class="action-section">
         <div class="section-header">
-          <h2>🎯 选择元素</h2>
+          <h2>选择元素</h2>
           <div class="section-description">
             选择页面中的任意元素，AI将生成精确的编程指令
           </div>
@@ -200,10 +200,10 @@
         
         <div class="action-buttons">
           <button id="selectElementBtn" class="primary">
-            🎯 选择元素
+            选择元素
           </button>
           <button id="exitSelectionBtn" class="danger" style="display: none;">
-            ❌ 退出选择
+            退出选择
           </button>
         </div>
       </section>
@@ -211,13 +211,13 @@
       <!-- Prompt输出区域 -->
       <section class="output-section">
         <div class="section-header">
-          <h2>📝 生成的AI指令</h2>
+          <h2> 生成的AI指令</h2>
           <div class="section-actions">
             <button id="copyPromptBtn" class="secondary" style="display: none;">
-              📋 复制指令
+              复制指令
             </button>
             <button id="clearPromptBtn" class="ghost" style="display: none;">
-              🗑️ 清除
+              清除
             </button>
           </div>
         </div>
@@ -235,7 +235,7 @@
       <!-- 页面信息显示 -->
       <section class="page-info-section">
         <div class="section-header">
-          <h2>🌐 页面信息</h2>
+          <h2>页面信息</h2>
           <div class="section-controls">
             <label class="checkbox-container">
               <input type="checkbox" id="includePageData" checked>
@@ -246,14 +246,14 @@
           </div>
         </div>
         <div id="pageInfoDisplay" class="page-info">
-          <div class="page-info-loading">🔍 正在获取页面信息...</div>
+          <div class="page-info-loading">正在获取页面信息...</div>
         </div>
         
         <!-- 页面数据详情区域 -->
         <div id="pageDataDetails" class="page-data-details" style="display: none;">
           <div class="data-section">
             <div class="data-header">
-              <span class="data-title">📄 HTML源码</span>
+              <span class="data-title">HTML源码</span>
               <button id="copyHtmlBtn" class="ghost tiny">复制</button>
             </div>
             <div id="htmlPreview" class="data-content"></div>
@@ -261,7 +261,7 @@
           
           <div class="data-section">
             <div class="data-header">
-              <span class="data-title">📝 页面文本</span>
+              <span class="data-title">页面文本</span>
               <button id="copyTextBtn" class="ghost tiny">复制</button>
             </div>
             <div id="textPreview" class="data-content"></div>
@@ -269,7 +269,7 @@
           
           <div class="data-section">
             <div class="data-header">
-              <span class="data-title">🎨 CSS样式</span>
+              <span class="data-title">CSS样式</span>
               <button id="copyCssBtn" class="ghost tiny">复制</button>
             </div>
             <div id="cssPreview" class="data-content"></div>
@@ -277,7 +277,7 @@
           
           <div class="data-section">
             <div class="data-header">
-              <span class="data-title">🔤 字体信息</span>
+              <span class="data-title">字体信息</span>
               <button id="copyFontsBtn" class="ghost tiny">复制</button>
             </div>
             <div id="fontsPreview" class="data-content"></div>
@@ -286,7 +286,7 @@
         
         <!-- 查看详情按钮 -->
         <div class="page-actions">
-          <button id="togglePageDataBtn" class="ghost small" style="display: none;">📋 查看页面数据</button>
+          <button id="togglePageDataBtn" class="ghost small" style="display: none;"> 查看页面数据</button>
         </div>
       </section>
     </div>
@@ -319,17 +319,17 @@
     <!-- 帮助信息 -->
     <section class="help-section">
       <div class="section-header">
-        <h3>💡 功能说明</h3>
+        <h3>功能说明</h3>
       </div>
       <div class="help-content">
         <div class="help-item">
-          <strong>🎯 智能Prompt：</strong>选择页面元素，AI生成精确的编程指令
+          <strong>· 智能Prompt：</strong>选择页面元素，AI生成精确的编程指令
         </div>
         <div class="help-item">
-          <strong>📄 页面分析：</strong>自动提取页面HTML、CSS和字体信息
+          <strong>· 页面分析：</strong>自动提取页面HTML、CSS和字体信息
         </div>
         <div class="help-item">
-          <strong>📋 PRD生成：</strong>输入想法，生成详细的产品需求文档
+          <strong>· PRD生成：</strong>输入想法，生成详细的产品需求文档
         </div>
       </div>
     </section>
