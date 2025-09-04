@@ -152,6 +152,15 @@ async def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
             row = await cur.fetchone()
             return dict(row) if row else None
 
+async def get_user_by_username(username: str) -> Optional[Dict[str, Any]]:
+    """根据用户名获取用户（用于注册时唯一性校验）"""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        async with conn.cursor(aiomysql.DictCursor) as cur:
+            await cur.execute("SELECT * FROM users WHERE username = %s", (username,))
+            row = await cur.fetchone()
+            return dict(row) if row else None
+
 async def get_users(limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
     """获取用户列表"""
     pool = await get_pool()
@@ -338,6 +347,17 @@ async def verify_code(email: str, code: str) -> bool:
                 await cur.execute("UPDATE email_verifications SET is_used = TRUE WHERE id = %s", (row[0],))
                 return True
             return False
+
+async def mark_email_verified(verification_id: str) -> bool:
+    """标记邮箱验证记录为已使用（用于邮箱验证完成）"""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                "UPDATE email_verifications SET is_used = TRUE WHERE id = %s",
+                (verification_id,)
+            )
+            return cur.rowcount > 0
 
 async def cleanup_expired_verifications() -> int:
     """清理过期的邮箱验证记录"""
