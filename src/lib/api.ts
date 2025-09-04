@@ -1,7 +1,7 @@
 // API配置
 // 根据环境自动选择API地址
-const API_BASE_URL = import.meta.env.PROD 
-  ? 'https://prd-for-n3j61jhwn-zcxs-projects-1434d8f1.vercel.app'  // 生产环境 - Vercel部署的后端
+const API_BASE_URL = import.meta.env.PROD
+  ? 'https://prd-for-ai.onrender.com'  // 生产环境 - render部署的后端
   : 'http://localhost:8001';           // 开发环境
 
 // 类型定义

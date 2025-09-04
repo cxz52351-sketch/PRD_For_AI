@@ -1,3 +1,15 @@
+import os
+from dotenv import load_dotenv
+load_dotenv("1.env")
+
+# 条件导入数据库模块
+if os.getenv("USE_MYSQL", "false").lower() == "true":
+    import db_mysql as db
+    print("使用MySQL数据库")
+else:
+    import db
+    print("使用SQLite数据库")
+
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, FileResponse
@@ -22,7 +34,6 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import re
 import base64
-import db  # 导入数据库模块
 from auth import (
     UserCreate, UserLogin, Token, UserResponse, EmailVerificationRequest, VerifyEmailRequest,
     register_user, login_user, get_current_user, get_current_user_optional,
