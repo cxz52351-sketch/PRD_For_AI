@@ -346,31 +346,6 @@ async def root():
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-
-@app.get("/api/db-status")
-async def check_database_status():
-    """检查数据库状态"""
-    try:
-        stats = await db.get_stats()
-        return {
-            "status": "ok",
-            "database_type": "MySQL" if os.getenv("USE_MYSQL", "false").lower() == "true" else "SQLite",
-            "stats": stats,
-            "mysql_config": {
-                "host": os.getenv("MYSQL_HOST"),
-                "database": os.getenv("MYSQL_DATABASE"),
-                "user": os.getenv("MYSQL_USER")
-            } if os.getenv("USE_MYSQL", "false").lower() == "true" else None,
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "error": str(e),
-            "database_type": "MySQL" if os.getenv("USE_MYSQL", "false").lower() == "true" else "SQLite",
-            "timestamp": datetime.now().isoformat()
-        }
-
 @app.post("/api/chat")
 async def chat_with_dify(request: ChatRequest, current_user: dict = Depends(get_current_user_optional)):
     """
