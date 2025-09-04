@@ -1042,6 +1042,34 @@ async def update_conversation(conversation_id: str, title: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"更新对话失败: {str(e)}")
 
+
+@app.post("/api/messages/{message_id}/copy")
+async def record_message_copy_event(
+    message_id: str,
+    current_user: Optional[dict] = Depends(get_current_user_optional)
+):
+    """记录消息复制事件"""
+    try:
+        success = await db.record_message_copy(message_id)
+        if success:
+            return {"status": "success", "message": "复制事件已记录"}
+        else:
+            raise HTTPException(status_code=404, detail="消息不存在")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"记录复制事件失败: {str(e)}")
+
+@app.get("/api/messages/{message_id}/copy-stats")
+async def get_message_copy_stats(
+    message_id: str,
+    current_user: Optional[dict] = Depends(get_current_user_optional)
+):
+    """获取消息复制统计信息"""
+    try:
+        stats = await db.get_message_copy_stats(message_id)
+        return stats
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取复制统计失败: {str(e)}")
+
 @app.delete("/api/conversations/{conversation_id}")
 async def delete_conversation(conversation_id: str):
     """删除对话"""

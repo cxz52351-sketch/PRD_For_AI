@@ -411,6 +411,17 @@ export const api = {
       body: JSON.stringify({ title }),
     }),
 
+
+  // 记录消息复制事件
+  recordMessageCopy: (messageId: string) =>
+    apiRequest<{ status: string; message: string }>(`/api/messages/${messageId}/copy`, {
+      method: 'POST',
+    }),
+
+  // 获取消息复制统计
+  getMessageCopyStats: (messageId: string) =>
+    apiRequest<{ copy_count: number; last_copied_at: string | null }>(`/api/messages/${messageId}/copy-stats`),
+
   // 删除对话
   deleteConversation: (conversationId: string) =>
     apiRequest<{ status: string }>(`/api/conversations/${conversationId}`, {

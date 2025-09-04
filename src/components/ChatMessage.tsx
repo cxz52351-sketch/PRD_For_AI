@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useTranslation } from "@/lib/useLanguage";
+import { api } from "@/lib/api";
 
 interface ChatMessageProps {
   type: "user" | "ai";
@@ -18,6 +19,7 @@ interface ChatMessageProps {
     type: string;
     url: string;
   }>;
+  messageId?: string;
 }
 
 export function ChatMessage({
@@ -28,7 +30,8 @@ export function ChatMessage({
   onRetry,
   onEditInCanvas,
   attachments = []
-}: ChatMessageProps) {
+,
+  messageId}: ChatMessageProps) {
   const { t } = useTranslation();
   const [copiedBlocks, setCopiedBlocks] = useState<Set<number>>(new Set());
   const [messageCopied, setMessageCopied] = useState(false);
@@ -71,15 +74,26 @@ export function ChatMessage({
     try {
       await navigator.clipboard.writeText(text);
       setCopiedBlocks(prev => new Set(prev).add(blockIndex));
+      
+      // 记录复制统计（只有AI消息且有messageId时）
+      if (type === "ai" && messageId) {
+        try {
+          await api.recordMessageCopy(messageId);
+          console.log(`📋 记录复制事件: ${messageId}`);
+        } catch (error) {
+          console.error('记录复制统计失败:', error);
+        }
+      }
+      
       setTimeout(() => {
         setCopiedBlocks(prev => {
           const newSet = new Set(prev);
           newSet.delete(blockIndex);
           return newSet;
         });
-      }, 2000);
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
+      }, 1500);
+    } catch (e) {
+      console.error("Failed to copy code block: ", e);
     }
   };
 
@@ -88,6 +102,17 @@ export function ChatMessage({
       // 对于用户与AI，均复制原始 content。AI 的 content 即 Dify 的 "answer" 原文
       await navigator.clipboard.writeText(content || "");
       setMessageCopied(true);
+      
+      // 记录复制统计（只有AI消息且有messageId时）
+      if (type === "ai" && messageId) {
+        try {
+          await api.recordMessageCopy(messageId);
+          console.log(`📋 记录整个消息复制事件: ${messageId}`);
+        } catch (error) {
+          console.error('记录复制统计失败:', error);
+        }
+      }
+      
       setTimeout(() => setMessageCopied(false), 1500);
     } catch (e) {
       console.error("Failed to copy message: ", e);

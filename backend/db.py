@@ -513,3 +513,46 @@ async def cleanup_expired_verifications() -> int:
         )
         await db.commit()
         return cursor.rowcount
+
+async def record_message_copy(message_id: str) -> bool:
+    """记录消息复制事件"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            # 增加复制次数并更新最后复制时间
+            await db.execute("""
+                UPDATE messages 
+                SET copy_count = copy_count + 1,
+                    last_copied_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """, (message_id,))
+            
+            await db.commit()
+            
+            # 检查是否成功更新
+            cursor = await db.execute("SELECT changes()")
+            changes = await cursor.fetchone()
+            return changes[0] > 0
+    except Exception as e:
+        print(f"记录复制事件失败: {e}")
+        return False
+
+async def get_message_copy_stats(message_id: str) -> Dict[str, Any]:
+    """获取消息复制统计信息"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            cursor = await db.execute("""
+                SELECT copy_count, last_copied_at
+                FROM messages 
+                WHERE id = ?
+            """, (message_id,))
+            
+            result = await cursor.fetchone()
+            if result:
+                return {
+                    "copy_count": result[0] or 0,
+                    "last_copied_at": result[1]
+                }
+            return {"copy_count": 0, "last_copied_at": None}
+    except Exception as e:
+        print(f"获取复制统计失败: {e}")
+        return {"copy_count": 0, "last_copied_at": None}

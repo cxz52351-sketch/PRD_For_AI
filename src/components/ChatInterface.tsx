@@ -832,6 +832,7 @@ export function ChatInterface() {
                   attachments={message.attachments}
                   onRetry={message.isError ? handleRetryMessage : undefined}
                   onEditInCanvas={!isCanvasMode ? handleEditInCanvas : undefined}
+                  messageId={message.id}
                 />
                 {message.generatedFile && (
                   <div className="flex items-center gap-2 ml-4">
