@@ -1,0 +1,231 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Industrial AI Dialogue Interface Design System
+All colors MUST be HSL. Enterprise-grade color palette with industrial aesthetics.
+*/
+
+@layer base {
+  :root {
+    /* PRD For AI - Pink / Gold / Purple Theme (Light) */
+    --background: 330 40% 98%;
+    --foreground: 268 30% 18%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 268 30% 18%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 268 30% 18%;
+
+    /* Primary: Elegant Purple */
+    --primary: 268 45% 46%;
+    --primary-foreground: 0 0% 98%;
+    --primary-light: 268 60% 62%;
+    --primary-dark: 268 45% 36%;
+
+    /* Secondary: Soft Pink */
+    --secondary: 330 70% 95%;
+    --secondary-foreground: 268 30% 22%;
+
+    --muted: 330 40% 96%;
+    --muted-foreground: 268 20% 42%;
+
+    /* Accent: Warm Gold */
+    --accent: 42 90% 60%;
+    --accent-foreground: 268 30% 16%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 280 20% 88%;
+    --input: 280 20% 96%;
+    --ring: 268 45% 46%;
+
+    /* AI Chat Specific Colors */
+    --ai-message: 275 45% 97%;
+    --user-message: 268 45% 46%;
+    --user-message-foreground: 0 0% 98%;
+    /* 代码背景与muted保持一致，确保与画布预览统一 */
+    --code-background: 330 40% 96%;
+    --success: 145 60% 40%;
+    --warning: 42 90% 55%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--secondary)));
+
+    /* Shadows */
+    --shadow-soft: 0 2px 8px -2px hsl(var(--primary) / 0.12);
+    --shadow-medium: 0 4px 16px -4px hsl(var(--primary) / 0.18);
+    --shadow-strong: 0 8px 24px -8px hsl(var(--primary) / 0.24);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s ease-out;
+
+    --radius: 0.6rem;
+
+    /* Sidebar */
+    --sidebar-background: 330 45% 98%;
+    --sidebar-foreground: 268 30% 22%;
+    --sidebar-primary: 268 45% 46%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 330 60% 96%;
+    --sidebar-accent-foreground: 268 30% 22%;
+    --sidebar-border: 280 20% 90%;
+    --sidebar-ring: 42 90% 60%;
+  }
+
+  .dark {
+    /* PRD For AI - Pink / Gold / Purple Theme (Dark) */
+    --background: 268 30% 9%;
+    --foreground: 0 0% 96%;
+
+    --card: 268 30% 11%;
+    --card-foreground: 0 0% 96%;
+
+    --popover: 268 30% 11%;
+    --popover-foreground: 0 0% 96%;
+
+    --primary: 268 65% 72%;
+    --primary-foreground: 268 25% 12%;
+    --primary-light: 268 70% 78%;
+    --primary-dark: 268 55% 58%;
+
+    --secondary: 330 35% 18%;
+    --secondary-foreground: 0 0% 96%;
+
+    --muted: 268 20% 16%;
+    --muted-foreground: 0 0% 76%;
+
+    --accent: 42 90% 62%;
+    --accent-foreground: 268 25% 12%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 268 20% 20%;
+    --input: 268 20% 16%;
+    --ring: 268 65% 72%;
+
+    /* Dark AI Chat Colors */
+    --ai-message: 268 22% 14%;
+    --user-message: 268 65% 32%;
+    --user-message-foreground: 0 0% 96%;
+    /* 深色主题下代码背景与muted保持一致 */
+    --code-background: 268 20% 16%;
+    --success: 145 60% 45%;
+    --warning: 42 90% 60%;
+
+    /* Sidebar */
+    --sidebar-background: 268 30% 8%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 268 65% 60%;
+    --sidebar-primary-foreground: 268 25% 12%;
+    --sidebar-accent: 268 22% 14%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 268 22% 18%;
+    --sidebar-ring: 42 90% 62%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+
+  /* Aurora soft gradient background inspired by your reference */
+  .bg-aurora {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(60% 45% at 20% 18%, hsla(315, 85%, 88%, 0.4) 0%, transparent 60%),
+      radial-gradient(55% 40% at 80% 16%, hsla(330, 90%, 85%, 0.3) 0%, transparent 60%),
+      radial-gradient(60% 45% at 76% 78%, hsla(290, 75%, 85%, 0.5) 0%, transparent 60%),
+      radial-gradient(55% 55% at 12% 85%, hsla(270, 80%, 82%, 0.3) 0%, transparent 70%);
+    background-attachment: fixed;
+  }
+
+  .dark .bg-aurora {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(60% 45% at 20% 18%, hsla(315, 70%, 45%, 0.35) 0%, transparent 60%),
+      radial-gradient(55% 40% at 80% 16%, hsla(330, 85%, 55%, 0.25) 0%, transparent 60%),
+      radial-gradient(60% 45% at 76% 78%, hsla(290, 75%, 60%, 0.4) 0%, transparent 60%),
+      radial-gradient(55% 55% at 12% 85%, hsla(270, 60%, 30%, 0.3) 0%, transparent 70%);
+  }
+
+  /* Brand linear gradients for elements like buttons/cards */
+  .bg-gradient-primary {
+    background-image: var(--gradient-primary);
+    background-color: transparent;
+  }
+
+  .bg-gradient-subtle {
+    background-image: var(--gradient-subtle);
+    background-color: transparent;
+  }
+
+  /* Premium button gradient, stronger and smoother */
+  .btn-gradient {
+    background-image: linear-gradient(100deg,
+        hsl(var(--primary)) 0%,
+        hsl(var(--primary-light)) 38%,
+        hsl(var(--accent)) 100%);
+    color: hsl(var(--primary-foreground));
+    box-shadow: var(--shadow-medium);
+  }
+
+  .btn-gradient:hover {
+    filter: brightness(1.05);
+    box-shadow: var(--shadow-strong);
+  }
+
+  /* Softer pastel gradient for buttons, closer to screenshot */
+  .btn-gradient-soft {
+    background: linear-gradient(135deg, #9A6FB8 100%, #B688CC 50%, #E9B6D4 0%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(182, 136, 204, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .btn-gradient-soft:hover {
+    background: linear-gradient(135deg, #D4A2C7 0%, #A876BA 50%, #8B5FA5 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(182, 136, 204, 0.5);
+    color: white;
+  }
+
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  /* Subtle chrome-like border used for input bar */
+  .ai-input-border {
+    /* Hide default border color, then draw layered strokes with shadows */
+    box-shadow:
+      0 0 0 1px hsl(var(--border) / 0.65),
+      /* outer hairline */
+      inset 0 1px 0 0 hsla(0, 0%, 100%, 0.55),
+      /* top soft highlight */
+      inset 0 0 0 1px hsl(var(--border) / 0.25);
+    /* inner subtle stroke */
+  }
+}
