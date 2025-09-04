@@ -360,7 +360,7 @@ const Register = () => {
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="创建一个强密码"
+                        placeholder="创建一个密码"
                         value={registerData.password}
                         onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
                         onKeyDown={handleKeyDown}
