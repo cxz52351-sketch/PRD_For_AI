@@ -372,7 +372,7 @@ async def check_database_status():
         }
 
 @app.post("/api/chat")
-async def chat_with_dify(request: ChatRequest, current_user: dict = Depends(get_current_user_optional)):
+async def chat_with_dify(request: ChatRequest, current_user: dict = Depends(get_current_user)):
     """
     通过 Dify 工作流进行对话（兼容现有前端协议）。
     - 流式：将 Dify SSE 事件转换为 OpenAI/DeepSeek 风格的 delta 流
@@ -397,22 +397,21 @@ async def chat_with_dify(request: ChatRequest, current_user: dict = Depends(get_
         conversation_id = request.conversation_id
         
         if not conversation_id:
-            # 创建新对话
+            # 创建新对话 - 必须有登录用户
             title = user_message.content[:30] + "..." if len(user_message.content) > 30 else user_message.content
-            # 若已登录，则把会话归属到当前用户
-            user_id_for_conversation = None
-            try:
-                if current_user and current_user.get("id"):
-                    user_id_for_conversation = current_user["id"]
-            except Exception:
-                user_id_for_conversation = None
+            user_id_for_conversation = current_user["id"]
+            print(f"为用户 {user_id_for_conversation} 创建新对话")
 
-            conversation_id = await db.create_conversation(
-                title=title,
-                model=request.model,
-                user_id=user_id_for_conversation
-            )
-            print(f"创建新对话: {conversation_id}")
+            try:
+                conversation_id = await db.create_conversation(
+                    title=title,
+                    model=request.model,
+                    user_id=user_id_for_conversation
+                )
+                print(f"创建新对话成功: {conversation_id}")
+            except Exception as e:
+                print(f"创建对话失败: {e}")
+                raise HTTPException(status_code=500, detail=f"创建对话失败: {str(e)}")
         else:
             # 验证对话是否存在
             conversation = await db.get_conversation(conversation_id)
@@ -1028,21 +1027,15 @@ async def get_available_models():
 async def get_conversations(
     limit: int = 20, 
     offset: int = 0,
-    current_user: Optional[dict] = Depends(get_current_user_optional)
+    current_user: dict = Depends(get_current_user)
 ):
     """获取对话列表 - 只返回当前用户的对话"""
     try:
-        # 如果用户已登录，只返回该用户的对话
-        if current_user:
-            conversations = await db.get_conversations(
-                user_id=current_user.get("id"), 
-                limit=limit, 
-                offset=offset
-            )
-        else:
-            # 如果用户未登录，返回空列表
-            conversations = []
-            
+        conversations = await db.get_conversations(
+            user_id=current_user["id"], 
+            limit=limit, 
+            offset=offset
+        )
         return {"conversations": conversations}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取对话列表失败: {str(e)}")
@@ -1082,7 +1075,7 @@ async def update_conversation(conversation_id: str, title: str):
 @app.post("/api/messages/{message_id}/copy")
 async def record_message_copy_event(
     message_id: str,
-    current_user: Optional[dict] = Depends(get_current_user_optional)
+    current_user: dict = Depends(get_current_user)
 ):
     """记录消息复制事件"""
     try:
@@ -1097,7 +1090,7 @@ async def record_message_copy_event(
 @app.get("/api/messages/{message_id}/copy-stats")
 async def get_message_copy_stats(
     message_id: str,
-    current_user: Optional[dict] = Depends(get_current_user_optional)
+    current_user: dict = Depends(get_current_user)
 ):
     """获取消息复制统计信息"""
     try:

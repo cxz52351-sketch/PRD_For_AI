@@ -175,9 +175,19 @@ async def create_conversation(title: str, model: str, user_id: Optional[str] = N
     pool = await get_pool()
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
+            # 如果提供了user_id，验证用户是否存在
+            final_user_id = None
+            if user_id:
+                await cur.execute("SELECT id FROM users WHERE id = %s", (user_id,))
+                user_exists = await cur.fetchone()
+                if user_exists:
+                    final_user_id = user_id
+                else:
+                    print(f"警告: 用户ID {user_id} 不存在，创建匿名对话")
+            
             await cur.execute(
                 "INSERT INTO conversations (id, title, user_id, model) VALUES (%s, %s, %s, %s)",
-                (conversation_id, title, user_id, model)
+                (conversation_id, title, final_user_id, model)
             )
     return conversation_id
 

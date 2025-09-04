@@ -219,11 +219,21 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     
     return user
 
-async def get_current_user_optional(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Optional[dict]:
+async def get_current_user_optional(credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))) -> Optional[dict]:
     """获取当前用户（可选，不抛出异常）"""
+    if not credentials:
+        return None
+    
     try:
-        return await get_current_user(credentials)
-    except HTTPException:
+        # 验证Token
+        token_data = verify_token(credentials.credentials)
+        if not token_data:
+            return None
+        
+        # 从数据库获取用户信息
+        user = await db.get_user_by_id(token_data.user_id)
+        return user
+    except Exception:
         return None
 
 # 认证业务逻辑
