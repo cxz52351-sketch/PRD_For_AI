@@ -18,6 +18,7 @@ interface CanvasEditProps {
   content: string;
   onClose: () => void;
   title?: string;
+  messageId?: string; // 用于记录复制统计
   children: React.ReactNode; // 用于传递真实的ChatInterface
 }
 
@@ -25,6 +26,7 @@ export function CanvasEdit({
   content,
   onClose,
   title = "画布编辑",
+  messageId,
   children
 }: CanvasEditProps) {
   const { t } = useTranslation();
@@ -41,6 +43,20 @@ export function CanvasEdit({
     try {
       await navigator.clipboard.writeText(editedContent);
       setCopied(true);
+
+      // 记录复制统计（如果有messageId）
+      if (messageId) {
+        try {
+          console.log(`🎯 画布准备记录复制事件: messageId=${messageId}`);
+          const result = await api.recordMessageCopy(messageId);
+          console.log(`✅ 画布复制事件记录成功:`, result);
+        } catch (error) {
+          console.error('❌ 记录画布复制统计失败:', error);
+        }
+      } else {
+        console.log('⚠️  画布复制但无messageId, 不记录统计');
+      }
+
       toast({
         title: t.common.success,
         description: t.common.copy + "成功",
@@ -326,7 +342,7 @@ export function CanvasEdit({
             <span>{t.common.currentMode}: {isPreviewMode ? t.common.preview : t.common.edit}</span>
           </div>
           <div>
-            {t.common.lines}: {editedContent.split('\n').length} |
+            {t.common.lines}: {editedContent.split('\import { api } from "@/lib/api";\nn').length} |
             {t.common.characters}: {editedContent.length}
           </div>
         </div>

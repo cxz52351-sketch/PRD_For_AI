@@ -8,7 +8,7 @@ import os
 from dotenv import load_dotenv
 
 # 加载环境变量
-load_dotenv()
+load_dotenv("1.env")
 
 if __name__ == "__main__":
     host = os.getenv("HOST", "0.0.0.0")

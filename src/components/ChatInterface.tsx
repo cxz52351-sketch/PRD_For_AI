@@ -198,6 +198,7 @@ export function ChatInterface() {
   const [showCanvasEdit, setShowCanvasEdit] = useState(false);
   const [canvasEditContent, setCanvasEditContent] = useState("");
   const [canvasEditTitle, setCanvasEditTitle] = useState("");
+  const [canvasEditMessageId, setCanvasEditMessageId] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const { toast } = useToast();
@@ -728,9 +729,10 @@ export function ChatInterface() {
     api.downloadFile(url);
   };
 
-  const handleEditInCanvas = (content: string) => {
+  const handleEditInCanvas = (content: string, messageId?: string) => {
     setCanvasEditContent(content);
     setCanvasEditTitle(activeConversation?.title || t.chat.editInCanvas);
+    setCanvasEditMessageId(messageId || "");
     setShowCanvasEdit(true);
   };
 
@@ -738,6 +740,7 @@ export function ChatInterface() {
     setShowCanvasEdit(false);
     setCanvasEditContent("");
     setCanvasEditTitle("");
+    setCanvasEditMessageId("");
   };
 
   // 渲染主界面内容（不包括画布编辑模式）
@@ -831,7 +834,7 @@ export function ChatInterface() {
                   isError={message.isError}
                   attachments={message.attachments}
                   onRetry={message.isError ? handleRetryMessage : undefined}
-                  onEditInCanvas={!isCanvasMode ? handleEditInCanvas : undefined}
+                  onEditInCanvas={!isCanvasMode ? (content) => handleEditInCanvas(content, message.id) : undefined}
                   messageId={message.id}
                 />
                 {message.generatedFile && (
@@ -883,6 +886,7 @@ export function ChatInterface() {
         <CanvasEdit
           content={canvasEditContent}
           title={canvasEditTitle}
+          messageId={canvasEditMessageId}
           onClose={handleCloseCanvas}
         >
           {renderMainInterface(true)}

@@ -88,6 +88,11 @@ export default function AdminPage() {
         stats: response.stats,
         conversations: response.conversations
       };
+      console.log('🔍 管理员界面收到的用户数据:', {
+        stats: response.stats,
+        conversations_count: response.conversations?.length || 0,
+        has_copy_stats: response.stats?.total_copies !== undefined
+      });
       setSelectedUser(userWithDetail);
 
       // 更新用户列表中的统计信息
@@ -292,8 +297,8 @@ export default function AdminPage() {
                                 <MessageSquare className="h-3 w-3" />
                                 {user.stats.conversations} 对话 · {user.stats.messages} 消息
                               </div>
-                              {user.stats.total_copies > 0 && (
-                                <div className="flex items-center gap-1 text-orange-600">
+                              {(user.stats?.total_copies || 0) > 0 && (
+                                <div className="flex items-center gap-1 text-orange-600 text-xs">
                                   <span>📋</span>
                                   {user.stats.total_copies} 次复制
                                 </div>
@@ -396,7 +401,7 @@ export default function AdminPage() {
                               <div className="text-right text-sm text-gray-500">
                                 <div>创建: {formatDate(conversation.created_at)}</div>
                                 <div>更新: {formatDate(conversation.updated_at)}</div>
-                                {conversation.total_copies > 0 && (
+                                {(conversation.total_copies || 0) > 0 && (
                                   <div className="text-orange-600 font-medium">
                                     📋 {conversation.total_copies} 次复制
                                   </div>

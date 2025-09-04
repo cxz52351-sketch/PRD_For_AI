@@ -19,7 +19,7 @@ import uuid
 import secrets
 import db
 
-load_dotenv()
+load_dotenv("1.env")
 
 # JWT配置
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-super-secret-jwt-key-change-in-production")

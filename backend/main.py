@@ -30,7 +30,7 @@ from auth import (
 )
 
 # 加载环境变量
-load_dotenv()
+load_dotenv("1.env")
 
 app = FastAPI(title="Indus AI Dialogue Forge API", version="1.0.0")
 
@@ -85,7 +85,7 @@ class ChatResponse(BaseModel):
 # Dify API 配置（可通过环境变量覆盖），默认指向教研环境网关
 # 如需切换，请在运行环境中设置 DIFY_API_BASE 与 DIFY_API_KEY
 DIFY_API_BASE = os.getenv("DIFY_API_BASE", "http://teach.excelmaster.ai/v1")
-DIFY_API_KEY = os.getenv("DIFY_API_KEY", "app-wiFSsheVuALpQ5cN7LrPv5Lb")
+DIFY_API_KEY = os.getenv("DIFY_API_KEY", "app-5zA5RoIpzA3isrshEQnWbvmq")
 # 优先调用工作流接口（/workflows/run）。如需改为应用聊天接口（/chat-messages），将该值设为 "chat"
 DIFY_API_CHANNEL = os.getenv("DIFY_API_CHANNEL", "workflow")  # workflow | chat
 
@@ -1101,7 +1101,42 @@ async def admin_get_users(limit: int = 50, offset: int = 0, admin_user: dict = D
     """获取用户列表（仅限管理员：490429443@qq.com）"""
     try:
         users = await db.get_users(limit=limit, offset=offset)
-        return {"users": users, "limit": limit, "offset": offset}
+        
+        # 为每个用户添加统计信息
+        users_with_stats = []
+        for user in users:
+            # 获取用户的对话和消息
+            conversations = await db.get_conversations(user_id=user["id"], limit=1000, offset=0)
+            total_messages = 0
+            total_copies = 0
+            conversations_with_copies = 0
+            
+            for c in conversations:
+                msgs = await db.get_messages(c["id"])
+                total_messages += len(msgs)
+                
+                conversation_copies = 0
+                for msg in msgs:
+                    if msg.get("role") == "assistant":  # AI消息
+                        copy_stats = await db.get_message_copy_stats(msg["id"])
+                        copy_count = copy_stats.get("copy_count", 0)
+                        conversation_copies += copy_count
+                        total_copies += copy_count
+                
+                if conversation_copies > 0:
+                    conversations_with_copies += 1
+            
+            # 添加统计信息到用户数据
+            user_with_stats = dict(user)
+            user_with_stats["stats"] = {
+                "conversations": len(conversations),
+                "messages": total_messages,
+                "total_copies": total_copies,
+                "conversations_with_copies": conversations_with_copies
+            }
+            users_with_stats.append(user_with_stats)
+        
+        return {"users": users_with_stats, "limit": limit, "offset": offset}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取用户列表失败: {str(e)}")
 
