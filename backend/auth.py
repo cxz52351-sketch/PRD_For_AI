@@ -333,6 +333,13 @@ async def register_user(user_data: UserCreate) -> Token:
                 detail="手机号已被注册"
             )
     
+    # 验证密码长度
+    if len(user_data.password) < 6:
+        raise HTTPException(
+            status_code=400,
+            detail="密码长度不能少于6位"
+        )
+    
     # 加密密码
     hashed_password = hash_password(user_data.password)
     

@@ -164,17 +164,11 @@ const Register = () => {
   };
 
   const validatePassword = (password: string) => {
-    const minLength = password.length >= 8;
-    const hasUpper = /[A-Z]/.test(password);
-    const hasLower = /[a-z]/.test(password);
-    const hasNumber = /\d/.test(password);
+    const minLength = password.length >= 6;
 
     return {
       minLength,
-      hasUpper,
-      hasLower,
-      hasNumber,
-      isValid: minLength && hasUpper && hasLower && hasNumber
+      isValid: minLength
     };
   };
 
@@ -255,19 +249,7 @@ const Register = () => {
     <div className="space-y-2 text-xs">
       <div className="flex items-center space-x-2">
         <div className={`w-2 h-2 rounded-full ${validation.minLength ? 'bg-green-500' : 'bg-gray-300'}`} />
-        <span className={validation.minLength ? 'text-green-600' : 'text-muted-foreground'}>至少8位字符</span>
-      </div>
-      <div className="flex items-center space-x-2">
-        <div className={`w-2 h-2 rounded-full ${validation.hasUpper ? 'bg-green-500' : 'bg-gray-300'}`} />
-        <span className={validation.hasUpper ? 'text-green-600' : 'text-muted-foreground'}>包含大写字母</span>
-      </div>
-      <div className="flex items-center space-x-2">
-        <div className={`w-2 h-2 rounded-full ${validation.hasLower ? 'bg-green-500' : 'bg-gray-300'}`} />
-        <span className={validation.hasLower ? 'text-green-600' : 'text-muted-foreground'}>包含小写字母</span>
-      </div>
-      <div className="flex items-center space-x-2">
-        <div className={`w-2 h-2 rounded-full ${validation.hasNumber ? 'bg-green-500' : 'bg-gray-300'}`} />
-        <span className={validation.hasNumber ? 'text-green-600' : 'text-muted-foreground'}>包含数字</span>
+        <span className={validation.minLength ? 'text-green-600' : 'text-muted-foreground'}>至少6位字符</span>
       </div>
     </div>
   );

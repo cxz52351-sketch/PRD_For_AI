@@ -116,10 +116,10 @@ const Settings = () => {
       return;
     }
 
-    if (passwordData.newPassword.length < 8) {
+    if (passwordData.newPassword.length < 6) {
       toast({
-        title: "密码强度不足",
-        description: "新密码至少需要8位字符",
+        title: "密码长度不足",
+        description: "新密码至少需要6位字符",
         variant: "destructive",
       });
       return;
