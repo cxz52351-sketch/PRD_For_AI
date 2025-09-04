@@ -13,6 +13,8 @@ import { useNavigate } from "react-router-dom";
 interface UserStats {
   conversations: number;
   messages: number;
+  total_copies?: number;
+  conversations_with_copies?: number;
 }
 
 interface UserWithStats extends UserData {
@@ -285,9 +287,17 @@ export default function AdminPage() {
                             {formatDate(user.created_at)}
                           </div>
                           {user.stats && (
-                            <div className="flex items-center gap-1 mt-1">
-                              <MessageSquare className="h-3 w-3" />
-                              {user.stats.conversations} 对话
+                            <div className="space-y-1 mt-1">
+                              <div className="flex items-center gap-1">
+                                <MessageSquare className="h-3 w-3" />
+                                {user.stats.conversations} 对话 · {user.stats.messages} 消息
+                              </div>
+                              {user.stats.total_copies > 0 && (
+                                <div className="flex items-center gap-1 text-orange-600">
+                                  <span>📋</span>
+                                  {user.stats.total_copies} 次复制
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -346,6 +356,14 @@ export default function AdminPage() {
                             <label className="text-sm font-medium text-gray-500">消息数量</label>
                             <div className="mt-1 text-gray-900">{selectedUser.stats?.messages || 0}</div>
                           </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">总复制次数</label>
+                            <div className="mt-1 text-orange-600 font-medium">{selectedUser.stats?.total_copies || 0}</div>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">有复制的对话</label>
+                            <div className="mt-1 text-purple-600 font-medium">{selectedUser.stats?.conversations_with_copies || 0}</div>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -378,6 +396,11 @@ export default function AdminPage() {
                               <div className="text-right text-sm text-gray-500">
                                 <div>创建: {formatDate(conversation.created_at)}</div>
                                 <div>更新: {formatDate(conversation.updated_at)}</div>
+                                {conversation.total_copies > 0 && (
+                                  <div className="text-orange-600 font-medium">
+                                    📋 {conversation.total_copies} 次复制
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>

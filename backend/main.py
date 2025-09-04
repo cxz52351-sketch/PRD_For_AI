@@ -1115,14 +1115,49 @@ async def admin_get_user_detail(user_id: str, admin_user: dict = Depends(get_adm
 
         conversations = await db.get_conversations(user_id=user_id, limit=1000, offset=0)
         total_messages = 0
+        total_copies = 0
+        conversations_with_copies = 0
+        
+        # 为每个对话添加复制统计
+        detailed_conversations = []
         for c in conversations:
             msgs = await db.get_messages(c["id"])  # 每个会话的消息
             total_messages += len(msgs)
+            
+            # 统计这个对话的复制信息
+            conversation_copies = 0
+            ai_messages_with_copies = 0
+            
+            for msg in msgs:
+                if msg.get("role") == "assistant":  # AI消息
+                    copy_stats = await db.get_message_copy_stats(msg["id"])
+                    copy_count = copy_stats.get("copy_count", 0)
+                    conversation_copies += copy_count
+                    total_copies += copy_count
+                    if copy_count > 0:
+                        ai_messages_with_copies += 1
+            
+            # 添加复制统计到对话信息
+            conv_with_stats = dict(c)
+            conv_with_stats.update({
+                "message_count": len(msgs),
+                "total_copies": conversation_copies,
+                "ai_messages_with_copies": ai_messages_with_copies
+            })
+            detailed_conversations.append(conv_with_stats)
+            
+            if conversation_copies > 0:
+                conversations_with_copies += 1
 
         return {
             "user": user,
-            "stats": {"conversations": len(conversations), "messages": total_messages},
-            "conversations": conversations,
+            "stats": {
+                "conversations": len(conversations), 
+                "messages": total_messages,
+                "total_copies": total_copies,
+                "conversations_with_copies": conversations_with_copies
+            },
+            "conversations": detailed_conversations,
         }
     except HTTPException:
         raise
