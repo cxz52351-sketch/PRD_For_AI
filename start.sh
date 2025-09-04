@@ -29,14 +29,16 @@ if [ ! -f "backend/requirements.txt" ]; then
 fi
 
 # 检查前端依赖
-if [ ! -f "package.json" ]; then
-    echo "❌ 错误: 未找到 package.json"
+if [ ! -f "Frontend/package.json" ]; then
+    echo "❌ 错误: 未找到 Frontend/package.json"
     exit 1
 fi
 
 # 安装前端依赖
 echo "📦 安装前端依赖..."
+cd Frontend
 npm install
+cd ..
 
 # 检查后端 .env 文件
 if [ ! -f "backend/.env" ]; then
@@ -60,13 +62,13 @@ cd ..
 echo "🎉 依赖安装完成！"
 echo ""
 echo "📋 下一步操作："
-echo "1. 编辑 backend/.env 文件，设置您的 DEEPSEEK_API_KEY"
+echo "1. 编辑 backend/.env 或 backend/1.env 文件，设置您的 DIFY_API_KEY"
 echo "2. 运行以下命令启动后端服务："
 echo "   cd backend && python start.py"
 echo "3. 在另一个终端运行以下命令启动前端服务："
-echo "   npm run dev"
+echo "   cd Frontend && npm run dev"
 echo ""
 echo "🌐 服务启动后访问："
 echo "   前端: http://localhost:8081"
-echo "   后端API: http://localhost:8000"
-echo "   API文档: http://localhost:8000/docs" 
+echo "   后端API: http://localhost:8001"
+echo "   API文档: http://localhost:8001/docs" 

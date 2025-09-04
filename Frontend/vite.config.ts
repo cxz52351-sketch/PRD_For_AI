@@ -8,6 +8,14 @@ export default defineConfig({
     host: "localhost",
     port: 8081,
     strictPort: false,
+    // 开发环境代理配置，确保前后端通信正常
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
   plugins: [
     react(),

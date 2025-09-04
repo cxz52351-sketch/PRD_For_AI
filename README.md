@@ -19,14 +19,20 @@
 
 ### 一键启动 (推荐)
 
-**启动后端服务:**
+**前后端一键启动 (推荐):**
 ```bash
-chmod +x start_backend.sh
-./start_backend.sh
+chmod +x start-frontend-backend.sh
+./start-frontend-backend.sh
 ```
 
-**启动前端服务:**
+**分别启动:**
 ```bash
+# 启动后端服务
+chmod +x start_backend.sh
+./start_backend.sh
+
+# 启动前端服务 (新终端)
+cd Frontend
 npm run dev
 ```
 
@@ -46,7 +52,9 @@ chmod +x start.sh
 1. **安装依赖**
    ```bash
    # 前端依赖
+   cd Frontend
    npm install
+   cd ..
    
    # 后端依赖
    cd backend
@@ -69,6 +77,7 @@ chmod +x start.sh
    python start.py
    
    # 启动前端 (终端2)
+   cd Frontend
    npm run dev
    ```
 
@@ -116,17 +125,21 @@ chmod +x start.sh
 ### 项目结构
 ```
 PRD_For_AI_cc/
-├── src/                    # 前端源代码
-│   ├── components/         # React组件
-│   ├── pages/             # 页面组件
-│   ├── lib/               # 工具库
-│   └── hooks/             # 自定义Hook
-├── backend/               # 后端源代码
-│   ├── main.py           # FastAPI主应用
-│   ├── auth.py           # 认证模块
-│   ├── db.py             # 数据库模块
-│   └── start.py          # 启动脚本
-└── docs/                 # 文档目录
+├── Frontend/              # 前端源代码
+│   ├── src/              # React源码
+│   │   ├── components/   # React组件
+│   │   ├── pages/       # 页面组件
+│   │   ├── lib/         # 工具库
+│   │   └── hooks/       # 自定义Hook
+│   ├── package.json     # 前端依赖配置
+│   └── vite.config.ts   # Vite配置
+├── backend/              # 后端源代码
+│   ├── main.py          # FastAPI主应用
+│   ├── auth.py          # 认证模块
+│   ├── db.py            # 数据库模块
+│   ├── start.py         # 启动脚本
+│   └── requirements.txt # 后端依赖配置
+└── README.md            # 项目文档
 ```
 
 ## 🛠️ 开发指南
@@ -135,6 +148,9 @@ PRD_For_AI_cc/
 
 **前端开发**
 ```bash
+# 进入前端目录
+cd Frontend
+
 # 安装依赖
 npm install
 
