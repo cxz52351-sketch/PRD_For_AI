@@ -1031,13 +1031,27 @@ async def get_conversations(
 ):
     """获取对话列表 - 只返回当前用户的对话"""
     try:
+        print(f"🔍 获取对话列表 - 用户ID: {current_user['id']}, 用户名: {current_user.get('username', 'N/A')}")
+        
         conversations = await db.get_conversations(
             user_id=current_user["id"], 
             limit=limit, 
             offset=offset
         )
+        
+        print(f"🔍 该用户的对话数量: {len(conversations)}")
+        for conv in conversations:
+            print(f"  - 对话ID: {conv['id']}, 标题: {conv['title']}")
+        
+        # 同时查看所有对话用于调试
+        all_conversations = await db.get_conversations(user_id=None, limit=100)
+        print(f"🔍 数据库中总对话数: {len(all_conversations)}")
+        for conv in all_conversations[:3]:  # 只显示前3个
+            print(f"  - 全局对话: ID={conv['id']}, 用户ID={conv['user_id']}, 标题={conv['title']}")
+        
         return {"conversations": conversations}
     except Exception as e:
+        print(f"❌ 获取对话列表失败: {e}")
         raise HTTPException(status_code=500, detail=f"获取对话列表失败: {str(e)}")
 
 @app.get("/api/conversations/{conversation_id}")
