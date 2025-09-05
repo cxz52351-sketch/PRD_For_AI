@@ -473,7 +473,7 @@ const Landing = () => {
           <div className="mx-auto max-w-4xl text-center px-6">
             <h2 className="font-display text-4xl md:text-5xl font-bold text-white mb-6">
               {t.landing.hero.become10XProductManager.replace('10X', '').trim()}
-              <span className="gradient-text">10X</span>
+              {/* <span className="gradient-text">10X</span> */}
               {t.landing.hero.become10XProductManager.split('10X')[1]}
               <br />
               {t.landing.hero.justNeedPrice.split('{price}')[0]}
