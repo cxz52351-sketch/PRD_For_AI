@@ -381,33 +381,52 @@ async def register_user(user_data: UserCreate) -> Token:
 
 async def login_user(login_data: UserLogin) -> Token:
     """用户登录"""
+    print(f"🔍 登录尝试 - 类型: {login_data.login_type}, 标识符: {login_data.identifier}")
+    
     # 根据登录类型获取用户
     if login_data.login_type == "email":
+        print(f"🔍 通过邮箱查找用户: {login_data.identifier}")
         user = await db.get_user_by_email(login_data.identifier)
         if not user:
+            print(f"❌ 邮箱未找到用户: {login_data.identifier}")
             raise HTTPException(
                 status_code=400,
                 detail="邮箱或密码错误"
             )
+        print(f"✅ 找到用户: ID={user['id']}, 用户名={user['username']}")
     elif login_data.login_type == "phone":
+        print(f"🔍 通过手机号查找用户: {login_data.identifier}")
         user = await db.get_user_by_phone(login_data.identifier)
         if not user:
+            print(f"❌ 手机号未找到用户: {login_data.identifier}")
             raise HTTPException(
                 status_code=400,
                 detail="手机号或密码错误"
             )
+        print(f"✅ 找到用户: ID={user['id']}, 用户名={user['username']}")
     else:
+        print(f"❌ 不支持的登录类型: {login_data.login_type}")
         raise HTTPException(
             status_code=400,
             detail="不支持的登录类型"
         )
     
     # 验证密码
-    if not verify_password(login_data.password, user["password_hash"]):
+    print(f"🔍 验证密码...")
+    print(f"🔍 输入密码: {login_data.password}")
+    print(f"🔍 数据库密码哈希: {user['password_hash'][:50]}...")
+    
+    password_valid = verify_password(login_data.password, user["password_hash"])
+    print(f"🔍 密码验证结果: {password_valid}")
+    
+    if not password_valid:
+        print(f"❌ 密码验证失败")
         raise HTTPException(
             status_code=400,
             detail="邮箱或密码错误" if login_data.login_type == "email" else "手机号或密码错误"
         )
+    
+    print(f"✅ 登录成功: {user['username']} ({user['email']})")
     
     # 更新最后登录时间
     await db.update_user_last_login(user["id"])
@@ -431,7 +450,7 @@ async def login_user(login_data: UserLogin) -> Token:
             created_at=user["created_at"]
         )
     )
-
+    
 async def get_admin_user(current_user: dict = Depends(get_current_user)) -> dict:
     """验证管理员权限 - 只有特定邮箱的用户才能访问管理功能"""
     ADMIN_EMAIL = "490429443@qq.com"
