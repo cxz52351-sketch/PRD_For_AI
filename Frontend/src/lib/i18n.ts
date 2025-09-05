@@ -575,10 +575,10 @@ export const zhTranslations: TranslationKeys = {
   },
   landing: {
     hero: {
-      badge: 'Product Roadmap Documentaion',
+      badge: 'Product Roadmap Documentaion For You',
       title: '想法一闪而过？让AI帮你立刻落地',
       subtitle: '解放创造力，专注核心价值',
-      description: 'AI时代，无论你是何种身份，只需一句话或一个网页，即可生成你的专属产品规划蓝图。',
+      description: 'AI时代，人人都是独立开发者。无论你是何种身份，只需一句话或一个网页，PRD For AI帮助你生成你的专属产品规划蓝图。',
       cta: '立即注册，免费试用',
       features: {
         feature1: '30秒生成PRD',
