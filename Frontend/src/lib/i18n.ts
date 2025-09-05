@@ -759,7 +759,7 @@ export const zhTranslations: TranslationKeys = {
     // 默认对话相关
     defaultConversationTitle: 'PRD For AI',
     defaultConversationPreview: '欢迎使用 PRD For AI 产品设计对话助手',
-    defaultWelcomeMessage: '欢迎使用 PRD For AI！\n\n我是你的产品规划师，帮助你：\n\n**核心功能:**\n\n•  产品价值提炼\n\n• 护城河构建 \n\n• MVP核心功能定义 \n\n• 技术栈选型 \n\n• 潜在风险预警 \n\n开始对我说：例如"我想做一个AI会议纪要工具，用来提高我的日常工作效率。',
+    defaultWelcomeMessage: '欢迎使用 PRD For AI！\n\n我是你的产品规划师，帮助你：\n\n**核心功能:**\n\n•  产品价值提炼\n\n• 护城河构建 \n\n• MVP核心功能定义 \n\n• 技术栈选型 \n\n• 潜在风险预警 \n\n开始对我说：例如"我想做一个AI会议纪要工具，用来提高我的日常工作效率。”',
     stopResponse: '停止响应',
     thinking: 'AI正在思考中...',
     generating: 'AI正在生成回复...',
