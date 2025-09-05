@@ -759,7 +759,7 @@ export const zhTranslations: TranslationKeys = {
     // 默认对话相关
     defaultConversationTitle: 'PRD For AI',
     defaultConversationPreview: '欢迎使用 PRD For AI 产品设计对话助手',
-    defaultWelcomeMessage: '欢迎使用 PRD For AI！\n\n我是你的产品规划师，帮助你：\n\n**核心功能:**\n\n•  提炼产品价值\n\n• 构建产品护城河 \n\n• 定义MVP核心功能 \n\n• 产品风险预警 \n\n开始对我说：例如"我想做一个AI会议纪要工具，提高我的日常工作效率。',
+    defaultWelcomeMessage: '欢迎使用 PRD For AI！\n\n我是你的产品规划师，帮助你：\n\n**核心功能:**\n\n•  提炼产品价值\n\n• 构建产品护城河 \n\n• 定义MVP核心功能 \n\n• 预警产品风险 \n\n开始对我说：例如"我想做一个AI会议纪要工具，用来提高我的日常工作效率。',
     stopResponse: '停止响应',
     thinking: 'AI正在思考中...',
     generating: 'AI正在生成回复...',
@@ -1152,7 +1152,7 @@ export const enTranslations: TranslationKeys = {
     // 默认对话相关
     defaultConversationTitle: 'PRD For AI',
     defaultConversationPreview: 'Welcome to PRD For AI Product Design Chat Assistant',
-    defaultWelcomeMessage: 'Welcome to PRD For AI!\n\nI am your product planner, helping you:\n\n**Core Functions:**\n\n• Distill product value\n\n• Build product moat\n\n• Define MVP core functions\n\n• Product risk warning\n\nStart by telling me: for example, "I want to create an AI meeting minutes tool to improve my daily work efficiency"',
+    defaultWelcomeMessage: 'Welcome to PRD For AI!\n\nI am your product planner, helping you:\n\n**Core Functions:**\n\n• Distill product value\n\n• Build product moat\n\n• Define MVP core functions\n\n• Warning Product Risks\n\nStart by telling me: for example, "I want to create an AI meeting minutes tool to improve my daily work efficiency"',
     stopResponse: 'Stop Response',
     thinking: 'AI is thinking...',
     generating: 'AI is generating response...',
