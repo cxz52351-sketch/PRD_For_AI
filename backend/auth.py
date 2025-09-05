@@ -17,7 +17,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import uuid
 import secrets
-import db
+import db_mysql as db
 
 load_dotenv("1.env")
 
