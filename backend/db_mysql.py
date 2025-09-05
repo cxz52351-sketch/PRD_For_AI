@@ -123,6 +123,8 @@ async def create_user(username: str, email: str, phone: str, password_hash: str,
                 "INSERT INTO users (id, username, email, phone, password_hash, avatar) VALUES (%s, %s, %s, %s, %s, %s)",
                 (user_id, username, email, phone, password_hash, avatar)
             )
+            await conn.commit()
+            print(f"✅ 用户已成功保存到数据库: {user_id}")
     return user_id
 
 async def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
@@ -176,6 +178,7 @@ async def update_user_last_login(user_id: str):
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
             await cur.execute("UPDATE users SET last_login_at = NOW() WHERE id = %s", (user_id,))
+            await conn.commit()
 
 # === 对话相关操作 ===
 async def create_conversation(title: str, model: str, user_id: Optional[str] = None) -> str:
@@ -198,6 +201,8 @@ async def create_conversation(title: str, model: str, user_id: Optional[str] = N
                 "INSERT INTO conversations (id, title, user_id, model) VALUES (%s, %s, %s, %s)",
                 (conversation_id, title, final_user_id, model)
             )
+            await conn.commit()
+            print(f"✅ 对话已成功保存到数据库: {conversation_id}")
     return conversation_id
 
 async def get_conversation(conversation_id: str) -> Optional[Dict[str, Any]]:
@@ -229,6 +234,7 @@ async def update_conversation_title(conversation_id: str, title: str) -> bool:
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
             await cur.execute("UPDATE conversations SET title = %s, updated_at = NOW() WHERE id = %s", (title, conversation_id))
+            await conn.commit()
             return cur.rowcount > 0
 
 async def delete_conversation(conversation_id: str) -> bool:
@@ -237,6 +243,7 @@ async def delete_conversation(conversation_id: str) -> bool:
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
             await cur.execute("DELETE FROM conversations WHERE id = %s", (conversation_id,))
+            await conn.commit()
             return cur.rowcount > 0
 
 # === 消息相关操作 ===
@@ -252,6 +259,8 @@ async def add_message(conversation_id: str, role: str, content: str, files: Opti
             )
             # 更新对话的最后更新时间
             await cur.execute("UPDATE conversations SET updated_at = NOW() WHERE id = %s", (conversation_id,))
+            await conn.commit()
+            print(f"✅ 消息已成功保存到数据库: {message_id}")
     return message_id
 
 async def get_messages(conversation_id: str) -> List[Dict[str, Any]]:
@@ -274,6 +283,7 @@ async def record_message_copy(message_id: str) -> bool:
                     "UPDATE messages SET copy_count = COALESCE(copy_count, 0) + 1, last_copied_at = NOW() WHERE id = %s",
                     (message_id,)
                 )
+                await conn.commit()
                 return cur.rowcount > 0
     except Exception as e:
         print(f"记录复制事件失败: {e}")
@@ -305,6 +315,7 @@ async def add_attachment(message_id: str, file_url: str) -> str:
                 "INSERT INTO attachments (id, message_id, file_url) VALUES (%s, %s, %s)",
                 (attachment_id, message_id, file_url)
             )
+            await conn.commit()
     return attachment_id
 
 async def add_generated_file(message_id: str, file_url: str) -> str:
@@ -317,6 +328,7 @@ async def add_generated_file(message_id: str, file_url: str) -> str:
                 "INSERT INTO generated_files (id, message_id, file_url) VALUES (%s, %s, %s)",
                 (file_id, message_id, file_url)
             )
+            await conn.commit()
     return file_id
 
 # === 邮箱验证相关操作 ===
@@ -330,6 +342,7 @@ async def store_verification_code(email: str, code: str, expires_at: datetime) -
                 "INSERT INTO email_verifications (id, email, code, expires_at) VALUES (%s, %s, %s, %s)",
                 (verification_id, email, code, expires_at)
             )
+            await conn.commit()
     return verification_id
 
 async def verify_code(email: str, code: str) -> bool:
@@ -345,6 +358,7 @@ async def verify_code(email: str, code: str) -> bool:
             if row:
                 # 标记为已使用
                 await cur.execute("UPDATE email_verifications SET is_used = TRUE WHERE id = %s", (row[0],))
+                await conn.commit()
                 return True
             return False
 
@@ -357,6 +371,7 @@ async def mark_email_verified(verification_id: str) -> bool:
                 "UPDATE email_verifications SET is_used = TRUE WHERE id = %s",
                 (verification_id,)
             )
+            await conn.commit()
             return cur.rowcount > 0
 
 async def cleanup_expired_verifications() -> int:
@@ -365,6 +380,7 @@ async def cleanup_expired_verifications() -> int:
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
             await cur.execute("DELETE FROM email_verifications WHERE expires_at < NOW()")
+            await conn.commit()
             return cur.rowcount
 
 # === 统计相关操作 ===
