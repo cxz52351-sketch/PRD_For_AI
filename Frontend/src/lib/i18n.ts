@@ -575,13 +575,13 @@ export const zhTranslations: TranslationKeys = {
   },
   landing: {
     hero: {
-      badge: 'PRD For AI，你的产品加速器',
+      badge: 'Product Roadmap Documentaion',
       title: '想法一闪而过？让AI帮你立刻落地',
       subtitle: '解放创造力，专注核心价值',
-      description: '无论你是产品经理、AI产品经理、独立开发者还是设计师，只需一句话或一个网页，即可生成专业的 PRD 文档。',
+      description: 'AI时代，无论你是何种身份，只需一句话或一个网页，即可生成你的专属产品规划蓝图。',
       cta: '立即注册，免费试用',
       features: {
-        feature1: '30秒生成专业PRD',
+        feature1: '30秒生成PRD',
         feature2: '支持多模态输入',
         feature3: 'Chrome插件+Web版',
       },
@@ -591,7 +591,7 @@ export const zhTranslations: TranslationKeys = {
       chromeExtension: 'Chrome插件 - 一键分析',
       oneClickAnalysis: '一键分析',
       anyWebpageOneClick: '任意网页一键生成PRD',
-      breakBarriers: '打破传统文档创作壁垒，让每个人都能轻松将想法转化为专业PRD',
+      breakBarriers: '打破传统文档创作壁垒，让每个人都能轻松将想法转化为个人专属PRD',
       multimodalInput: '支持文字、图片等多模态输入',
       // 产品功能截图部分
       aiMultimodalAnalysis: 'AI 多模态分析',
@@ -612,8 +612,8 @@ export const zhTranslations: TranslationKeys = {
       testimonial2: '我对AI文档听起来不够人性化持怀疑态度。PRD For AI 改变了一切。',
       testimonial3: '这真的感觉像魔法。',
       zhaoMeili: '赵美丽',
-      chiefProductManager: '首席产品经理',
-      become10XProductManager: '成为 10X 产品经理。',
+      chiefProductManager: '首席AI产品经理',
+      become10XProductManager: '人人都是独立开发者',
       justFewCupsCoffee: '每月几杯咖啡',
       justNeedPrice: '只需 {price} 的价格。',
       weMakePRDAffordable: '我们让 PRD For AI 变得经济实惠，让从工程师到创始人到CPO的每个人都能从AI产品经理中受益。',
