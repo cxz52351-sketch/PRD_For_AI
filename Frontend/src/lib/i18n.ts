@@ -578,7 +578,7 @@ export const zhTranslations: TranslationKeys = {
       badge: 'Product Roadmap Documentaion',
       title: '想法一闪而过？让AI帮你立刻落地',
       subtitle: '解放创造力，专注核心价值',
-      description: 'AI时代，人人都是独立开发者。无论你是何种身份，现在只需一句话或一个网页，  PRD For AI帮助你生成你的专属产品规划蓝图。',
+      description: '无论你是何种身份，只需一句话或一个网页，PRD For AI为你生成专属产品规划蓝图。AI时代，人人都是独立开发者。',
       cta: '立即注册，免费试用',
       features: {
         feature1: '30秒生成PRD',
