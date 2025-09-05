@@ -968,10 +968,10 @@ export const enTranslations: TranslationKeys = {
   },
   landing: {
     hero: {
-      badge: 'PRD For AI, Your Product Accelerator',
+      badge: 'Product Roadmap Documentaion',
       title: 'Ideas Flash By? Let AI Help You Implement Them Instantly',
       subtitle: 'Unleash Creativity, Focus on Core Value',
-      description: 'Whether you\'re a product manager, AI product manager, indie developer, or designer, generate professional PRD documents from just a sentence or webpage.',
+      description: ' AI era, everyone is an independent developer. No matter your identity, with just a sentence or a webpage, PRD For AI generates a custom product planning blueprint for you.',
       cta: 'Sign Up Now, Free Trial',
       features: {
         feature1: 'Generate Professional PRD in 30s',
