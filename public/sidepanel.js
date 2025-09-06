@@ -19,6 +19,20 @@
   const promptOutput = document.getElementById('promptOutput');
   const copyPromptBtn = document.getElementById('copyPromptBtn');
   const clearPromptBtn = document.getElementById('clearPromptBtn');
+  // 新增：所选元素详情区
+  const selectedElementSection = document.getElementById('selected-element-section');
+  const selHtmlPreview = document.getElementById('selHtmlPreview');
+  const selTextPreview = document.getElementById('selTextPreview');
+  const selCssPreview = document.getElementById('selCssPreview');
+  const selFontsPreview = document.getElementById('selFontsPreview');
+  const copySelHtmlBtn = document.getElementById('copySelHtmlBtn');
+  const copySelTextBtn = document.getElementById('copySelTextBtn');
+  const copySelCssBtn = document.getElementById('copySelCssBtn');
+  const copySelFontsBtn = document.getElementById('copySelFontsBtn');
+  const copySelHtmlBtn2 = document.getElementById('copySelHtmlBtn2');
+  const copySelTextBtn2 = document.getElementById('copySelTextBtn2');
+  const copySelCssBtn2 = document.getElementById('copySelCssBtn2');
+  const copySelFontsBtn2 = document.getElementById('copySelFontsBtn2');
   
   // 功能2：页面数据提取
   const pageInfoDisplay = document.getElementById('pageInfoDisplay');
@@ -215,19 +229,18 @@
         currentPageInfo.innerHTML = `
           <div class="page-info-content">
             <div class="page-header">
-              <span class="page-icon">🌐</span>
               <div class="page-details">
                 <div class="page-title" title="${pageData.title || '未知标题'}">${truncateText(pageData.title || '未知标题', 40)}</div>
                 <div class="page-domain">${pageData.domain || '未知域名'}</div>
               </div>
-              <div class="page-status success">✅</div>
+              <div class="page-status success">✔</div>
             </div>
           </div>
         `;
       } else {
         currentPageInfo.innerHTML = `
           <div class="page-info-error">
-            <span class="error-icon">⚠️</span>
+            <span class="error-icon">⚠</span>
             <span>无法获取页面信息</span>
           </div>
         `;
@@ -236,7 +249,7 @@
       console.error('[Prompt Generator] Error updating page info:', error);
       currentPageInfo.innerHTML = `
         <div class="page-info-error">
-          <span class="error-icon">❌</span>
+          <span class="error-icon">✖</span>
           <span>页面信息获取失败</span>
         </div>
       `;
@@ -255,6 +268,8 @@
           
           console.log('[Prompt Generator] New element selected:', currentElementData);
           
+          // 渲染所选元素详情
+          renderSelectedElementDetails(currentElementData);
           // 生成AI指令
           await generatePromptWithAI(currentElementData);
           
@@ -270,13 +285,58 @@
       }
     }, 500); // 每500ms检查一次
   }
+
+  // 渲染所选元素的 HTML/文本/CSS/字体
+  function renderSelectedElementDetails(elementData) {
+    try {
+      if (!elementData) return;
+      if (selectedElementSection) selectedElementSection.style.display = 'block';
+
+      const el = elementData.element || elementData; // 兼容两种结构
+      // HTML
+      const tag = el.tagName || 'div';
+      let html = `<${tag}`;
+      if (el.attributes) {
+        Object.entries(el.attributes).forEach(([k, v]) => {
+          html += ` ${k}="${v}"`;
+        });
+      }
+      html += `>` + (el.outerHTML ? '' : (el.innerHTML || el.directText || '')) + `</${tag}>`;
+      if (el.outerHTML) html = el.outerHTML;
+      if (selHtmlPreview) selHtmlPreview.textContent = html;
+
+      // 文本
+      if (selTextPreview) selTextPreview.textContent = el.directText || el.innerText || '';
+
+      // CSS（仅挑重要属性，避免过长）
+      const importantProps = ['display','position','width','height','background','background-color','color','font-size','font-family','font-weight','line-height','border','border-radius','padding','margin','flex-direction','justify-content','align-items'];
+      let cssLines = [];
+      if (el.styles) {
+        Object.entries(el.styles).forEach(([prop, val]) => {
+          if (importantProps.includes(prop) && val != null && val !== '') {
+            cssLines.push(`${prop}: ${val};`);
+          }
+        });
+      }
+      if (selCssPreview) selCssPreview.textContent = cssLines.join('\n');
+
+      // 字体信息
+      if (el.fonts && Array.isArray(el.fonts.used)) {
+        if (selFontsPreview) selFontsPreview.textContent = el.fonts.used.join('\n');
+      } else if (selFontsPreview) {
+        selFontsPreview.textContent = '';
+      }
+    } catch (e) {
+      console.error('[Prompt] renderSelectedElementDetails error', e);
+    }
+  }
   
   // 生成AI指令（使用OpenRouter API）
   async function generatePromptWithAI(elementData) {
     if (!elementData || !promptOutput) return;
     
     try {
-      showStatusMessage('🧠 AI正在分析元素，生成编程指令...', 'info');
+      showStatusMessage(' AI正在分析元素，生成编程指令...', 'info');
       
       // 构建请求数据
       const requestData = {
@@ -304,7 +364,7 @@
       promptOutput.innerHTML = `
         <div class="prompt-container">
           <div class="prompt-header">
-            <h3>🧠 AI生成的编程指令</h3>
+            <h3> AI生成的编程指令</h3>
             <div class="prompt-meta">
               <span class="prompt-source">来源: ${elementData.pageContext.domain}</span>
               <span class="prompt-time">${new Date().toLocaleTimeString()}</span>
@@ -321,10 +381,10 @@
       if (copyPromptBtn) copyPromptBtn.style.display = 'inline-flex';
       if (clearPromptBtn) clearPromptBtn.style.display = 'inline-flex';
       
-      showStatusMessage('✅ AI指令生成成功！', 'success');
+      showStatusMessage('✔ AI指令生成成功！', 'success');
     } catch (error) {
       console.error('[Prompt Generator] Error generating AI prompt:', error);
-      showStatusMessage('❌ AI指令生成失败: ' + error.message, 'error');
+      showStatusMessage('✖ AI指令生成失败: ' + error.message, 'error');
     }
   }
   
@@ -334,7 +394,7 @@
       // 获取当前激活的标签页
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tabs[0]) {
-        showStatusMessage('❌ 无法获取当前标签页', 'error');
+        showStatusMessage('✖ 无法获取当前标签页', 'error');
         return;
       }
       
@@ -360,13 +420,13 @@
       if (response?.success) {
         isSelectionMode = true;
         updateSelectionButtons();
-        showStatusMessage('🎯 选择模式已激活，请在页面中点击要分析的元素', 'info');
+        showStatusMessage('选择模式已激活，请在页面中点击要分析的元素', 'info');
       } else {
-        showStatusMessage('❌ 无法激活选择模式：' + (response?.error || '未知错误'), 'error');
+        showStatusMessage('✖ 无法激活选择模式：' + (response?.error || '未知错误'), 'error');
       }
     } catch (error) {
       console.error('[Prompt Generator] Error entering selection mode:', error);
-      showStatusMessage('❌ 激活选择模式失败', 'error');
+      showStatusMessage('✖ 激活选择模式失败', 'error');
     }
   }
   
@@ -376,7 +436,7 @@
       // 获取当前激活的标签页
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tabs[0]) {
-        showStatusMessage('❌ 无法获取当前标签页', 'error');
+        showStatusMessage('✖ 无法获取当前标签页', 'error');
         return;
       }
       
@@ -404,7 +464,7 @@
       showStatusMessage('选择模式已退出', 'success');
     } catch (error) {
       console.error('[Prompt Generator] Error exiting selection mode:', error);
-      showStatusMessage('❌ 退出选择模式失败', 'error');
+      showStatusMessage('✖ 退出选择模式失败', 'error');
     }
   }
   
@@ -425,13 +485,13 @@
   async function handleCopyPrompt() {
     const promptText = promptOutput?.querySelector('.prompt-text')?.textContent;
     if (!promptText) {
-      showStatusMessage('❌ 没有可复制的AI指令', 'error');
+      showStatusMessage('✖ 没有可复制的AI指令', 'error');
       return;
     }
     
     try {
       await navigator.clipboard.writeText(promptText);
-      showStatusMessage('✅ AI指令已复制到剪贴板！', 'success');
+      showStatusMessage('✔ AI指令已复制到剪贴板！', 'success');
       
       // 临时改变按钮文本
       const originalText = copyPromptBtn.textContent;
@@ -441,7 +501,7 @@
       }, 2000);
     } catch (error) {
       console.error('[Prompt Generator] Error copying prompt:', error);
-      showStatusMessage('❌ 复制失败，请手动选择文本复制', 'error');
+      showStatusMessage('✖ 复制失败，请手动选择文本复制', 'error');
     }
   }
   
@@ -525,7 +585,7 @@
     if (error) {
       pageInfoDisplay.innerHTML = `
         <div class="page-info-error">
-          <span class="error-icon">⚠️</span>
+          <span class="error-icon">⚠</span>
           <span>无法获取页面信息: ${error}</span>
         </div>
       `;
@@ -551,22 +611,21 @@
       <div class="page-info-content">
         <div class="page-info-header">
           <div class="page-header">
-            <span class="page-icon">🌐</span>
             <div class="page-details">
               <div class="page-title" title="${title}">${truncateText(title, 30)}</div>
               <div class="page-domain">${domain}</div>
             </div>
             <div class="page-status ${pageData.error ? 'error' : 'success'}">
-              ${pageData.error ? '❌' : '✅'}
+              ${pageData.error ? '✖' : '✔'}
             </div>
           </div>
         </div>
         ${pageData.textContent ? `
           <div class="page-stats">
-            <span>📝 ${pageData.textContent.paragraphs?.length || 0} 段落</span>
-            <span>🔗 ${pageData.textContent.links?.length || 0} 链接</span>
-            <span>🎨 ${pageData.styles?.externalStylesheets?.length || 0} 样式表</span>
-            <span>🔤 ${pageData.fonts?.summary?.totalFontResources || 0} 字体文件</span>
+            <span> ${pageData.textContent.paragraphs?.length || 0} 段落</span>
+            <span> ${pageData.textContent.links?.length || 0} 链接</span>
+            <span> ${pageData.styles?.externalStylesheets?.length || 0} 样式表</span>
+            <span> ${pageData.fonts?.summary?.totalFontResources || 0} 字体文件</span>
           </div>
         ` : ''}
       </div>
@@ -737,10 +796,10 @@
     if (pageDataDetails && togglePageDataBtn) {
       if (pageDataDetails.style.display === 'none') {
         pageDataDetails.style.display = 'block';
-        togglePageDataBtn.textContent = '🔼 隐藏页面数据';
+        togglePageDataBtn.textContent = '隐藏页面数据';
       } else {
         pageDataDetails.style.display = 'none';
-        togglePageDataBtn.textContent = '📋 查看页面数据';
+        togglePageDataBtn.textContent = '查看页面数据';
       }
     }
   }
@@ -1153,6 +1212,22 @@
         copyToClipboard(fullFonts, copyFontsBtn, '复制');
       }
     });
+
+    // 所选元素复制按钮
+    const bindCopy = (btn, preview, label) => {
+      btn?.addEventListener('click', () => {
+        const text = preview?.textContent || '';
+        if (text) copyToClipboard(text, btn, label || '复制');
+      });
+    };
+    bindCopy(copySelHtmlBtn, selHtmlPreview, '复制HTML');
+    bindCopy(copySelTextBtn, selTextPreview, '复制文本');
+    bindCopy(copySelCssBtn, selCssPreview, '复制CSS');
+    bindCopy(copySelFontsBtn, selFontsPreview, '复制字体');
+    bindCopy(copySelHtmlBtn2, selHtmlPreview, '复制');
+    bindCopy(copySelTextBtn2, selTextPreview, '复制');
+    bindCopy(copySelCssBtn2, selCssPreview, '复制');
+    bindCopy(copySelFontsBtn2, selFontsPreview, '复制');
     
     // 功能3：PRD生成
     generateBtn?.addEventListener('click', handleGenerate);

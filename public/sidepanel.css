@@ -248,7 +248,7 @@ section {
 }
 
 .page-status.success {
-  color: var(--success);
+  color: #111 !important;
 }
 
 .page-status.error {
@@ -342,6 +342,15 @@ button:disabled {
   background: var(--danger-press);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* 覆盖：仅用于页面状态的成功态，显示黑色对号，不使用绿色底色 */
+.page-status.success {
+  background: transparent !important;
+  color: #111 !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
 .ghost {
@@ -497,9 +506,9 @@ textarea::placeholder {
   padding: 20px;
   min-height: 200px;
   font-size: 14px;
-  line-height: 1.6;
-  overflow-y: auto;
-  max-height: 500px;
+  line-height: 1.36; /* 更紧凑行间距 */
+  overflow: visible; /* 让容器随内容增长 */
+  max-height: none;
   white-space: pre-wrap;
   word-wrap: break-word;
 }
@@ -539,9 +548,9 @@ button.tiny {
   padding: 16px;
   min-height: 200px;
   font-size: 13px;
-  line-height: 1.6;
-  overflow-y: auto;
-  max-height: 500px;
+  line-height: 1.40; /* 再收紧 */
+  overflow: visible; /* 随内容增长 */
+  max-height: none;
 }
 
 .output-placeholder {
@@ -581,20 +590,71 @@ button.tiny {
 }
 
 .prompt-text {
-  background: #1F2937 !important;
-  color: #F9FAFB !important;
-  border: 1px solid #374151 !important;
+  background: rgba(154, 111, 184, 0.12) !important; /* 浅紫色 */
+  color: #1F2937 !important; /* 深色文字提高可读性 */
+  border: 1px solid rgba(154, 111, 184, 0.28) !important;
   border-radius: var(--radius-md);
   padding: 16px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.45;
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow-x: auto;
   margin: 0;
   max-height: 400px;
   overflow-y: auto;
+}
+
+/* Markdown 渲染 - 版式与表格、代码块优化 */
+.output h1, .output h2, .output h3, .output h4, .output h5, .output h6 {
+  margin: 12px 0 6px;
+  line-height: 1.25;
+}
+.output p { margin: 2px 0; }
+.output li { margin: 1px 0; }
+
+/* 表格：边框清晰、对齐紧凑 */
+.output table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  background: rgba(255,255,255,0.9);
+}
+.output th, .output td {
+  border: 1px solid var(--panel-border-strong);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  font-size: 13px;
+}
+.output thead th {
+  background: rgba(154, 111, 184, 0.06);
+  font-weight: 600;
+}
+
+/* 代码块：深色背景与圆角边框 */
+.output pre {
+  background: rgba(154, 111, 184, 0.12); /* 浅紫色背景 */
+  color: #1F2937; /* 深色文字 */
+  border: 1px solid rgba(154, 111, 184, 0.28);
+  border-radius: 10px;
+  padding: 14px 16px;
+  overflow: auto;
+  margin: 10px 0;
+}
+.output pre code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+}
+/* 行内代码：浅色底，轻边框 */
+.output :not(pre) > code {
+  background: rgba(154, 111, 184, 0.10);
+  border: 1px solid rgba(154, 111, 184, 0.25);
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
 }
 
 /* 页面数据详情区域 */

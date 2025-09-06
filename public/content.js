@@ -175,10 +175,21 @@ function extractElementInfo(element, depth = 0, maxDepth = 10) {
     tagName: element.tagName.toLowerCase(),
     attributes: attributes,
     styles: styles,
+    innerText: (element.innerText || '').trim(),
+    innerHTML: element.innerHTML || '',
+    outerHTML: element.outerHTML || '',
     directText: directText,
     dimensions: {
       width: rect.width,
       height: rect.height
+    },
+    fonts: {
+      used: (() => {
+        const ff = computedStyle.getPropertyValue('font-family') || '';
+        return ff
+          ? ff.split(',').map(f => f.trim().replace(/['"]/g, '')).filter(Boolean)
+          : [];
+      })()
     },
     children: []
   };

@@ -228,6 +228,49 @@
           </div>
         </div>
       </section>
+
+      <!-- 新增：所选元素详情展示 -->
+      <section class="page-info-section" id="selected-element-section" style="display:none;">
+        <div class="section-header">
+          <h2>所选元素详情</h2>
+          <div class="section-actions">
+            <button id="copySelHtmlBtn" class="ghost tiny">复制HTML</button>
+            <button id="copySelTextBtn" class="ghost tiny">复制文本</button>
+            <button id="copySelCssBtn" class="ghost tiny">复制CSS</button>
+            <button id="copySelFontsBtn" class="ghost tiny">复制字体</button>
+          </div>
+        </div>
+        <div class="page-data-details" style="display:block;">
+          <div class="data-section">
+            <div class="data-header">
+              <span class="data-title">元素HTML</span>
+              <button id="copySelHtmlBtn2" class="ghost tiny">复制</button>
+            </div>
+            <div id="selHtmlPreview" class="data-content"></div>
+          </div>
+          <div class="data-section">
+            <div class="data-header">
+              <span class="data-title">元素文本</span>
+              <button id="copySelTextBtn2" class="ghost tiny">复制</button>
+            </div>
+            <div id="selTextPreview" class="data-content"></div>
+          </div>
+          <div class="data-section">
+            <div class="data-header">
+              <span class="data-title">计算样式</span>
+              <button id="copySelCssBtn2" class="ghost tiny">复制</button>
+            </div>
+            <div id="selCssPreview" class="data-content"></div>
+          </div>
+          <div class="data-section">
+            <div class="data-header">
+              <span class="data-title">字体信息</span>
+              <button id="copySelFontsBtn2" class="ghost tiny">复制</button>
+            </div>
+            <div id="selFontsPreview" class="data-content"></div>
+          </div>
+        </div>
+      </section>
     </div>
 
     <!-- 功能2：页面数据提取 -->
