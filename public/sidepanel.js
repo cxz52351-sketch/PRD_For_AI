@@ -462,70 +462,43 @@
     const hasHTML = outerHTML.length > 0;
     const hasText = textContent.length > 0;
     
-    const prompt = `你是一个专业的前端开发专家。请严格基于以下真实的网页元素数据，生成完全一致的HTML+CSS代码。
+    const prompt = `你是一位专业的前端开发专家。请基于以下网页元素数据，为用户生成一个**完整可用的代码片段**，用户将把这个代码提供给AI编程助手，让AI助手帮忙集成到自己的项目中。
 
-⚠️ 重要提醒：你必须完全按照下面提供的真实数据来生成代码，不允许添加、修改或假设任何信息。
+## 🎯 提取的元素数据
 
-## 🎯 真实元素数据
-
-### HTML结构（必须完全保持一致）
+### HTML结构
 \`\`\`html
 ${hasHTML ? outerHTML : `<${tagName}>${innerHTML || textContent}</${tagName}>`}
 \`\`\`
 
-### CSS属性（必须完全使用这些值）
-${stylesCount > 0 ? Object.entries(relevantStyles).map(([prop, value]) => `${prop}: ${value};`).join('\n') : '无样式属性'}
+### CSS样式属性
+${stylesCount > 0 ? Object.entries(relevantStyles).map(([prop, value]) => `${prop}: ${value};`).join('\n') : '无特殊样式'}
 
-### 元素基本信息
+### 元素信息
 - 标签: ${tagName}
 - 尺寸: ${element.dimensions ? `${Math.round(element.dimensions.width)}x${Math.round(element.dimensions.height)}px` : '未知'}
-- class属性: ${element.attributes?.class || '无'}
-- 文本内容: ${textContent || '无'}
+- Class: ${element.attributes?.class || '无'}
+- 文本: ${textContent || '无'}
 
-## 📋 严格要求
+## 📋 请生成以下内容
 
-生成一个完整的HTML文档，包含：
+### 1. 完整的HTML代码
+提供一个独立完整的HTML文件，包含：
+- 基本的HTML5文档结构
+- 内联CSS样式（在<style>标签中）
+- 完整的元素代码
 
-1. **完整的HTML结构**：
-   - 必须包含<!DOCTYPE html>和完整的文档结构
-   - 在body中使用上述提供的完全相同的HTML代码
-   - 不允许修改任何class名称或属性
+### 2. 使用说明
+简要说明这个元素的特点和用途，以及如何集成到项目中。
 
-2. **精确的CSS样式**：
-   - 创建一个名为"target-element"的CSS类
-   - 将上述所有CSS属性完全复制到这个类中
-   - 不允许添加任何未列出的CSS属性
-   - 所有数值必须与上述完全一致
+## 🔧 代码要求
 
-3. **输出格式**：
-   - 提供完整可运行的HTML代码
-   - 内联CSS样式（在<style>标签中）
-   - 为原始元素添加"target-element"类
+1. **独立可用**: 代码要完整，不依赖外部CSS文件或图片
+2. **样式准确**: CSS样式要与原元素保持一致
+3. **结构清晰**: HTML结构要简洁明了
+4. **易于集成**: 方便AI助手理解和集成到用户项目中
 
-## 代码模板
-
-请按照以下结构生成代码：
-
-\`\`\`html
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>复制的页面元素</title>
-    <style>
-        .target-element {
-            /* 在这里放置上述所有CSS属性，值必须完全一致 */
-        }
-    </style>
-</head>
-<body>
-    <!-- 在这里放置上述HTML结构，并添加target-element类 -->
-</body>
-</html>
-\`\`\`
-
-请严格按照上述要求生成代码，不要添加任何说明文字，直接输出完整的HTML代码：`;
+请直接输出完整的HTML代码和使用说明：`;
 
     console.log('[Prompt Builder] 最终prompt长度:', prompt.length);
     console.log('[Prompt Builder] Prompt预览:', prompt.substring(0, 500) + '...');
@@ -548,7 +521,22 @@ ${stylesCount > 0 ? Object.entries(relevantStyles).map(([prop, value]) => `${pro
     if (!elementData || !promptOutput) return;
     
     try {
-      showStatusMessage('🔮 AI正在分析元素，生成编程指令...', 'info');
+      showStatusMessage('🔮 AI正在提取元素代码...', 'info');
+      
+      // 显示加载状态
+      promptOutput.innerHTML = `
+        <div class="loading-container" style="text-align: center; padding: 40px 20px; color: #666;">
+          <div class="loading-spinner" style="display: inline-block; width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #9b59b6; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
+          <h3 style="margin: 0 0 10px 0; color: #333;">🤖 AI正在工作中...</h3>
+          <p style="margin: 0; font-size: 14px;">正在提取元素结构和样式，生成完整代码</p>
+          <style>
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          </style>
+        </div>
+      `;
       
       // 构建智能prompt
       const promptTemplate = buildPromptTemplate(elementData);
@@ -606,11 +594,11 @@ ${stylesCount > 0 ? Object.entries(relevantStyles).map(([prop, value]) => `${pro
         throw new Error('API返回内容为空或格式异常');
       }
       
-      // 显示生成的AI指令
+      // 显示生成的代码
       promptOutput.innerHTML = `
         <div class="prompt-container">
           <div class="prompt-header">
-            <h3>🤖 AI生成的编程指令</h3>
+            <h3>🔧 提取的元素代码</h3>
             <div class="prompt-meta">
               <span class="prompt-source">来源: ${elementData.pageContext?.domain || '未知网站'}</span>
               <span class="prompt-time">${new Date().toLocaleTimeString()}</span>
@@ -627,7 +615,7 @@ ${stylesCount > 0 ? Object.entries(relevantStyles).map(([prop, value]) => `${pro
       if (copyPromptBtn) copyPromptBtn.style.display = 'inline-flex';
       if (clearPromptBtn) clearPromptBtn.style.display = 'inline-flex';
       
-      showStatusMessage('✔ AI指令生成成功！', 'success');
+      showStatusMessage('✔ 元素代码提取完成！', 'success');
     } catch (error) {
       console.error('[Prompt Generator] Error generating AI prompt:', error);
       console.error('[Prompt Generator] Error stack:', error.stack);
@@ -643,7 +631,7 @@ ${stylesCount > 0 ? Object.entries(relevantStyles).map(([prop, value]) => `${pro
         errorMessage = 'API访问被拒绝，请检查账户余额或权限';
       }
       
-      showStatusMessage('✖ AI指令生成失败: ' + errorMessage, 'error');
+      showStatusMessage('✖ 元素代码提取失败: ' + errorMessage, 'error');
       
       // 显示详细错误信息
       if (promptOutput) {
@@ -767,13 +755,13 @@ ${stylesCount > 0 ? Object.entries(relevantStyles).map(([prop, value]) => `${pro
   async function handleCopyPrompt() {
     const promptText = promptOutput?.querySelector('.prompt-text')?.textContent;
     if (!promptText) {
-      showStatusMessage('✖ 没有可复制的AI指令', 'error');
+      showStatusMessage('✖ 没有可复制的代码', 'error');
       return;
     }
     
     try {
       await navigator.clipboard.writeText(promptText);
-      showStatusMessage('✔ AI指令已复制到剪贴板！', 'success');
+      showStatusMessage('✔ 元素代码已复制到剪贴板！', 'success');
       
       // 临时改变按钮文本
       const originalText = copyPromptBtn.textContent;
@@ -790,7 +778,7 @@ ${stylesCount > 0 ? Object.entries(relevantStyles).map(([prop, value]) => `${pro
   // 处理清除AI指令输出
   function handleClearPrompt() {
     if (promptOutput) {
-      promptOutput.innerHTML = '<div class="output-placeholder">选择页面元素后，AI生成的编程指令将显示在这里</div>';
+      promptOutput.innerHTML = '<div class="output-placeholder">选择页面元素后，提取的完整代码将显示在这里</div>';
     }
     
     if (copyPromptBtn) copyPromptBtn.style.display = 'none';
