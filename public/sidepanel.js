@@ -332,43 +332,289 @@
   }
   
   // 生成AI指令（使用OpenRouter API）
+  // OpenRouter API 配置
+  const OPENROUTER_API_KEY = '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';
+  const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+  
+  // 测试API连接
+  async function testOpenRouterAPI() {
+    try {
+      console.log('[API Test] Testing OpenRouter connection...');
+      console.log('[API Test] API Key length:', OPENROUTER_API_KEY.length);
+      console.log('[API Test] API Key starts with:', OPENROUTER_API_KEY.substring(0, 10) + '...');
+      
+      // 先测试简单的模型列表API
+      const modelsResponse = await fetch(`${OPENROUTER_BASE_URL}/models`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'HTTP-Referer': window.location.origin || 'chrome-extension://unknown',
+          'X-Title': 'AI-Programming-Prompt-Generator'
+        }
+      });
+      
+      console.log('[API Test] Models API status:', modelsResponse.status);
+      
+      if (modelsResponse.ok) {
+        console.log('[API Test] ✅ API Key验证成功，开始测试聊天API');
+        
+        // 测试聊天API
+        const testResponse = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': window.location.origin || 'chrome-extension://unknown',
+            'X-Title': 'AI-Programming-Prompt-Generator'
+          },
+          body: JSON.stringify({
+            model: 'openai/gpt-4o-mini',
+            messages: [
+              {
+                role: 'user',
+                content: '测试连接，请回复OK'
+              }
+            ],
+            max_tokens: 10
+          })
+        });
+        
+        console.log('[API Test] Chat API status:', testResponse.status);
+        const testResult = await testResponse.text();
+        console.log('[API Test] Chat API response:', testResult);
+        
+        if (testResponse.ok) {
+          console.log('[API Test] ✅ 聊天API测试成功');
+          return true;
+        } else {
+          console.error('[API Test] ❌ 聊天API测试失败:', testResult);
+          return false;
+        }
+      } else {
+        const errorText = await modelsResponse.text();
+        console.error('[API Test] ❌ API Key验证失败:', errorText);
+        return false;
+      }
+    } catch (error) {
+      console.error('[API Test] ❌ 连接测试异常:', error);
+      console.error('[API Test] Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+      return false;
+    }
+  }
+  
+  // 构建智能prompt模板
+  function buildPromptTemplate(elementData) {
+    console.log('[Prompt Builder] 原始elementData:', elementData);
+    
+    const element = elementData.element || elementData;
+    const pageContext = elementData.pageContext || {};
+    
+    console.log('[Prompt Builder] 提取的element:', element);
+    console.log('[Prompt Builder] pageContext:', pageContext);
+    
+    // 提取核心信息
+    const tagName = element.tagName || 'div';
+    const textContent = element.directText || element.innerText || '';
+    const outerHTML = element.outerHTML || '';
+    const innerHTML = element.innerHTML || '';
+    
+    console.log('[Prompt Builder] 基础信息:', {
+      tagName, 
+      textContent: textContent.substring(0, 100),
+      outerHTMLLength: outerHTML.length,
+      innerHTMLLength: innerHTML.length
+    });
+    
+    // 处理样式信息
+    const styles = element.styles || {};
+    console.log('[Prompt Builder] 原始styles:', styles);
+    
+    const importantStyles = [
+      'display', 'position', 'width', 'height', 'max-width', 'max-height',
+      'background', 'background-color', 'background-image', 'background-size',
+      'color', 'font-size', 'font-family', 'font-weight', 'line-height',
+      'border', 'border-radius', 'border-color', 'border-width',
+      'padding', 'margin', 'box-shadow', 'text-align',
+      'flex-direction', 'justify-content', 'align-items', 'gap',
+      'grid-template-columns', 'grid-gap', 'transform', 'transition'
+    ];
+    
+    const relevantStyles = {};
+    importantStyles.forEach(prop => {
+      if (styles[prop] && styles[prop] !== 'initial' && styles[prop] !== 'auto' && styles[prop] !== 'none') {
+        relevantStyles[prop] = styles[prop];
+      }
+    });
+    
+    console.log('[Prompt Builder] 过滤后的relevantStyles:', relevantStyles);
+    
+    // 字体信息
+    const fontInfo = element.fonts || {};
+    const usedFonts = fontInfo.used || [];
+    console.log('[Prompt Builder] 字体信息:', fontInfo, usedFonts);
+    
+    // 构建详细的prompt
+    const stylesCount = Object.keys(relevantStyles).length;
+    const hasHTML = outerHTML.length > 0;
+    const hasText = textContent.length > 0;
+    
+    const prompt = `你是一个专业的前端开发专家。请严格基于以下真实的网页元素数据，生成完全一致的HTML+CSS代码。
+
+⚠️ 重要提醒：你必须完全按照下面提供的真实数据来生成代码，不允许添加、修改或假设任何信息。
+
+## 🎯 真实元素数据
+
+### HTML结构（必须完全保持一致）
+\`\`\`html
+${hasHTML ? outerHTML : `<${tagName}>${innerHTML || textContent}</${tagName}>`}
+\`\`\`
+
+### CSS属性（必须完全使用这些值）
+${stylesCount > 0 ? Object.entries(relevantStyles).map(([prop, value]) => `${prop}: ${value};`).join('\n') : '无样式属性'}
+
+### 元素基本信息
+- 标签: ${tagName}
+- 尺寸: ${element.dimensions ? `${Math.round(element.dimensions.width)}x${Math.round(element.dimensions.height)}px` : '未知'}
+- class属性: ${element.attributes?.class || '无'}
+- 文本内容: ${textContent || '无'}
+
+## 📋 严格要求
+
+生成一个完整的HTML文档，包含：
+
+1. **完整的HTML结构**：
+   - 必须包含<!DOCTYPE html>和完整的文档结构
+   - 在body中使用上述提供的完全相同的HTML代码
+   - 不允许修改任何class名称或属性
+
+2. **精确的CSS样式**：
+   - 创建一个名为"target-element"的CSS类
+   - 将上述所有CSS属性完全复制到这个类中
+   - 不允许添加任何未列出的CSS属性
+   - 所有数值必须与上述完全一致
+
+3. **输出格式**：
+   - 提供完整可运行的HTML代码
+   - 内联CSS样式（在<style>标签中）
+   - 为原始元素添加"target-element"类
+
+## 代码模板
+
+请按照以下结构生成代码：
+
+\`\`\`html
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>复制的页面元素</title>
+    <style>
+        .target-element {
+            /* 在这里放置上述所有CSS属性，值必须完全一致 */
+        }
+    </style>
+</head>
+<body>
+    <!-- 在这里放置上述HTML结构，并添加target-element类 -->
+</body>
+</html>
+\`\`\`
+
+请严格按照上述要求生成代码，不要添加任何说明文字，直接输出完整的HTML代码：`;
+
+    console.log('[Prompt Builder] 最终prompt长度:', prompt.length);
+    console.log('[Prompt Builder] Prompt预览:', prompt.substring(0, 500) + '...');
+    
+    // 显示完整的传递给AI的数据摘要
+    console.log('[Prompt Builder] === 传递给AI的数据摘要 ===');
+    console.log('HTML长度:', outerHTML.length, '字符');
+    console.log('CSS属性数量:', stylesCount, '个');
+    console.log('文本内容:', textContent ? `"${textContent.substring(0, 50)}..."` : '无');
+    console.log('元素属性:', element.attributes ? Object.keys(element.attributes).length : 0, '个');
+    console.log('字体信息:', usedFonts.length ? usedFonts.join(', ') : '无');
+    console.log('实际CSS属性:', Object.keys(relevantStyles));
+    console.log('=========================');
+
+    return prompt;
+  }
+  
+  // 调用OpenRouter API生成prompt
   async function generatePromptWithAI(elementData) {
     if (!elementData || !promptOutput) return;
     
     try {
-      showStatusMessage(' AI正在分析元素，生成编程指令...', 'info');
+      showStatusMessage('🔮 AI正在分析元素，生成编程指令...', 'info');
       
-      // 构建请求数据
-      const requestData = {
-        messages: [{ role: 'user', content: `请分析这个网页元素并生成编程指令` }],
-        stream: false,
-        page_data: elementData
+      // 构建智能prompt
+      const promptTemplate = buildPromptTemplate(elementData);
+      
+      console.log('[OpenRouter Debug] API Key:', OPENROUTER_API_KEY ? 'Present' : 'Missing');
+      console.log('[OpenRouter Debug] Base URL:', OPENROUTER_BASE_URL);
+      console.log('[OpenRouter Debug] Prompt length:', promptTemplate.length);
+      
+      const requestBody = {
+        model: 'openai/gpt-4o-mini',
+        messages: [
+          {
+            role: 'user',
+            content: promptTemplate.substring(0, 8000) // 限制prompt长度避免过长
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 4000,
+        stream: false
       };
       
-      const response = await fetch(`${API_BASE_URL}/api/prompt`, {
+      console.log('[OpenRouter Debug] Request body:', JSON.stringify(requestBody, null, 2));
+      
+      // 先测试API连接（临时禁用以排查问题）
+      console.log('[Debug] 跳过API测试，直接尝试调用...');
+      
+      // 调用OpenRouter API
+      const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.origin || 'chrome-extension://unknown',
+          'X-Title': 'AI-Programming-Prompt-Generator'
         },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify(requestBody)
       });
       
+      console.log('[OpenRouter Debug] Response status:', response.status);
+      console.log('[OpenRouter Debug] Response headers:', [...response.headers.entries()]);
+      
+      const responseText = await response.text();
+      console.log('[OpenRouter Debug] Response text:', responseText);
+      
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+        throw new Error(`OpenRouter API Error ${response.status}: ${responseText}`);
       }
       
-      const result = await response.json();
+      const result = JSON.parse(responseText);
+      console.log('[OpenRouter Debug] Parsed result:', result);
+      
       const aiPrompt = result.choices?.[0]?.message?.content || '生成失败';
+      
+      if (!aiPrompt || aiPrompt === '生成失败') {
+        throw new Error('API返回内容为空或格式异常');
+      }
       
       // 显示生成的AI指令
       promptOutput.innerHTML = `
         <div class="prompt-container">
           <div class="prompt-header">
-            <h3> AI生成的编程指令</h3>
+            <h3>🤖 AI生成的编程指令</h3>
             <div class="prompt-meta">
-              <span class="prompt-source">来源: ${elementData.pageContext.domain}</span>
+              <span class="prompt-source">来源: ${elementData.pageContext?.domain || '未知网站'}</span>
               <span class="prompt-time">${new Date().toLocaleTimeString()}</span>
-              <span class="prompt-model">模型: GPT-4o Mini</span>
+              <span class="prompt-model">模型: GPT-4o Mini via OpenRouter</span>
             </div>
           </div>
           <div class="prompt-content">
@@ -384,7 +630,43 @@
       showStatusMessage('✔ AI指令生成成功！', 'success');
     } catch (error) {
       console.error('[Prompt Generator] Error generating AI prompt:', error);
-      showStatusMessage('✖ AI指令生成失败: ' + error.message, 'error');
+      console.error('[Prompt Generator] Error stack:', error.stack);
+      
+      let errorMessage = error.message;
+      if (errorMessage.includes('Failed to fetch')) {
+        errorMessage = '网络连接失败，请检查网络连接';
+      } else if (errorMessage.includes('401')) {
+        errorMessage = 'API密钥无效，请检查OpenRouter API Key';
+      } else if (errorMessage.includes('429')) {
+        errorMessage = 'API调用频率超限，请稍后重试';
+      } else if (errorMessage.includes('403')) {
+        errorMessage = 'API访问被拒绝，请检查账户余额或权限';
+      }
+      
+      showStatusMessage('✖ AI指令生成失败: ' + errorMessage, 'error');
+      
+      // 显示详细错误信息
+      if (promptOutput) {
+        promptOutput.innerHTML = `
+          <div class="error-container" style="padding: 20px; border: 2px solid #ff6b6b; border-radius: 8px; background: #ffe0e0; margin: 10px 0;">
+            <h3 style="color: #d63031; margin-top: 0;">⚠️ 生成失败</h3>
+            <p><strong>错误原因:</strong> ${errorMessage}</p>
+            <p><strong>详细信息:</strong> ${error.message}</p>
+            <div style="margin-top: 15px; padding: 10px; background: #fff; border-radius: 4px; font-family: monospace; font-size: 12px; color: #666;">
+              <strong>调试信息:</strong><br/>
+              • API Key: ${OPENROUTER_API_KEY ? '已配置' : '未配置'}<br/>
+              • API端点: ${OPENROUTER_BASE_URL}/chat/completions<br/>
+              • 错误时间: ${new Date().toLocaleString()}
+            </div>
+            <p style="margin-top: 15px; color: #666; font-size: 14px;">
+              💡 <strong>排查建议:</strong><br/>
+              1. 检查浏览器开发者工具的Console面板查看详细日志<br/>
+              2. 确认OpenRouter账户有足够余额<br/>
+              3. 验证API Key是否正确配置
+            </p>
+          </div>
+        `;
+      }
     }
   }
   

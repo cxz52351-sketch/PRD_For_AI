@@ -16,7 +16,8 @@
     "https://localhost:*/*",
     "https://teach.excelmaster.ai/*",
     "https://mirror.o3pro.pro/*",
-    "https://*.o3pro.pro/*"
+    "https://*.o3pro.pro/*",
+    "https://openrouter.ai/*"
   ],
   "side_panel": {
     "default_path": "sidepanel.html"

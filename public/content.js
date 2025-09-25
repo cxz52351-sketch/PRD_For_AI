@@ -135,18 +135,48 @@ function extractElementInfo(element, depth = 0, maxDepth = 10) {
   
   // 提取重要的CSS属性
   const importantProps = [
-    'display', 'position', 'width', 'height', 'margin', 'padding',
-    'background-color', 'background-image', 'color', 'font-family', 
-    'font-size', 'font-weight', 'line-height', 'text-align',
-    'border', 'border-radius', 'box-shadow', 'flex-direction',
-    'justify-content', 'align-items', 'gap', 'grid-template-columns',
-    'grid-template-rows', 'z-index', 'opacity', 'transform'
+    // 布局相关
+    'display', 'position', 'float', 'clear',
+    // 尺寸相关  
+    'width', 'height', 'min-width', 'min-height', 'max-width', 'max-height',
+    // 外边距和内边距
+    'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+    'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+    // 背景相关
+    'background', 'background-color', 'background-image', 'background-size',
+    'background-position', 'background-repeat', 'background-attachment',
+    // 文字相关
+    'color', 'font-family', 'font-size', 'font-weight', 'font-style',
+    'line-height', 'text-align', 'text-decoration', 'text-transform',
+    'letter-spacing', 'word-spacing',
+    // 边框相关
+    'border', 'border-width', 'border-style', 'border-color', 'border-radius',
+    'border-top', 'border-right', 'border-bottom', 'border-left',
+    // 阴影和效果
+    'box-shadow', 'text-shadow', 'opacity', 'visibility',
+    // Flexbox
+    'flex-direction', 'flex-wrap', 'justify-content', 'align-items', 'align-content',
+    'flex', 'flex-grow', 'flex-shrink', 'flex-basis', 'gap',
+    // Grid
+    'grid-template-columns', 'grid-template-rows', 'grid-gap', 'grid-area',
+    // 变换和动画
+    'transform', 'transition', 'animation',
+    // 其他
+    'z-index', 'overflow', 'cursor', 'user-select'
   ];
   
   const styles = {};
   importantProps.forEach(prop => {
     const value = computedStyle.getPropertyValue(prop);
-    if (value && value !== 'normal' && value !== 'none' && value !== '0px' && value !== 'auto') {
+    if (value && 
+        value !== 'normal' && 
+        value !== 'none' && 
+        value !== '0px' && 
+        value !== 'auto' && 
+        value !== 'initial' &&
+        value !== 'inherit' &&
+        value !== 'unset' &&
+        value.trim() !== '') {
       styles[prop] = value;
     }
   });
