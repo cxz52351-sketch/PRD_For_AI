@@ -270,6 +270,15 @@
           
           // 渲染所选元素详情
           renderSelectedElementDetails(currentElementData);
+          
+          // 截图并生成AI指令
+          try {
+            const elementScreenshot = await captureElementScreenshot(currentElementData);
+            currentElementData.screenshot = elementScreenshot;
+          } catch (error) {
+            console.warn('[Screenshot] 截图失败，继续不带图片生成:', error);
+          }
+          
           // 生成AI指令
           await generatePromptWithAI(currentElementData);
           
@@ -434,18 +443,57 @@
     console.log('[Prompt Builder] 原始styles:', styles);
     
     const importantStyles = [
-      'display', 'position', 'width', 'height', 'max-width', 'max-height',
-      'background', 'background-color', 'background-image', 'background-size',
-      'color', 'font-size', 'font-family', 'font-weight', 'line-height',
-      'border', 'border-radius', 'border-color', 'border-width',
-      'padding', 'margin', 'box-shadow', 'text-align',
-      'flex-direction', 'justify-content', 'align-items', 'gap',
-      'grid-template-columns', 'grid-gap', 'transform', 'transition'
+      // 布局和定位
+      'display', 'position', 'top', 'right', 'bottom', 'left', 'z-index',
+      'width', 'height', 'min-width', 'min-height', 'max-width', 'max-height',
+      
+      // 背景和颜色
+      'background', 'background-color', 'background-image', 'background-size', 
+      'background-position', 'background-repeat', 'background-attachment',
+      'color', 'opacity',
+      
+      // 字体和文本
+      'font-size', 'font-family', 'font-weight', 'font-style', 'font-variant',
+      'line-height', 'text-align', 'text-decoration', 'text-transform',
+      'letter-spacing', 'word-spacing', 'text-shadow', 'white-space',
+      
+      // 边框和轮廓
+      'border', 'border-width', 'border-style', 'border-color', 'border-radius',
+      'border-top', 'border-right', 'border-bottom', 'border-left',
+      'outline', 'outline-width', 'outline-style', 'outline-color',
+      
+      // 间距
+      'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+      'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+      
+      // 视觉效果
+      'box-shadow', 'text-shadow', 'filter', 'backdrop-filter',
+      
+      // Flexbox
+      'flex', 'flex-direction', 'flex-wrap', 'justify-content', 'align-items', 
+      'align-content', 'flex-grow', 'flex-shrink', 'flex-basis', 'gap',
+      
+      // Grid
+      'grid-template-columns', 'grid-template-rows', 'grid-gap', 'grid-area',
+      'justify-items', 'align-items',
+      
+      // 动画和过渡
+      'transition', 'transition-property', 'transition-duration', 'transition-timing-function',
+      'animation', 'animation-name', 'animation-duration', 'animation-timing-function',
+      'transform', 'transform-origin',
+      
+      // 其他重要属性
+      'overflow', 'overflow-x', 'overflow-y', 'visibility', 'cursor',
+      'user-select', 'pointer-events', 'box-sizing', 'vertical-align'
     ];
     
     const relevantStyles = {};
     importantStyles.forEach(prop => {
-      if (styles[prop] && styles[prop] !== 'initial' && styles[prop] !== 'auto' && styles[prop] !== 'none') {
+      if (styles[prop] && 
+          styles[prop] !== 'initial' && 
+          styles[prop] !== '' && 
+          !(styles[prop] === 'auto' && !['width', 'height', 'margin', 'padding'].includes(prop)) &&
+          !(styles[prop] === 'none' && !['border', 'text-decoration', 'transform', 'animation'].includes(prop))) {
         relevantStyles[prop] = styles[prop];
       }
     });
@@ -462,43 +510,85 @@
     const hasHTML = outerHTML.length > 0;
     const hasText = textContent.length > 0;
     
-    const prompt = `你是一位专业的前端开发专家。请基于以下网页元素数据，为用户生成一个**完整可用的代码片段**，用户将把这个代码提供给AI编程助手，让AI助手帮忙集成到自己的项目中。
+    const prompt = `你是一位专业的前端开发专家。请基于以下真实网页元素的精确数据${elementData.screenshot ? '和提供的元素截图' : ''}，生成一个**完全匹配原样式**的HTML代码。这个代码将用于完美复刻原始元素的视觉效果和交互体验。
 
-## 🎯 提取的元素数据
+## 📷 重要提示
+${elementData.screenshot ? '我已经为你提供了该元素的实际截图。请结合图像中的视觉效果和下方的技术数据，确保生成的代码能够完美还原截图中看到的外观。' : '注意：仅基于文本数据生成代码，请确保样式的准确性。'}
 
-### HTML结构
+## 🎯 精确提取的元素数据
+
+### HTML结构（请完全保持一致）
 \`\`\`html
 ${hasHTML ? outerHTML : `<${tagName}>${innerHTML || textContent}</${tagName}>`}
 \`\`\`
 
-### CSS样式属性
+### 精确的CSS样式属性（必须全部使用）
 ${stylesCount > 0 ? Object.entries(relevantStyles).map(([prop, value]) => `${prop}: ${value};`).join('\n') : '无特殊样式'}
 
-### 元素信息
-- 标签: ${tagName}
-- 尺寸: ${element.dimensions ? `${Math.round(element.dimensions.width)}x${Math.round(element.dimensions.height)}px` : '未知'}
-- Class: ${element.attributes?.class || '无'}
-- 文本: ${textContent || '无'}
+### 元素详细信息
+- 标签类型: ${tagName}
+- 实际尺寸: ${element.dimensions ? `${Math.round(element.dimensions.width)}x${Math.round(element.dimensions.height)}px` : '未知'}
+- Class属性: ${element.attributes?.class || '无'}
+- 文本内容: ${textContent || '无文本'}
 
-## 📋 请生成以下内容
+## ⚠️ 关键要求
 
-### 1. 完整的HTML代码
-提供一个独立完整的HTML文件，包含：
-- 基本的HTML5文档结构
+### 1. 视觉还原准确性
+${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中的视觉效果有差异，优先按照截图的实际外观调整\n- **细节观察**：仔细观察截图中的阴影、渐变、圆角、边框等细节效果\n- **颜色匹配**：确保生成的元素颜色与截图中完全一致\n- **尺寸比例**：保持元素的宽高比例与截图一致' : '- **必须使用上述所有CSS属性**，不得遗漏任何一个\n- **数值必须完全一致**，包括px、rem、%等单位\n- **颜色值必须精确**，RGB、HEX值不得更改'}
+- **字体必须匹配**：包括font-family、font-weight、font-size
+
+### 2. 交互状态补充
+请为元素添加常见的交互状态（如果是交互元素）：
+- **:hover** 状态：添加合适的悬停效果
+- **:active** 状态：添加点击时的效果
+- **:focus** 状态：添加焦点状态样式
+
+### 3. 代码结构要求
+生成一个完整的HTML文件，包含：
+- DOCTYPE和完整HTML5结构
 - 内联CSS样式（在<style>标签中）
-- 完整的元素代码
+- 为目标元素创建CSS类名".target-element"
+- 元素代码中添加target-element类
 
-### 2. 使用说明
-简要说明这个元素的特点和用途，以及如何集成到项目中。
+### 4. 输出格式
+请严格按照以下模板输出：
 
-## 🔧 代码要求
+\`\`\`html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提取的页面元素</title>
+    <style>
+        .target-element {
+            /* 在这里放置上述所有CSS属性 */
+        }
+        
+        /* 交互状态（如果适用） */
+        .target-element:hover {
+            /* 悬停效果 */
+        }
+        
+        .target-element:active {
+            /* 激活效果 */
+        }
+        
+        .target-element:focus {
+            /* 焦点效果 */
+        }
+    </style>
+</head>
+<body>
+    <!-- 在这里放置HTML结构，并添加target-element类 -->
+</body>
+</html>
+\`\`\`
 
-1. **独立可用**: 代码要完整，不依赖外部CSS文件或图片
-2. **样式准确**: CSS样式要与原元素保持一致
-3. **结构清晰**: HTML结构要简洁明了
-4. **易于集成**: 方便AI助手理解和集成到用户项目中
+## 💡 使用说明
+简要说明这个元素的用途和特点，以及在项目中的集成建议。
 
-请直接输出完整的HTML代码和使用说明：`;
+**重要提醒**: ${elementData.screenshot ? '请结合截图和技术数据，确保生成的代码能够完美还原截图中的视觉效果！图片中的每一个视觉细节都很重要。' : '请确保生成的代码能够完美还原原始元素的视觉效果！'}`;
 
     console.log('[Prompt Builder] 最终prompt长度:', prompt.length);
     console.log('[Prompt Builder] Prompt预览:', prompt.substring(0, 500) + '...');
@@ -516,6 +606,95 @@ ${stylesCount > 0 ? Object.entries(relevantStyles).map(([prop, value]) => `${pro
     return prompt;
   }
   
+  // 截取元素图片
+  async function captureElementScreenshot(elementData) {
+    try {
+      console.log('[Screenshot] 开始截图，元素数据:', elementData);
+      
+      // 获取当前标签页
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tabs[0]) {
+        throw new Error('无法获取当前标签页');
+      }
+      
+      // 截取整个可见区域
+      const fullScreenshot = await chrome.tabs.captureVisibleTab(tabs[0].windowId, {
+        format: 'png',
+        quality: 100
+      });
+      
+      console.log('[Screenshot] 全屏截图完成，开始裁剪元素区域');
+      
+      // 获取元素位置信息
+      const element = elementData.element || elementData;
+      const rect = element.rect || element.dimensions;
+      
+      if (!rect) {
+        console.warn('[Screenshot] 缺少元素位置信息，返回全屏截图');
+        return fullScreenshot;
+      }
+      
+      // 创建Canvas裁剪元素区域
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      return new Promise((resolve, reject) => {
+        img.onload = () => {
+          try {
+            // 获取设备像素比
+            const devicePixelRatio = window.devicePixelRatio || 1;
+            
+            // 计算实际截图尺寸（考虑设备像素比）
+            const actualX = rect.x * devicePixelRatio;
+            const actualY = rect.y * devicePixelRatio;
+            const actualWidth = rect.width * devicePixelRatio;
+            const actualHeight = rect.height * devicePixelRatio;
+            
+            // 设置Canvas尺寸
+            canvas.width = actualWidth;
+            canvas.height = actualHeight;
+            
+            console.log('[Screenshot] 裁剪区域:', { 
+              x: actualX, 
+              y: actualY, 
+              width: actualWidth, 
+              height: actualHeight,
+              devicePixelRatio 
+            });
+            
+            // 裁剪元素区域
+            ctx.drawImage(
+              img, 
+              actualX, actualY, actualWidth, actualHeight,  // 源区域
+              0, 0, actualWidth, actualHeight               // 目标区域
+            );
+            
+            // 转换为base64
+            const croppedScreenshot = canvas.toDataURL('image/png', 1.0);
+            console.log('[Screenshot] 元素截图完成，图片大小:', croppedScreenshot.length);
+            
+            resolve(croppedScreenshot);
+          } catch (error) {
+            console.error('[Screenshot] 图片处理失败:', error);
+            resolve(fullScreenshot); // 失败时返回全屏截图
+          }
+        };
+        
+        img.onerror = () => {
+          console.error('[Screenshot] 图片加载失败');
+          resolve(fullScreenshot); // 失败时返回全屏截图
+        };
+        
+        img.src = fullScreenshot;
+      });
+      
+    } catch (error) {
+      console.error('[Screenshot] 截图失败:', error);
+      throw error;
+    }
+  }
+
   // 调用OpenRouter API生成prompt
   async function generatePromptWithAI(elementData) {
     if (!elementData || !promptOutput) return;
@@ -545,12 +724,32 @@ ${stylesCount > 0 ? Object.entries(relevantStyles).map(([prop, value]) => `${pro
       console.log('[OpenRouter Debug] Base URL:', OPENROUTER_BASE_URL);
       console.log('[OpenRouter Debug] Prompt length:', promptTemplate.length);
       
+      // 构建消息内容，支持图片
+      const messageContent = [{
+        type: 'text',
+        text: promptTemplate.substring(0, 8000) // 限制prompt长度避免过长
+      }];
+      
+      // 如果有截图，添加到消息中
+      if (elementData.screenshot) {
+        console.log('[OpenRouter Debug] 包含元素截图，图片大小:', elementData.screenshot.length);
+        messageContent.push({
+          type: 'image_url',
+          image_url: {
+            url: elementData.screenshot,
+            detail: 'high' // 使用高质量分析
+          }
+        });
+      } else {
+        console.log('[OpenRouter Debug] 无截图，仅使用文本描述');
+      }
+
       const requestBody = {
         model: 'openai/gpt-4o-mini',
         messages: [
           {
             role: 'user',
-            content: promptTemplate.substring(0, 8000) // 限制prompt长度避免过长
+            content: messageContent
           }
         ],
         temperature: 0.7,
@@ -606,10 +805,16 @@ ${stylesCount > 0 ? Object.entries(relevantStyles).map(([prop, value]) => `${pro
             </div>
           </div>
           <div class="prompt-content">
-            <pre class="prompt-text">${aiPrompt}</pre>
+            <pre class="prompt-text"></pre>
           </div>
         </div>
       `;
+      
+      // 安全地设置代码文本，避免HTML被渲染
+      const preElement = promptOutput.querySelector('.prompt-text');
+      if (preElement) {
+        preElement.textContent = aiPrompt; // 使用 textContent 而不是 innerHTML
+      }
       
       // 显示复制和清除按钮
       if (copyPromptBtn) copyPromptBtn.style.display = 'inline-flex';
