@@ -96,7 +96,7 @@
   const HTML_UPDATE_INTERVAL = 120; // ms，节流
 
   // API配置
-  const API_BASE_URL = (typeof window !== 'undefined' && window.__VITE_API_BASE_URL__) || 'http://localhost:8001';
+  const API_BASE_URL = (typeof window !== 'undefined' && window.__VITE_API_BASE_URL__) || 'https://prd-for-ai-chrome.onrender.com';
 
   // ===========================================
   // 工具函数
@@ -442,7 +442,7 @@ Y坐标: ${Math.round(dimensions.y)}px
 
   // 生成AI指令（通过后端代理）
   // 后端API配置
-  const BACKEND_BASE_URL = 'http://localhost:8001'; // 开发环境，生产环境需要改为Render URL
+  const BACKEND_BASE_URL = 'https://prd-for-ai-chrome.onrender.com'; // 开发环境，生产环境需要改为Render URL
 
   // 测试后端连接
   async function testBackendAPI() {
@@ -736,7 +736,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       // 调用后端API
       console.log('[Backend Debug] 发送请求到:', `${BACKEND_BASE_URL}/api/generate-prompt`);
       console.log('[Backend Debug] 请求数据:', requestData);
-      
+
       const response = await fetch(`${BACKEND_BASE_URL}/api/generate-prompt`, {
         method: 'POST',
         headers: {
