@@ -9,4 +9,3 @@ passlib==1.7.4
 aiofiles==22.1.0
 python-docx==0.8.11
 markdown==3.4.0
-reportlab==3.6.0

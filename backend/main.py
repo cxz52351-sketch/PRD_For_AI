@@ -17,12 +17,7 @@ from datetime import datetime
 from docx import Document
 from docx.shared import Inches
 import markdown
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+# PDF generation temporarily disabled for deployment
 import re
 import db  # 导入数据库模块
 import base64
@@ -329,53 +324,8 @@ async def generate_pdf_file(content: str, filename: str) -> str:
     """生成PDF文件"""
     file_path = os.path.join(GENERATED_DIR, filename)
     
-    # 创建PDF文档
-    doc = SimpleDocTemplate(file_path, pagesize=letter,
-                          rightMargin=72, leftMargin=72,
-                          topMargin=72, bottomMargin=18)
-    
-    # 获取样式
-    styles = getSampleStyleSheet()
-    title_style = styles['Title']
-    normal_style = styles['Normal']
-    heading_style = styles['Heading1']
-    
-    # 创建内容列表
-    story = []
-    
-    # 添加标题
-    story.append(Paragraph("AI生成文档", title_style))
-    story.append(Spacer(1, 12))
-    
-    # 添加时间戳
-    story.append(Paragraph(f'生成时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', normal_style))
-    story.append(Spacer(1, 12))
-    
-    # 处理内容
-    lines = content.split('\n')
-    for line in lines:
-        line = line.strip()
-        if not line:
-            story.append(Spacer(1, 6))
-            continue
-            
-        # 处理标题
-        if line.startswith('# '):
-            story.append(Paragraph(line[2:], heading_style))
-        elif line.startswith('## '):
-            story.append(Paragraph(line[3:], heading_style))
-        elif line.startswith('### '):
-            story.append(Paragraph(line[4:], heading_style))
-        else:
-            # 清理特殊字符，避免ReportLab解析错误
-            clean_line = re.sub(r'[<>&]', '', line)
-            story.append(Paragraph(clean_line, normal_style))
-        
-        story.append(Spacer(1, 6))
-    
-    # 构建PDF
-    doc.build(story)
-    return file_path
+    # PDF generation temporarily disabled for deployment
+    raise HTTPException(status_code=501, detail="PDF generation temporarily disabled for deployment")
 
 async def generate_file(content: str, output_format: str) -> Optional[Dict[str, str]]:
     """根据格式生成文件"""
