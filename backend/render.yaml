@@ -4,12 +4,16 @@ services:
     env: python
     region: oregon
     plan: free
-    buildCommand: pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt
+    buildCommand: pip install --no-cache-dir --only-binary=all --upgrade pip && pip install --no-cache-dir --only-binary=all -r requirements.txt
     startCommand: python start.py
     envVars:
       - key: PIP_NO_CACHE_DIR
         value: "1"
+      - key: PIP_ONLY_BINARY
+        value: ":all:"
       - key: PYTHONUNBUFFERED
         value: "1"
       - key: PORT
         value: "8001"
+      - key: CARGO_NET_GIT_FETCH_WITH_CLI
+        value: "false"
