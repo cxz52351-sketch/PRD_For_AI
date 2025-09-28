@@ -43,6 +43,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // 异步响应
   }
   
+  if (message.action === 'captureElementScreenshot') {
+    captureElementScreenshot(message.elementData).then(sendResponse).catch(err => {
+      console.error('[Prompt Generator] Error in captureElementScreenshot:', err);
+      sendResponse({ success: false, error: err.message });
+    });
+    return true; // 异步响应
+  }
+  
   if (message.action === 'injectContentScript') {
     injectContentScript(message.tabId).then(sendResponse).catch(err => {
       console.error('[Prompt Generator] Error in injectContentScript:', err);
@@ -279,6 +287,88 @@ async function captureCurrentTab() {
     
   } catch (error) {
     console.error('[PRD For AI] Error capturing tab:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// 截取元素图片
+async function captureElementScreenshot(elementData) {
+  try {
+    console.log('[Background] 开始截图，元素数据:', elementData);
+
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tabs[0]) {
+      throw new Error('无法获取当前标签页');
+    }
+
+    // 截取整个可见区域
+    const fullScreenshot = await chrome.tabs.captureVisibleTab(tabs[0].windowId, {
+      format: 'png',
+      quality: 100
+    });
+
+    console.log('[Background] 全屏截图完成，开始裁剪元素区域');
+
+    // 获取元素位置信息
+    const element = elementData.element || elementData;
+    const rect = element.rect || element.dimensions;
+
+    if (!rect) {
+      console.warn('[Background] 缺少元素位置信息，返回全屏截图');
+      return { success: true, screenshot: fullScreenshot };
+    }
+
+    // 创建一个离屏Canvas进行图片处理
+    const canvas = new OffscreenCanvas(1, 1);
+    const ctx = canvas.getContext('2d');
+    
+    // 创建图片对象
+    const response = await fetch(fullScreenshot);
+    const blob = await response.blob();
+    const bitmap = await createImageBitmap(blob);
+
+    // 获取设备像素比
+    const devicePixelRatio = 2; // 默认值，可以根据需要调整
+
+    // 计算实际截图尺寸
+    const actualX = Math.max(0, rect.x * devicePixelRatio);
+    const actualY = Math.max(0, rect.y * devicePixelRatio);
+    const actualWidth = Math.min(bitmap.width - actualX, rect.width * devicePixelRatio);
+    const actualHeight = Math.min(bitmap.height - actualY, rect.height * devicePixelRatio);
+
+    console.log('[Background] 裁剪参数:', { 
+      originalRect: rect, 
+      devicePixelRatio, 
+      actualX, actualY, actualWidth, actualHeight,
+      bitmapSize: { width: bitmap.width, height: bitmap.height }
+    });
+
+    // 设置Canvas尺寸
+    canvas.width = actualWidth;
+    canvas.height = actualHeight;
+
+    // 裁剪元素区域
+    ctx.drawImage(
+      bitmap,
+      actualX, actualY, actualWidth, actualHeight,  // 源区域
+      0, 0, actualWidth, actualHeight                // 目标区域
+    );
+
+    // 转换为Blob然后转为DataURL
+    const croppedBlob = await canvas.convertToBlob({ type: 'image/png', quality: 1.0 });
+    const reader = new FileReader();
+    
+    return new Promise((resolve) => {
+      reader.onload = () => {
+        const croppedDataUrl = reader.result;
+        console.log('[Background] 元素截图完成，大小:', croppedDataUrl.length);
+        resolve({ success: true, screenshot: croppedDataUrl });
+      };
+      reader.readAsDataURL(croppedBlob);
+    });
+
+  } catch (error) {
+    console.error('[Background] 截图失败:', error);
     return { success: false, error: error.message };
   }
 }

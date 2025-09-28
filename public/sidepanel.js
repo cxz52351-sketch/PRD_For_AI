@@ -664,83 +664,18 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
     try {
       console.log('[Screenshot] 开始截图，元素数据:', elementData);
 
-      // 获取当前标签页
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!tabs[0]) {
-        throw new Error('无法获取当前标签页');
-      }
-
-      // 截取整个可见区域
-      const fullScreenshot = await chrome.tabs.captureVisibleTab(tabs[0].windowId, {
-        format: 'png',
-        quality: 100
+      // 通过background.js来截图
+      const response = await chrome.runtime.sendMessage({
+        action: 'captureElementScreenshot',
+        elementData: elementData
       });
 
-      console.log('[Screenshot] 全屏截图完成，开始裁剪元素区域');
-
-      // 获取元素位置信息
-      const element = elementData.element || elementData;
-      const rect = element.rect || element.dimensions;
-
-      if (!rect) {
-        console.warn('[Screenshot] 缺少元素位置信息，返回全屏截图');
-        return fullScreenshot;
+      if (response.error) {
+        throw new Error(response.error);
       }
 
-      // 创建Canvas裁剪元素区域
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-
-      return new Promise((resolve, reject) => {
-        img.onload = () => {
-          try {
-            // 获取设备像素比
-            const devicePixelRatio = window.devicePixelRatio || 1;
-
-            // 计算实际截图尺寸（考虑设备像素比）
-            const actualX = rect.x * devicePixelRatio;
-            const actualY = rect.y * devicePixelRatio;
-            const actualWidth = rect.width * devicePixelRatio;
-            const actualHeight = rect.height * devicePixelRatio;
-
-            // 设置Canvas尺寸
-            canvas.width = actualWidth;
-            canvas.height = actualHeight;
-
-            console.log('[Screenshot] 裁剪区域:', {
-              x: actualX,
-              y: actualY,
-              width: actualWidth,
-              height: actualHeight,
-              devicePixelRatio
-            });
-
-            // 裁剪元素区域
-            ctx.drawImage(
-              img,
-              actualX, actualY, actualWidth, actualHeight,  // 源区域
-              0, 0, actualWidth, actualHeight               // 目标区域
-            );
-
-            // 转换为base64
-            const croppedScreenshot = canvas.toDataURL('image/png', 1.0);
-            console.log('[Screenshot] 元素截图完成，图片大小:', croppedScreenshot.length);
-
-            resolve(croppedScreenshot);
-          } catch (error) {
-            console.error('[Screenshot] 图片处理失败:', error);
-            resolve(fullScreenshot); // 失败时返回全屏截图
-          }
-        };
-
-        img.onerror = () => {
-          console.error('[Screenshot] 图片加载失败');
-          resolve(fullScreenshot); // 失败时返回全屏截图
-        };
-
-        img.src = fullScreenshot;
-      });
+      console.log('[Screenshot] 截图完成，大小:', response.screenshot ? response.screenshot.length : 0);
+      return response.screenshot;
 
     } catch (error) {
       console.error('[Screenshot] 截图失败:', error);
@@ -789,6 +724,9 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       });
 
       // 调用后端API
+      console.log('[Backend Debug] 发送请求到:', `${BACKEND_BASE_URL}/api/generate-prompt`);
+      console.log('[Backend Debug] 请求数据:', requestData);
+      
       const response = await fetch(`${BACKEND_BASE_URL}/api/generate-prompt`, {
         method: 'POST',
         headers: {
@@ -798,11 +736,13 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       });
 
       console.log('[Backend Debug] Response status:', response.status);
+      console.log('[Backend Debug] Response headers:', [...response.headers.entries()]);
 
       const responseText = await response.text();
-      console.log('[Backend Debug] Response text:', responseText.substring(0, 200) + '...');
+      console.log('[Backend Debug] Response text full:', responseText);
 
       if (!response.ok) {
+        console.error('[Backend Debug] API调用失败，响应内容:', responseText);
         throw new Error(`Backend API Error ${response.status}: ${responseText}`);
       }
 

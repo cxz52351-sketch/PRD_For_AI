@@ -4,6 +4,8 @@ from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any, Literal
 import httpx
+import requests
+import subprocess
 import json
 import os
 from dotenv import load_dotenv
@@ -87,7 +89,7 @@ DIFY_PRD_API_KEY = os.getenv("DIFY_PRD_API_KEY", "app-wiFSsheVuALpQ5cN7LrPv5Lb")
 DIFY_PROMPT_API_KEY = os.getenv("DIFY_PROMPT_API_KEY", "app-6tFKntYIPDWzq2toScD1XIiY")
 
 # OpenRouter API 配置
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 # 优先调用工作流接口（/workflows/run）。如需改为应用聊天接口（/chat-messages），将该值设为 "chat"
@@ -102,6 +104,10 @@ if not DIFY_PRD_API_KEY:
     print("警告: 未设置DIFY_PRD_API_KEY环境变量")
 if not DIFY_PROMPT_API_KEY:
     print("警告: 未设置DIFY_PROMPT_API_KEY环境变量")
+if not OPENROUTER_API_KEY:
+    print("警告: 未设置OPENROUTER_API_KEY环境变量")
+else:
+    print(f"✅ OpenRouter API Key已加载: {OPENROUTER_API_KEY[:15]}...")
 
 # API错误处理函数
 async def handle_dify_api_error(response: httpx.Response, context: str = "") -> str:
@@ -433,6 +439,12 @@ async def generate_prompt_simple(request: PromptGenerateRequest):
     try:
         print(f"收到Chrome插件prompt生成请求, prompt长度: {len(request.prompt)}")
         
+        # 检查API密钥是否配置
+        if not OPENROUTER_API_KEY:
+            raise HTTPException(status_code=500, detail="OpenRouter API密钥未配置")
+        
+        print(f"使用API密钥: {OPENROUTER_API_KEY[:15]}...")
+        
         # 构建OpenRouter请求
         messages = [
             {"role": "system", "content": "你是一个专业的编程助手，专门帮助开发者分析网页元素并生成详细的编程实现指令。"},
@@ -464,37 +476,49 @@ async def generate_prompt_simple(request: PromptGenerateRequest):
         
         print(f"发送请求到OpenRouter API...")
         
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                f"{OPENROUTER_BASE_URL}/chat/completions",
-                json=openrouter_payload,
-                headers=headers,
-            )
-            
-            if response.status_code != 200:
-                error_text = await response.aread()
-                error_text = error_text.decode('utf-8')
-                print(f"OpenRouter API错误: {error_text}")
-                raise HTTPException(status_code=response.status_code, 
-                                  detail=f"OpenRouter API错误: {error_text}")
-            
-            openrouter_data = response.json()
-            
-            # 提取AI回复内容
-            ai_content = ""
-            if 'choices' in openrouter_data and len(openrouter_data['choices']) > 0:
-                ai_content = openrouter_data['choices'][0].get('message', {}).get('content', '')
-            
-            if not ai_content:
-                raise HTTPException(status_code=500, detail="AI生成内容为空")
-            
-            print(f"成功生成prompt，长度: {len(ai_content)}")
-            
-            return {
-                "prompt": ai_content,
-                "content": ai_content,  # 兼容不同的前端字段名
-                "success": True
-            }
+        # 使用httpx进行API调用
+        try:
+            async with httpx.AsyncClient(timeout=60.0, verify=False) as client:
+                response = await client.post(
+                    f"{OPENROUTER_BASE_URL}/chat/completions",
+                    json=openrouter_payload,
+                    headers=headers,
+                )
+                
+                if response.status_code != 200:
+                    error_text = await response.aread()
+                    error_text = error_text.decode('utf-8')
+                    print(f"OpenRouter API错误详情: {error_text}")
+                    raise HTTPException(status_code=response.status_code, 
+                                      detail=f"OpenRouter API错误 (status={response.status_code}): {error_text}")
+                
+                openrouter_data = response.json()
+                print(f"OpenRouter响应成功，数据长度: {len(str(openrouter_data))}")
+                
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=408, detail="请求超时")
+        except httpx.RequestError as e:
+            print(f"网络请求错误: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"网络请求错误: {str(e)}")
+        except Exception as e:
+            print(f"API请求异常: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"网络请求异常: {str(e)}")
+        
+        # 提取AI回复内容
+        ai_content = ""
+        if 'choices' in openrouter_data and len(openrouter_data['choices']) > 0:
+            ai_content = openrouter_data['choices'][0].get('message', {}).get('content', '')
+        
+        if not ai_content:
+            raise HTTPException(status_code=500, detail="AI生成内容为空")
+        
+        print(f"成功生成prompt，长度: {len(ai_content)}")
+        
+        return {
+            "prompt": ai_content,
+            "content": ai_content,  # 兼容不同的前端字段名
+            "success": True
+        }
             
     except httpx.TimeoutException:
         raise HTTPException(status_code=408, detail="请求超时")
