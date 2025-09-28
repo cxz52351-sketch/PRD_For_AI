@@ -4,14 +4,12 @@ import {
   ArrowRight,
   Sparkles,
   Zap,
-  Users,
   CheckCircle,
   MessageCircle,
   Chrome,
   Globe,
   Lightbulb,
-  Target,
-  Star
+  Target
 } from "lucide-react";
 import { useTranslation } from "@/lib/useLanguage";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -369,104 +367,7 @@ const Landing = () => {
 
         <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent my-12" />
 
-        {/* Testimonials */}
-        <section id="testimonials" className="py-20 px-6 sm:px-8 lg:px-10 bg-gradient-to-r from-slate-50 to-indigo-50">
-          <div className="mx-auto max-w-7xl">
-            <div className="text-center mb-16">
-              <h2 className="font-display text-4xl font-bold mb-4 gradient-text">{t.landing.testimonials.title}</h2>
-              <p className="text-xl text-slate-600">{t.landing.testimonials.subtitle}</p>
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="glass-effect rounded-2xl p-8 premium-shadow hover-lift">
-                <div className="flex items-center space-x-1 mb-6">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-slate-700 mb-6 leading-relaxed">"{t.landing.testimonials.reviews.review1.content}"</p>
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-xl flex items-center justify-center mr-4">
-                    <span className="text-white font-bold">{t.landing.testimonials.reviews.review1.author.charAt(0)}</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-slate-900">{t.landing.testimonials.reviews.review1.author}</div>
-                    <div className="text-sm text-slate-500">{t.landing.testimonials.reviews.review1.role}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="glass-effect rounded-2xl p-8 premium-shadow hover-lift">
-                <div className="flex items-center space-x-1 mb-6">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-slate-700 mb-6 leading-relaxed">"{t.landing.testimonials.reviews.review2.content}"</p>
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center mr-4">
-                    <span className="text-white font-bold">{t.landing.testimonials.reviews.review2.author.charAt(0)}</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-slate-900">{t.landing.testimonials.reviews.review2.author}</div>
-                    <div className="text-sm text-slate-500">{t.landing.testimonials.reviews.review2.role}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="glass-effect rounded-2xl p-8 premium-shadow hover-lift">
-                <div className="flex items-center space-x-1 mb-6">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-slate-700 mb-6 leading-relaxed">"{t.landing.testimonials.reviews.review3.content}"</p>
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-pink-600 rounded-xl flex items-center justify-center mr-4">
-                    <span className="text-white font-bold">{t.landing.testimonials.reviews.review3.author.charAt(0)}</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-slate-900">{t.landing.testimonials.reviews.review3.author}</div>
-                    <div className="text-sm text-slate-500">{t.landing.testimonials.reviews.review3.role}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Video Quote */}
-        <section className="bg-white py-16">
-          <div className="mx-auto max-w-7xl px-6 grid xl:grid-cols-2 gap-10 items-start">
-            <div className="w-full">
-              <div className="relative rounded-xl border border-gray-200 overflow-hidden aspect-video bg-gradient-to-br from-indigo-50 to-purple-50">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <Users className="h-16 w-16 text-indigo-500 mx-auto mb-4" />
-                    <p className="text-lg text-gray-700">{t.landing.hero.productDemoVideo}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <figure className="relative">
-              <blockquote className="text-lg sm:text-xl text-gray-900 pt-2">
-                <p>
-                  {t.landing.hero.testimonial1}
-                  <br />
-                  <br />
-                  {t.landing.hero.testimonial2}
-                  <br />
-                  <br />
-                  {t.landing.hero.testimonial3}
-                </p>
-              </blockquote>
-              <figcaption className="mt-6">
-                <div className="font-semibold text-gray-900">{t.landing.hero.zhaoMeili}</div>
-                <div className="text-gray-600">{t.landing.hero.chiefProductManager}</div>
-              </figcaption>
-            </figure>
-          </div>
-        </section>
 
         {/* Pricing CTA */}
         <section className="bg-slate-900 py-20">
@@ -494,74 +395,7 @@ const Landing = () => {
           </div>
         </section>
 
-        {/* Everything You Need */}
-        <section className="py-16 border-t">
-          <div className="mx-auto max-w-7xl px-6 text-center">
-            <h2 className="text-base font-semibold text-indigo-600">{t.landing.hero.whyChoosePRD}</h2>
-            <p className="font-display text-3xl sm:text-4xl font-bold mt-2 mb-6">{t.landing.hero.aiWorksForYou}</p>
-            <p className="text-lg mb-12">{t.landing.hero.prdCustomizedForYou}</p>
-          </div>
-          <div className="relative overflow-hidden pt-12">
-            <div className="mx-auto max-w-7xl px-6">
-              <div className="glass-effect rounded-xl premium-shadow w-full aspect-video bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center">
-                <div className="text-center">
-                  <Target className="h-20 w-20 text-indigo-500 mx-auto mb-4" />
-                  <p className="text-xl text-gray-700">{t.landing.hero.productFeatureScreenshots}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* Feature Bullets */}
-        <section className="py-6">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              <div className="relative pl-9">
-                <div className="absolute left-1 top-1 h-5 w-5 text-indigo-500">
-                  <CheckCircle />
-                </div>
-                <dt className="inline font-semibold text-gray-900">{t.landing.hero.aiMultimodalAnalysis}。</dt>{' '}
-                <dd className="inline text-gray-700">{t.landing.hero.combineWebpageCode}</dd>
-              </div>
-              <div className="relative pl-9">
-                <div className="absolute left-1 top-1 h-5 w-5 text-indigo-500">
-                  <CheckCircle />
-                </div>
-                <dt className="inline font-semibold text-gray-900">{t.landing.hero.dataSecurityPrivacy}</dt>{' '}
-                <dd className="inline text-gray-700">{t.landing.hero.allDataOnlyForProcessing}</dd>
-              </div>
-              <div className="relative pl-9">
-                <div className="absolute left-1 top-1 h-5 w-5 text-indigo-500">
-                  <CheckCircle />
-                </div>
-                <dt className="inline font-semibold text-gray-900">{t.landing.hero.customConfiguration}</dt>{' '}
-                <dd className="inline text-gray-700">{t.landing.hero.saveCompanyRoleInfo}</dd>
-              </div>
-              <div className="relative pl-9">
-                <div className="absolute left-1 top-1 h-5 w-5 text-indigo-500">
-                  <CheckCircle />
-                </div>
-                <dt className="inline font-semibold text-gray-900">{t.landing.hero.customDocumentTemplates}</dt>{' '}
-                <dd className="inline text-gray-700">{t.landing.hero.useYourOwnTemplates}</dd>
-              </div>
-              <div className="relative pl-9">
-                <div className="absolute left-1 top-1 h-5 w-5 text-indigo-500">
-                  <CheckCircle />
-                </div>
-                <dt className="inline font-semibold text-gray-900">{t.landing.hero.onlineCustomerService}</dt>{' '}
-                <dd className="inline text-gray-700">{t.landing.hero.ourTeamAndCommunity}</dd>
-              </div>
-              <div className="relative pl-9">
-                <div className="absolute left-1 top-1 h-5 w-5 text-indigo-500">
-                  <CheckCircle />
-                </div>
-                <dt className="inline font-semibold text-gray-900">{t.landing.hero.teamAccount}</dt>{' '}
-                <dd className="inline text-gray-700">{t.landing.hero.centralizedBilling}</dd>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* How It Works */}
         <section id="how-it-works" className="py-20 px-6 bg-slate-50">
