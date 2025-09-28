@@ -7,11 +7,11 @@
   // ===========================================
   // DOM 元素引用
   // ===========================================
-  
+
   // 选项卡相关
   const tabButtons = document.querySelectorAll('.tab-button');
   const tabContents = document.querySelectorAll('.tab-content');
-  
+
   // 功能1：智能Prompt生成
   const selectElementBtn = document.getElementById('selectElementBtn');
   const exitSelectionBtn = document.getElementById('exitSelectionBtn');
@@ -33,7 +33,7 @@
   const copySelTextBtn2 = document.getElementById('copySelTextBtn2');
   const copySelCssBtn2 = document.getElementById('copySelCssBtn2');
   const copySelFontsBtn2 = document.getElementById('copySelFontsBtn2');
-  
+
   // 新增元素信息区域
   const selAttrsPreview = document.getElementById('selAttrsPreview');
   const selDimensionsPreview = document.getElementById('selDimensionsPreview');
@@ -46,7 +46,7 @@
   const copySelPathBtn = document.getElementById('copySelPathBtn');
   const copySelPageInfoBtn = document.getElementById('copySelPageInfoBtn');
   const copySelScreenshotBtn = document.getElementById('copySelScreenshotBtn');
-  
+
   // 功能2：页面数据提取
   const pageInfoDisplay = document.getElementById('pageInfoDisplay');
   const refreshPageBtn = document.getElementById('refreshPageBtn');
@@ -61,7 +61,7 @@
   const copyTextBtn = document.getElementById('copyTextBtn');
   const copyCssBtn = document.getElementById('copyCssBtn');
   const copyFontsBtn = document.getElementById('copyFontsBtn');
-  
+
   // 功能3：PRD生成
   const ideaInput = document.getElementById('ideaInput');
   const generateBtn = document.getElementById('generateBtn');
@@ -69,26 +69,26 @@
   const outputEl = document.getElementById('output');
   const copyBtn = document.getElementById('copyBtn');
   const newChatBtn = document.getElementById('newChatBtn');
-  
+
   // ===========================================
   // 全局状态管理
   // ===========================================
-  
+
   // 当前激活的选项卡
   let activeTab = 'prompt';
-  
+
   // 智能Prompt功能状态
   let isSelectionMode = false;
   let currentElementData = null;
   let lastElementTimestamp = 0;
-  
+
   // 页面数据功能状态
   let currentPageData = null;
-  
+
   // PRD生成功能状态
   let dbConversationId = null; // 本地数据库会话ID（由后端返回）
   let difyConversationId = null; // Dify 会话ID（由后端返回）
-  
+
   // 流式渲染控制（避免抖动）
   let hasHtml = false; // 一旦收到 HTML（partial/full），改为仅用 HTML 通道渲染
   let pendingHtml = '';
@@ -97,26 +97,26 @@
 
   // API配置
   const API_BASE_URL = (typeof window !== 'undefined' && window.__VITE_API_BASE_URL__) || 'http://localhost:8001';
-  
+
   // ===========================================
   // 工具函数
   // ===========================================
-  
+
   function setLoading(loading) {
     if (loadingEl) loadingEl.style.display = loading ? 'block' : 'none';
     if (generateBtn) generateBtn.disabled = loading;
   }
-  
+
   // 显示状态消息
   function showStatusMessage(message, type = 'info') {
     // 创建状态消息元素
     const statusEl = document.createElement('div');
     statusEl.className = `status-message ${type}`;
     statusEl.textContent = message;
-    
+
     // 添加到页面
     document.body.appendChild(statusEl);
-    
+
     // 自动移除
     setTimeout(() => {
       if (statusEl.parentNode) {
@@ -124,13 +124,13 @@
       }
     }, 3000);
   }
-  
+
   // 截断文本
   function truncateText(text, maxLength) {
     if (!text) return '';
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
   }
-  
+
   // 格式化文件大小
   function formatFileSize(bytes) {
     if (bytes === 0) return '0 B';
@@ -139,7 +139,7 @@
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
-  
+
   // 复制到剪贴板
   async function copyToClipboard(text, buttonEl, originalText) {
     try {
@@ -156,18 +156,18 @@
       }, 1500);
     }
   }
-  
+
   // Markdown渲染（简单版本）
   function renderMarkdown(text) {
     if (outputEl) {
       outputEl.textContent = text == null ? '' : String(text);
     }
   }
-  
+
   // ===========================================
   // 选项卡功能
   // ===========================================
-  
+
   function switchTab(tabName) {
     // 更新按钮状态
     tabButtons.forEach(btn => {
@@ -177,7 +177,7 @@
         btn.classList.remove('active');
       }
     });
-    
+
     // 更新内容显示
     tabContents.forEach(content => {
       if (content.id === tabName + '-tab') {
@@ -186,9 +186,9 @@
         content.classList.remove('active');
       }
     });
-    
+
     activeTab = tabName;
-    
+
     // 根据切换的选项卡执行特定初始化
     if (tabName === 'prompt') {
       updatePageInfo(); // 更新页面信息
@@ -196,15 +196,15 @@
       updatePageInfoDisplay(); // 更新页面数据显示
     }
   }
-  
+
   // ===========================================
   // 功能1：智能Prompt生成
   // ===========================================
-  
+
   // 更新页面信息显示（用于Prompt功能）
   async function updatePageInfo() {
     if (!currentPageInfo) return;
-    
+
     try {
       // 获取当前激活的标签页
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -217,26 +217,26 @@
         `;
         return;
       }
-      
+
       const response = await new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error('Request timeout'));
         }, 5000); // 5秒超时
-        
+
         chrome.tabs.sendMessage(tabs[0].id, {
           action: 'getPageInfo'
         }, (response) => {
           clearTimeout(timeout);
-          
+
           if (chrome.runtime.lastError) {
             reject(new Error(chrome.runtime.lastError.message));
             return;
           }
-          
+
           resolve(response);
         });
       });
-      
+
       if (response?.success && response.data) {
         const pageData = response.data;
         currentPageInfo.innerHTML = `
@@ -268,22 +268,22 @@
       `;
     }
   }
-  
+
   // 开始轮询检查元素选择
   function startElementPolling() {
     setInterval(async () => {
       try {
         const result = await chrome.storage.session.get(['elementSelectedData', 'elementSelectedTimestamp']);
-        
+
         if (result.elementSelectedTimestamp && result.elementSelectedTimestamp > lastElementTimestamp) {
           lastElementTimestamp = result.elementSelectedTimestamp;
           currentElementData = result.elementSelectedData;
-          
+
           console.log('[Prompt Generator] New element selected:', currentElementData);
-          
+
           // 渲染所选元素详情
           renderSelectedElementDetails(currentElementData);
-          
+
           // 截图并生成AI指令
           try {
             const elementScreenshot = await captureElementScreenshot(currentElementData);
@@ -291,14 +291,14 @@
           } catch (error) {
             console.warn('[Screenshot] 截图失败，继续不带图片生成:', error);
           }
-          
+
           // 生成AI指令
           await generatePromptWithAI(currentElementData);
-          
+
           // 自动退出选择模式
           isSelectionMode = false;
           updateSelectionButtons();
-          
+
           // 清除storage中的数据
           await chrome.storage.session.remove(['elementSelectedData', 'elementSelectedTimestamp']);
         }
@@ -331,7 +331,7 @@
       if (selTextPreview) selTextPreview.textContent = el.directText || el.innerText || '';
 
       // CSS（仅挑重要属性，避免过长）
-      const importantProps = ['display','position','width','height','background','background-color','color','font-size','font-family','font-weight','line-height','border','border-radius','padding','margin','flex-direction','justify-content','align-items'];
+      const importantProps = ['display', 'position', 'width', 'height', 'background', 'background-color', 'color', 'font-size', 'font-family', 'font-weight', 'line-height', 'border', 'border-radius', 'padding', 'margin', 'flex-direction', 'justify-content', 'align-items'];
       let cssLines = [];
       if (el.styles) {
         Object.entries(el.styles).forEach(([prop, val]) => {
@@ -429,19 +429,19 @@ Y坐标: ${Math.round(dimensions.y)}px
       console.error('[Prompt] renderSelectedElementDetails error', e);
     }
   }
-  
+
   // 生成AI指令（使用OpenRouter API）
   // OpenRouter API 配置
   const OPENROUTER_API_KEY = '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';
   const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
-  
+
   // 测试API连接
   async function testOpenRouterAPI() {
     try {
       console.log('[API Test] Testing OpenRouter connection...');
       console.log('[API Test] API Key length:', OPENROUTER_API_KEY.length);
       console.log('[API Test] API Key starts with:', OPENROUTER_API_KEY.substring(0, 10) + '...');
-      
+
       // 先测试简单的模型列表API
       const modelsResponse = await fetch(`${OPENROUTER_BASE_URL}/models`, {
         method: 'GET',
@@ -451,12 +451,12 @@ Y坐标: ${Math.round(dimensions.y)}px
           'X-Title': 'AI-Programming-Prompt-Generator'
         }
       });
-      
+
       console.log('[API Test] Models API status:', modelsResponse.status);
-      
+
       if (modelsResponse.ok) {
         console.log('[API Test] ✅ API Key验证成功，开始测试聊天API');
-        
+
         // 测试聊天API
         const testResponse = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
           method: 'POST',
@@ -477,11 +477,11 @@ Y坐标: ${Math.round(dimensions.y)}px
             max_tokens: 10
           })
         });
-        
+
         console.log('[API Test] Chat API status:', testResponse.status);
         const testResult = await testResponse.text();
         console.log('[API Test] Chat API response:', testResult);
-        
+
         if (testResponse.ok) {
           console.log('[API Test] ✅ 聊天API测试成功');
           return true;
@@ -504,102 +504,102 @@ Y坐标: ${Math.round(dimensions.y)}px
       return false;
     }
   }
-  
+
   // 构建智能prompt模板
   function buildPromptTemplate(elementData) {
     console.log('[Prompt Builder] 原始elementData:', elementData);
-    
+
     const element = elementData.element || elementData;
     const pageContext = elementData.pageContext || {};
-    
+
     console.log('[Prompt Builder] 提取的element:', element);
     console.log('[Prompt Builder] pageContext:', pageContext);
-    
+
     // 提取核心信息
     const tagName = element.tagName || 'div';
     const textContent = element.directText || element.innerText || '';
     const outerHTML = element.outerHTML || '';
     const innerHTML = element.innerHTML || '';
-    
+
     console.log('[Prompt Builder] 基础信息:', {
-      tagName, 
+      tagName,
       textContent: textContent.substring(0, 100),
       outerHTMLLength: outerHTML.length,
       innerHTMLLength: innerHTML.length
     });
-    
+
     // 处理样式信息
     const styles = element.styles || {};
     console.log('[Prompt Builder] 原始styles:', styles);
-    
+
     const importantStyles = [
       // 布局和定位
       'display', 'position', 'top', 'right', 'bottom', 'left', 'z-index',
       'width', 'height', 'min-width', 'min-height', 'max-width', 'max-height',
-      
+
       // 背景和颜色
-      'background', 'background-color', 'background-image', 'background-size', 
+      'background', 'background-color', 'background-image', 'background-size',
       'background-position', 'background-repeat', 'background-attachment',
       'color', 'opacity',
-      
+
       // 字体和文本
       'font-size', 'font-family', 'font-weight', 'font-style', 'font-variant',
       'line-height', 'text-align', 'text-decoration', 'text-transform',
       'letter-spacing', 'word-spacing', 'text-shadow', 'white-space',
-      
+
       // 边框和轮廓
       'border', 'border-width', 'border-style', 'border-color', 'border-radius',
       'border-top', 'border-right', 'border-bottom', 'border-left',
       'outline', 'outline-width', 'outline-style', 'outline-color',
-      
+
       // 间距
       'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
       'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
-      
+
       // 视觉效果
       'box-shadow', 'text-shadow', 'filter', 'backdrop-filter',
-      
+
       // Flexbox
-      'flex', 'flex-direction', 'flex-wrap', 'justify-content', 'align-items', 
+      'flex', 'flex-direction', 'flex-wrap', 'justify-content', 'align-items',
       'align-content', 'flex-grow', 'flex-shrink', 'flex-basis', 'gap',
-      
+
       // Grid
       'grid-template-columns', 'grid-template-rows', 'grid-gap', 'grid-area',
       'justify-items', 'align-items',
-      
+
       // 动画和过渡
       'transition', 'transition-property', 'transition-duration', 'transition-timing-function',
       'animation', 'animation-name', 'animation-duration', 'animation-timing-function',
       'transform', 'transform-origin',
-      
+
       // 其他重要属性
       'overflow', 'overflow-x', 'overflow-y', 'visibility', 'cursor',
       'user-select', 'pointer-events', 'box-sizing', 'vertical-align'
     ];
-    
+
     const relevantStyles = {};
     importantStyles.forEach(prop => {
-      if (styles[prop] && 
-          styles[prop] !== 'initial' && 
-          styles[prop] !== '' && 
-          !(styles[prop] === 'auto' && !['width', 'height', 'margin', 'padding'].includes(prop)) &&
-          !(styles[prop] === 'none' && !['border', 'text-decoration', 'transform', 'animation'].includes(prop))) {
+      if (styles[prop] &&
+        styles[prop] !== 'initial' &&
+        styles[prop] !== '' &&
+        !(styles[prop] === 'auto' && !['width', 'height', 'margin', 'padding'].includes(prop)) &&
+        !(styles[prop] === 'none' && !['border', 'text-decoration', 'transform', 'animation'].includes(prop))) {
         relevantStyles[prop] = styles[prop];
       }
     });
-    
+
     console.log('[Prompt Builder] 过滤后的relevantStyles:', relevantStyles);
-    
+
     // 字体信息
     const fontInfo = element.fonts || {};
     const usedFonts = fontInfo.used || [];
     console.log('[Prompt Builder] 字体信息:', fontInfo, usedFonts);
-    
+
     // 构建详细的prompt
     const stylesCount = Object.keys(relevantStyles).length;
     const hasHTML = outerHTML.length > 0;
     const hasText = textContent.length > 0;
-    
+
     const prompt = `你是一位专业的前端开发专家。请基于以下真实网页元素的精确数据${elementData.screenshot ? '和提供的元素截图' : ''}，生成一个**完全匹配原样式**的HTML代码。这个代码将用于完美复刻原始元素的视觉效果和交互体验。
 
 ## 📷 重要提示
@@ -682,7 +682,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
 
     console.log('[Prompt Builder] 最终prompt长度:', prompt.length);
     console.log('[Prompt Builder] Prompt预览:', prompt.substring(0, 500) + '...');
-    
+
     // 显示完整的传递给AI的数据摘要
     console.log('[Prompt Builder] === 传递给AI的数据摘要 ===');
     console.log('HTML长度:', outerHTML.length, '字符');
@@ -695,90 +695,90 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
 
     return prompt;
   }
-  
+
   // 截取元素图片
   async function captureElementScreenshot(elementData) {
     try {
       console.log('[Screenshot] 开始截图，元素数据:', elementData);
-      
+
       // 获取当前标签页
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tabs[0]) {
         throw new Error('无法获取当前标签页');
       }
-      
+
       // 截取整个可见区域
       const fullScreenshot = await chrome.tabs.captureVisibleTab(tabs[0].windowId, {
         format: 'png',
         quality: 100
       });
-      
+
       console.log('[Screenshot] 全屏截图完成，开始裁剪元素区域');
-      
+
       // 获取元素位置信息
       const element = elementData.element || elementData;
       const rect = element.rect || element.dimensions;
-      
+
       if (!rect) {
         console.warn('[Screenshot] 缺少元素位置信息，返回全屏截图');
         return fullScreenshot;
       }
-      
+
       // 创建Canvas裁剪元素区域
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
-      
+
       return new Promise((resolve, reject) => {
         img.onload = () => {
           try {
             // 获取设备像素比
             const devicePixelRatio = window.devicePixelRatio || 1;
-            
+
             // 计算实际截图尺寸（考虑设备像素比）
             const actualX = rect.x * devicePixelRatio;
             const actualY = rect.y * devicePixelRatio;
             const actualWidth = rect.width * devicePixelRatio;
             const actualHeight = rect.height * devicePixelRatio;
-            
+
             // 设置Canvas尺寸
             canvas.width = actualWidth;
             canvas.height = actualHeight;
-            
-            console.log('[Screenshot] 裁剪区域:', { 
-              x: actualX, 
-              y: actualY, 
-              width: actualWidth, 
+
+            console.log('[Screenshot] 裁剪区域:', {
+              x: actualX,
+              y: actualY,
+              width: actualWidth,
               height: actualHeight,
-              devicePixelRatio 
+              devicePixelRatio
             });
-            
+
             // 裁剪元素区域
             ctx.drawImage(
-              img, 
+              img,
               actualX, actualY, actualWidth, actualHeight,  // 源区域
               0, 0, actualWidth, actualHeight               // 目标区域
             );
-            
+
             // 转换为base64
             const croppedScreenshot = canvas.toDataURL('image/png', 1.0);
             console.log('[Screenshot] 元素截图完成，图片大小:', croppedScreenshot.length);
-            
+
             resolve(croppedScreenshot);
           } catch (error) {
             console.error('[Screenshot] 图片处理失败:', error);
             resolve(fullScreenshot); // 失败时返回全屏截图
           }
         };
-        
+
         img.onerror = () => {
           console.error('[Screenshot] 图片加载失败');
           resolve(fullScreenshot); // 失败时返回全屏截图
         };
-        
+
         img.src = fullScreenshot;
       });
-      
+
     } catch (error) {
       console.error('[Screenshot] 截图失败:', error);
       throw error;
@@ -788,10 +788,10 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
   // 调用OpenRouter API生成prompt
   async function generatePromptWithAI(elementData) {
     if (!elementData || !promptOutput) return;
-    
+
     try {
       showStatusMessage('🔮 AI正在提取元素代码...', 'info');
-      
+
       // 显示加载状态
       promptOutput.innerHTML = `
         <div class="loading-container" style="text-align: center; padding: 40px 20px; color: #666;">
@@ -806,20 +806,20 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
           </style>
         </div>
       `;
-      
+
       // 构建智能prompt
       const promptTemplate = buildPromptTemplate(elementData);
-      
+
       console.log('[OpenRouter Debug] API Key:', OPENROUTER_API_KEY ? 'Present' : 'Missing');
       console.log('[OpenRouter Debug] Base URL:', OPENROUTER_BASE_URL);
       console.log('[OpenRouter Debug] Prompt length:', promptTemplate.length);
-      
+
       // 构建消息内容，支持图片
       const messageContent = [{
         type: 'text',
         text: promptTemplate.substring(0, 8000) // 限制prompt长度避免过长
       }];
-      
+
       // 如果有截图，添加到消息中
       if (elementData.screenshot) {
         console.log('[OpenRouter Debug] 包含元素截图，图片大小:', elementData.screenshot.length);
@@ -846,12 +846,12 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         max_tokens: 4000,
         stream: false
       };
-      
+
       console.log('[OpenRouter Debug] Request body:', JSON.stringify(requestBody, null, 2));
-      
+
       // 先测试API连接（临时禁用以排查问题）
       console.log('[Debug] 跳过API测试，直接尝试调用...');
-      
+
       // 调用OpenRouter API
       const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
         method: 'POST',
@@ -863,26 +863,26 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         },
         body: JSON.stringify(requestBody)
       });
-      
+
       console.log('[OpenRouter Debug] Response status:', response.status);
       console.log('[OpenRouter Debug] Response headers:', [...response.headers.entries()]);
-      
+
       const responseText = await response.text();
       console.log('[OpenRouter Debug] Response text:', responseText);
-      
+
       if (!response.ok) {
         throw new Error(`OpenRouter API Error ${response.status}: ${responseText}`);
       }
-      
+
       const result = JSON.parse(responseText);
       console.log('[OpenRouter Debug] Parsed result:', result);
-      
+
       const aiPrompt = result.choices?.[0]?.message?.content || '生成失败';
-      
+
       if (!aiPrompt || aiPrompt === '生成失败') {
         throw new Error('API返回内容为空或格式异常');
       }
-      
+
       // 显示生成的代码
       promptOutput.innerHTML = `
         <div class="prompt-container">
@@ -899,22 +899,22 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
           </div>
         </div>
       `;
-      
+
       // 安全地设置代码文本，避免HTML被渲染
       const preElement = promptOutput.querySelector('.prompt-text');
       if (preElement) {
         preElement.textContent = aiPrompt; // 使用 textContent 而不是 innerHTML
       }
-      
+
       // 显示复制和清除按钮
       if (copyPromptBtn) copyPromptBtn.style.display = 'inline-flex';
       if (clearPromptBtn) clearPromptBtn.style.display = 'inline-flex';
-      
+
       showStatusMessage('✔ 元素代码提取完成！', 'success');
     } catch (error) {
       console.error('[Prompt Generator] Error generating AI prompt:', error);
       console.error('[Prompt Generator] Error stack:', error.stack);
-      
+
       let errorMessage = error.message;
       if (errorMessage.includes('Failed to fetch')) {
         errorMessage = '网络连接失败，请检查网络连接';
@@ -925,9 +925,9 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       } else if (errorMessage.includes('403')) {
         errorMessage = 'API访问被拒绝，请检查账户余额或权限';
       }
-      
+
       showStatusMessage('✖ 元素代码提取失败: ' + errorMessage, 'error');
-      
+
       // 显示详细错误信息
       if (promptOutput) {
         promptOutput.innerHTML = `
@@ -952,7 +952,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       }
     }
   }
-  
+
   // 处理选择元素按钮点击
   async function handleSelectElement() {
     try {
@@ -962,26 +962,26 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         showStatusMessage('✖ 无法获取当前标签页', 'error');
         return;
       }
-      
+
       const response = await new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error('Request timeout'));
         }, 5000);
-        
+
         chrome.tabs.sendMessage(tabs[0].id, {
           action: 'enterSelectionMode'
         }, (response) => {
           clearTimeout(timeout);
-          
+
           if (chrome.runtime.lastError) {
             reject(new Error(chrome.runtime.lastError.message));
             return;
           }
-          
+
           resolve(response);
         });
       });
-      
+
       if (response?.success) {
         isSelectionMode = true;
         updateSelectionButtons();
@@ -994,7 +994,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       showStatusMessage('✖ 激活选择模式失败', 'error');
     }
   }
-  
+
   // 处理退出选择按钮点击
   async function handleExitSelection() {
     try {
@@ -1004,26 +1004,26 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         showStatusMessage('✖ 无法获取当前标签页', 'error');
         return;
       }
-      
+
       await new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error('Request timeout'));
         }, 5000);
-        
+
         chrome.tabs.sendMessage(tabs[0].id, {
           action: 'exitSelectionMode'
         }, (response) => {
           clearTimeout(timeout);
-          
+
           if (chrome.runtime.lastError) {
             reject(new Error(chrome.runtime.lastError.message));
             return;
           }
-          
+
           resolve(response);
         });
       });
-      
+
       isSelectionMode = false;
       updateSelectionButtons();
       showStatusMessage('选择模式已退出', 'success');
@@ -1032,11 +1032,11 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       showStatusMessage('✖ 退出选择模式失败', 'error');
     }
   }
-  
+
   // 更新选择按钮状态
   function updateSelectionButtons() {
     if (!selectElementBtn || !exitSelectionBtn) return;
-    
+
     if (isSelectionMode) {
       selectElementBtn.style.display = 'none';
       exitSelectionBtn.style.display = 'inline-flex';
@@ -1045,7 +1045,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       exitSelectionBtn.style.display = 'none';
     }
   }
-  
+
   // 处理复制AI指令
   async function handleCopyPrompt() {
     const promptText = promptOutput?.querySelector('.prompt-text')?.textContent;
@@ -1053,11 +1053,11 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       showStatusMessage('✖ 没有可复制的代码', 'error');
       return;
     }
-    
+
     try {
       await navigator.clipboard.writeText(promptText);
       showStatusMessage('✔ 元素代码已复制到剪贴板！', 'success');
-      
+
       // 临时改变按钮文本
       const originalText = copyPromptBtn.textContent;
       copyPromptBtn.textContent = '已复制!';
@@ -1069,36 +1069,36 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       showStatusMessage('✖ 复制失败，请手动选择文本复制', 'error');
     }
   }
-  
+
   // 处理清除AI指令输出
   function handleClearPrompt() {
     if (promptOutput) {
       promptOutput.innerHTML = '<div class="output-placeholder">选择页面元素后，提取的完整代码将显示在这里</div>';
     }
-    
+
     if (copyPromptBtn) copyPromptBtn.style.display = 'none';
     if (clearPromptBtn) clearPromptBtn.style.display = 'none';
-    
+
     currentElementData = null;
     showStatusMessage('输出已清除', 'success');
   }
-  
+
   // ===========================================
   // 功能2：页面数据提取
   // ===========================================
-  
+
   // 获取当前页面数据
   async function getCurrentPageData() {
     try {
       console.log('[Page Analyzer] Getting current page data...');
-      
+
       // 检查Chrome扩展API是否可用
       if (!chrome || !chrome.tabs) {
         console.error('[Page Analyzer] Chrome extension API not available');
         updatePageInfoDisplay(null, 'Chrome extension API not available');
         return null;
       }
-      
+
       // 获取当前激活的标签页
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tabs[0]) {
@@ -1106,26 +1106,26 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         updatePageInfoDisplay(null, 'No active tab found');
         return null;
       }
-      
+
       const response = await new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error('Request timeout'));
         }, 10000); // 10秒超时
-        
-        chrome.tabs.sendMessage(tabs[0].id, { 
-          action: 'getCurrentPageData' 
+
+        chrome.tabs.sendMessage(tabs[0].id, {
+          action: 'getCurrentPageData'
         }, (response) => {
           clearTimeout(timeout);
-          
+
           if (chrome.runtime.lastError) {
             reject(new Error(chrome.runtime.lastError.message));
             return;
           }
-          
+
           resolve(response);
         });
       });
-      
+
       if (response && response.success) {
         currentPageData = response.data;
         updatePageInfoDisplay(currentPageData);
@@ -1142,11 +1142,11 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       return null;
     }
   }
-  
+
   // 更新页面信息显示（用于页面分析功能）
   function updatePageInfoDisplay(pageData, error) {
     if (!pageInfoDisplay) return;
-    
+
     if (error) {
       pageInfoDisplay.innerHTML = `
         <div class="page-info-error">
@@ -1157,7 +1157,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       if (togglePageDataBtn) togglePageDataBtn.style.display = 'none';
       return;
     }
-    
+
     if (!pageData) {
       pageInfoDisplay.innerHTML = `
         <div class="page-info-empty">
@@ -1167,11 +1167,11 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       if (togglePageDataBtn) togglePageDataBtn.style.display = 'none';
       return;
     }
-    
+
     const domain = pageData.domain || '未知域名';
     const title = pageData.title || '未知标题';
     const url = pageData.url || '';
-    
+
     pageInfoDisplay.innerHTML = `
       <div class="page-info-content">
         <div class="page-info-header">
@@ -1195,7 +1195,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         ` : ''}
       </div>
     `;
-    
+
     // 如果有详细的页面数据，显示查看按钮
     if (pageData.htmlSource || pageData.textContent || pageData.styles || pageData.fonts) {
       if (togglePageDataBtn) togglePageDataBtn.style.display = 'block';
@@ -1204,19 +1204,19 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       if (togglePageDataBtn) togglePageDataBtn.style.display = 'none';
     }
   }
-  
+
   // 更新页面数据详情显示
   function updatePageDataDetails(pageData) {
     if (!pageData) return;
-    
+
     // 更新HTML源码预览
     if (pageData.htmlSource && htmlPreview) {
-      const truncatedHtml = pageData.htmlSource.length > 5000 
+      const truncatedHtml = pageData.htmlSource.length > 5000
         ? pageData.htmlSource.substring(0, 5000) + '\n\n... (显示前5000字符，完整内容可复制)'
         : pageData.htmlSource;
       htmlPreview.textContent = truncatedHtml;
     }
-    
+
     // 更新页面文本预览
     if (pageData.textContent && textPreview) {
       let textSummary = '';
@@ -1230,7 +1230,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       if (pageData.textContent.paragraphs) {
         textSummary += '=== 页面段落 ===\n';
         pageData.textContent.paragraphs.slice(0, 10).forEach((p, i) => {
-          textSummary += `${i+1}. ${p.substring(0, 200)}${p.length > 200 ? '...' : ''}\n`;
+          textSummary += `${i + 1}. ${p.substring(0, 200)}${p.length > 200 ? '...' : ''}\n`;
         });
         if (pageData.textContent.paragraphs.length > 10) {
           textSummary += `\n... 还有 ${pageData.textContent.paragraphs.length - 10} 个段落\n`;
@@ -1239,7 +1239,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       if (pageData.textContent.links) {
         textSummary += '\n=== 页面链接 ===\n';
         pageData.textContent.links.slice(0, 20).forEach((link, i) => {
-          textSummary += `${i+1}. ${link.text} -> ${link.href}\n`;
+          textSummary += `${i + 1}. ${link.text} -> ${link.href}\n`;
         });
         if (pageData.textContent.links.length > 20) {
           textSummary += `... 还有 ${pageData.textContent.links.length - 20} 个链接\n`;
@@ -1247,14 +1247,14 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       }
       textPreview.textContent = textSummary;
     }
-    
+
     // 更新CSS样式预览
     if (pageData.styles && cssPreview) {
       let cssSummary = '';
       if (pageData.styles.externalStylesheets?.length > 0) {
         cssSummary += '=== 外部样式表 ===\n';
         pageData.styles.externalStylesheets.forEach((sheet, i) => {
-          cssSummary += `${i+1}. ${sheet.href || sheet.title || '未知样式表'}\n`;
+          cssSummary += `${i + 1}. ${sheet.href || sheet.title || '未知样式表'}\n`;
         });
         cssSummary += '\n';
       }
@@ -1277,11 +1277,11 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       }
       cssPreview.textContent = cssSummary;
     }
-    
+
     // 更新字体信息预览
     if (pageData.fonts && fontsPreview) {
       let fontsSummary = '';
-      
+
       // 字体使用总结
       if (pageData.fonts.summary) {
         fontsSummary += '=== 字体使用统计 ===\n';
@@ -1299,12 +1299,12 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         }
         fontsSummary += '\n';
       }
-      
+
       // 字体文件详情
       if (pageData.fonts.fontResources?.length > 0) {
         fontsSummary += '=== 字体文件详情 ===\n';
         pageData.fonts.fontResources.forEach((font, i) => {
-          fontsSummary += `${i+1}. ${font.name}\n`;
+          fontsSummary += `${i + 1}. ${font.name}\n`;
           fontsSummary += `   URL: ${font.url}\n`;
           fontsSummary += `   域名: ${font.domain}\n`;
           fontsSummary += `   格式: ${font.format}\n`;
@@ -1316,16 +1316,16 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
           fontsSummary += '\n';
         });
       }
-      
+
       // 字体族使用
       if (pageData.fonts.used?.length > 0) {
         fontsSummary += '=== 页面使用的字体族 ===\n';
         pageData.fonts.used.forEach((font, i) => {
-          fontsSummary += `${i+1}. ${font}\n`;
+          fontsSummary += `${i + 1}. ${font}\n`;
         });
         fontsSummary += '\n';
       }
-      
+
       // @font-face声明
       if (pageData.fonts.webFonts?.length > 0) {
         const fontFaceDeclarations = pageData.fonts.webFonts.filter(f => f.cssText || f.src);
@@ -1333,7 +1333,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
           fontsSummary += '=== @font-face声明 ===\n';
           fontFaceDeclarations.slice(0, 5).forEach((font, i) => {
             if (font.family) {
-              fontsSummary += `${i+1}. ${font.family}\n`;
+              fontsSummary += `${i + 1}. ${font.family}\n`;
               if (font.weight) fontsSummary += `   字重: ${font.weight}\n`;
               if (font.style) fontsSummary += `   样式: ${font.style}\n`;
               if (font.display) fontsSummary += `   显示: ${font.display}\n`;
@@ -1351,11 +1351,11 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
           }
         }
       }
-      
+
       fontsPreview.textContent = fontsSummary;
     }
   }
-  
+
   // 切换页面数据显示
   function togglePageData() {
     if (pageDataDetails && togglePageDataBtn) {
@@ -1368,22 +1368,22 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       }
     }
   }
-  
+
   // ===========================================
   // 功能3：PRD生成
   // ===========================================
-  
+
   // 生成包含页面数据的上下文提示
   function generatePageContext(pageData, userIdea) {
     if (!pageData || !includePageDataCheckbox?.checked) {
       return userIdea;
     }
-    
+
     let context = `基于当前网页信息，${userIdea}\n\n`;
     context += `【当前网页信息】\n`;
     context += `网站: ${pageData.title} (${pageData.domain})\n`;
     context += `网址: ${pageData.url}\n`;
-    
+
     if (pageData.textContent) {
       context += `\n【页面内容概览】\n`;
       if (pageData.textContent.headings?.length > 0) {
@@ -1394,7 +1394,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         context += `内容摘要: ${sampleText}...\n`;
       }
     }
-    
+
     if (pageData.styles) {
       context += `\n【技术信息】\n`;
       if (pageData.styles.externalStylesheets?.length > 0) {
@@ -1414,12 +1414,12 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         context += `字体格式: ${pageData.fonts.summary.fontFormats.join(', ')}\n`;
       }
     }
-    
+
     context += `\n【用户需求】\n${userIdea}`;
-    
+
     return context;
   }
-  
+
   // 主要的PRD生成处理函数
   async function handleGenerate() {
     const idea = (ideaInput.value || '').trim();
@@ -1427,7 +1427,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       if (outputEl) outputEl.textContent = '请先输入你的应用想法。';
       return;
     }
-    
+
     setLoading(true);
     if (outputEl) outputEl.textContent = '';
     if (copyBtn) copyBtn.style.display = 'none';
@@ -1442,7 +1442,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         }
         contextualIdea = generatePageContext(currentPageData, idea);
       }
-      
+
       // 构建请求体
       const history = [];
       const body = {
@@ -1478,15 +1478,15 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       let acc = '';
       if (outputEl) outputEl.textContent = '';
 
-      const resp = await fetch(`${API_BASE_URL}/api/chat`, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(body) 
+      const resp = await fetch(`${API_BASE_URL}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
       });
-      
+
       // 清空输入框
       if (ideaInput) ideaInput.value = '';
-      
+
       if (!resp.ok || !resp.body) {
         const text = await resp.text();
         throw new Error(`HTTP ${resp.status}: ${text}`);
@@ -1499,24 +1499,24 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         const chunk = decoder.decode(value, { stream: true });
         buf += chunk;
-        
+
         let idx;
         while ((idx = buf.indexOf('\n')) >= 0) {
           const line = buf.slice(0, idx);
           buf = buf.slice(idx + 1);
-          
+
           if (!line.trim()) continue;
-          
+
           if (line.startsWith('data: ')) {
             const data = line.slice(6).trim();
             if (data === '[DONE]') break;
-            
+
             try {
               const json = JSON.parse(data);
-              
+
               if (json.choices && json.choices[0]?.delta?.content) {
                 const delta = json.choices[0].delta.content;
                 acc += delta;
@@ -1561,18 +1561,18 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       } else if (acc) {
         renderMarkdown(acc);
       }
-      
+
       if ((acc || hasHtml) && copyBtn) {
         copyBtn.style.display = 'inline-flex';
       }
-      
+
     } catch (e) {
       if (outputEl) outputEl.textContent = `生成失败：${e?.message || e}`;
     } finally {
       setLoading(false);
     }
   }
-  
+
   // PRD复制功能
   async function handleCopy() {
     try {
@@ -1586,7 +1586,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       console.error('[PRD Generator] Copy failed:', error);
     }
   }
-  
+
   // 新对话：清空会话ID与展示
   function handleNewChat() {
     dbConversationId = null;
@@ -1594,11 +1594,11 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
     if (outputEl) outputEl.innerHTML = '';
     if (ideaInput) ideaInput.focus();
   }
-  
+
   // ===========================================
   // 事件监听器绑定
   // ===========================================
-  
+
   function bindEventListeners() {
     // 选项卡切换
     tabButtons.forEach(btn => {
@@ -1606,36 +1606,36 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         switchTab(btn.dataset.tab);
       });
     });
-    
+
     // 功能1：智能Prompt生成
     selectElementBtn?.addEventListener('click', handleSelectElement);
     exitSelectionBtn?.addEventListener('click', handleExitSelection);
     copyPromptBtn?.addEventListener('click', handleCopyPrompt);
     clearPromptBtn?.addEventListener('click', handleClearPrompt);
-    
+
     // 功能2：页面数据提取
     refreshPageBtn?.addEventListener('click', async () => {
       if (refreshPageBtn) {
         refreshPageBtn.disabled = true;
         refreshPageBtn.textContent = '刷新中...';
       }
-      
+
       await getCurrentPageData();
-      
+
       if (refreshPageBtn) {
         refreshPageBtn.disabled = false;
         refreshPageBtn.textContent = '刷新';
       }
     });
-    
+
     togglePageDataBtn?.addEventListener('click', togglePageData);
-    
+
     copyHtmlBtn?.addEventListener('click', () => {
       if (currentPageData?.htmlSource) {
         copyToClipboard(currentPageData.htmlSource, copyHtmlBtn, '复制');
       }
     });
-    
+
     copyTextBtn?.addEventListener('click', () => {
       if (currentPageData?.textContent) {
         let fullText = '';
@@ -1652,40 +1652,40 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         } else if (currentPageData.textContent.paragraphs) {
           fullText += '=== 页面段落 ===\n';
           currentPageData.textContent.paragraphs.forEach((p, i) => {
-            fullText += `${i+1}. ${p}\n`;
+            fullText += `${i + 1}. ${p}\n`;
           });
         }
         copyToClipboard(fullText, copyTextBtn, '复制');
       }
     });
-    
+
     copyCssBtn?.addEventListener('click', () => {
       if (currentPageData?.styles) {
         let fullCss = '';
-        
+
         if (currentPageData.styles.inlineStyles?.length > 0) {
           fullCss += '=== 内联样式 ===\n';
           currentPageData.styles.inlineStyles.forEach((style, i) => {
             if (typeof style === 'string') {
-              fullCss += `${i+1}. ${style}\n`;
+              fullCss += `${i + 1}. ${style}\n`;
             } else {
-              fullCss += `${i+1}. ${style.element}: ${style.style}\n`;
+              fullCss += `${i + 1}. ${style.element}: ${style.style}\n`;
             }
           });
           fullCss += '\n';
         }
-        
+
         if (currentPageData.styles.externalStylesheets?.length > 0) {
           fullCss += '=== 外部样式表 ===\n';
           currentPageData.styles.externalStylesheets.forEach((sheet, i) => {
-            fullCss += `${i+1}. ${sheet.href || sheet.title || '未知样式表'}\n`;
+            fullCss += `${i + 1}. ${sheet.href || sheet.title || '未知样式表'}\n`;
             if (sheet.rules) {
               fullCss += sheet.rules.join('\n') + '\n';
             }
           });
           fullCss += '\n';
         }
-        
+
         if (currentPageData.styles.cssVariables && Object.keys(currentPageData.styles.cssVariables).length > 0) {
           fullCss += '=== CSS变量 ===\n';
           Object.entries(currentPageData.styles.cssVariables).forEach(([key, value]) => {
@@ -1693,15 +1693,15 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
           });
           fullCss += '\n';
         }
-        
+
         copyToClipboard(fullCss, copyCssBtn, '复制');
       }
     });
-    
+
     copyFontsBtn?.addEventListener('click', () => {
       if (currentPageData?.fonts) {
         let fullFonts = '';
-        
+
         // 字体使用统计
         if (currentPageData.fonts.summary) {
           fullFonts += '=== 字体使用统计 ===\n';
@@ -1719,12 +1719,12 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
           }
           fullFonts += '\n';
         }
-        
+
         // 字体文件详情
         if (currentPageData.fonts.fontResources?.length > 0) {
           fullFonts += '=== 字体文件详情 ===\n';
           currentPageData.fonts.fontResources.forEach((font, i) => {
-            fullFonts += `${i+1}. ${font.name}\n`;
+            fullFonts += `${i + 1}. ${font.name}\n`;
             fullFonts += `   URL: ${font.url}\n`;
             fullFonts += `   域名: ${font.domain}\n`;
             fullFonts += `   格式: ${font.format}\n`;
@@ -1736,16 +1736,16 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
             fullFonts += '\n';
           });
         }
-        
+
         // 字体族使用
         if (currentPageData.fonts.used?.length > 0) {
           fullFonts += '=== 页面使用的字体族 ===\n';
           currentPageData.fonts.used.forEach((font, i) => {
-            fullFonts += `${i+1}. ${font}\n`;
+            fullFonts += `${i + 1}. ${font}\n`;
           });
           fullFonts += '\n';
         }
-        
+
         // @font-face声明
         if (currentPageData.fonts.webFonts?.length > 0) {
           const fontFaceDeclarations = currentPageData.fonts.webFonts.filter(f => f.cssText || f.src);
@@ -1753,7 +1753,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
             fullFonts += '=== @font-face声明 ===\n';
             fontFaceDeclarations.forEach((font, i) => {
               if (font.family || font.cssText) {
-                fullFonts += `${i+1}. ${font.family || '字体声明'}\n`;
+                fullFonts += `${i + 1}. ${font.family || '字体声明'}\n`;
                 if (font.weight) fullFonts += `   字重: ${font.weight}\n`;
                 if (font.style) fullFonts += `   样式: ${font.style}\n`;
                 if (font.display) fullFonts += `   显示: ${font.display}\n`;
@@ -1773,7 +1773,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
             });
           }
         }
-        
+
         copyToClipboard(fullFonts, copyFontsBtn, '复制');
       }
     });
@@ -1793,13 +1793,13 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
     bindCopy(copySelTextBtn2, selTextPreview, '复制');
     bindCopy(copySelCssBtn2, selCssPreview, '复制');
     bindCopy(copySelFontsBtn2, selFontsPreview, '复制');
-    
+
     // 新增信息项的复制按钮
     bindCopy(copySelAttrsBtn, selAttrsPreview, '复制');
     bindCopy(copySelDimensionsBtn, selDimensionsPreview, '复制');
     bindCopy(copySelPathBtn, selPathPreview, '复制');
     bindCopy(copySelPageInfoBtn, selPageInfoPreview, '复制');
-    
+
     // 截图下载按钮
     copySelScreenshotBtn?.addEventListener('click', () => {
       if (currentElementData?.screenshot) {
@@ -1809,12 +1809,12 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         link.click();
       }
     });
-    
+
     // 功能3：PRD生成
     generateBtn?.addEventListener('click', handleGenerate);
     copyBtn?.addEventListener('click', handleCopy);
     newChatBtn?.addEventListener('click', handleNewChat);
-    
+
     // Enter 发送，Shift+Enter 换行
     ideaInput?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -1823,21 +1823,21 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       }
     });
   }
-  
+
   // ===========================================
   // 标签页变化监听
   // ===========================================
-  
+
   // 监听标签页变化
   async function handleTabChange() {
     console.log('[AI Assistant] Tab changed, refreshing page data...');
-    
+
     // 显示刷新状态
     if (refreshPageBtn) {
       refreshPageBtn.disabled = true;
       refreshPageBtn.textContent = '正在同步...';
     }
-    
+
     // 清除旧数据
     currentPageData = null;
     if (activeTab === 'page') {
@@ -1845,29 +1845,29 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
     } else if (activeTab === 'prompt') {
       updatePageInfo();
     }
-    
+
     // 重新获取当前页面数据
     await getCurrentPageData();
-    
+
     // 恢复按钮状态
     if (refreshPageBtn) {
       refreshPageBtn.disabled = false;
       refreshPageBtn.textContent = '刷新';
     }
   }
-  
+
   // ===========================================
   // 初始化函数
   // ===========================================
-  
+
   async function initializeApp() {
     console.log('[AI Assistant] Sidepanel initializing...');
-    
+
     // 监听标签页激活事件
     if (chrome.tabs && chrome.tabs.onActivated) {
       chrome.tabs.onActivated.addListener(handleTabChange);
     }
-    
+
     // 监听标签页更新事件
     if (chrome.tabs && chrome.tabs.onUpdated) {
       chrome.tabs.onUpdated.addListener((tabId, changeInfo, _tab) => {
@@ -1882,13 +1882,13 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         }
       });
     }
-    
+
     // 绑定事件监听器
     bindEventListeners();
-    
+
     // 开始元素选择轮询（用于智能Prompt功能）
     startElementPolling();
-    
+
     // 延迟一下再获取页面数据，确保Chrome API准备就绪
     setTimeout(async () => {
       console.log('[AI Assistant] Starting to get page data...');
@@ -1896,12 +1896,12 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       await getCurrentPageData(); // 获取详细页面数据
     }, 1000);
   }
-  
+
   // 如果DOM已经加载完成，立即初始化
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
   } else {
     initializeApp();
   }
-  
+
 })();
