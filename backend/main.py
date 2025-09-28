@@ -481,55 +481,36 @@ async def generate_prompt_simple(request: PromptGenerateRequest):
         
         print(f"发送请求到OpenRouter API...")
         
-        # 使用httpx进行API调用，增加重试机制
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                # 配置更宽松的连接设置
-                limits = httpx.Limits(max_keepalive_connections=5, max_connections=10)
-                async with httpx.AsyncClient(
-                    timeout=httpx.Timeout(60.0, connect=10.0), 
-                    verify=False,
-                    limits=limits,
-                    trust_env=False  # 忽略环境代理设置
-                ) as client:
-                    response = await client.post(
-                        f"{OPENROUTER_BASE_URL}/chat/completions",
-                        json=openrouter_payload,
-                        headers=headers,
-                    )
+        # 使用requests同步调用作为备用方案
+        try:
+            import requests
+            print(f"使用requests库进行API调用...")
+            
+            response = requests.post(
+                f"{OPENROUTER_BASE_URL}/chat/completions",
+                json=openrouter_payload,
+                headers=headers,
+                timeout=60,
+                verify=False
+            )
+            
+            if response.status_code != 200:
+                error_text = response.text
+                print(f"OpenRouter API错误详情: {error_text}")
+                raise HTTPException(status_code=response.status_code, 
+                                  detail=f"OpenRouter API错误 (status={response.status_code}): {error_text}")
+            
+            openrouter_data = response.json()
+            print(f"OpenRouter响应成功，数据长度: {len(str(openrouter_data))}")
                 
-                if response.status_code != 200:
-                    error_text = await response.aread()
-                    error_text = error_text.decode('utf-8')
-                    print(f"OpenRouter API错误详情: {error_text}")
-                    raise HTTPException(status_code=response.status_code, 
-                                      detail=f"OpenRouter API错误 (status={response.status_code}): {error_text}")
-                
-                    openrouter_data = response.json()
-                    print(f"OpenRouter响应成功，数据长度: {len(str(openrouter_data))}")
-                    break  # 成功则跳出重试循环
-                    
-            except (httpx.TimeoutException, httpx.ConnectTimeout) as e:
-                print(f"第 {attempt + 1} 次尝试超时: {str(e)}")
-                if attempt == max_retries - 1:
-                    raise HTTPException(status_code=408, detail="请求超时，已重试3次")
-                await asyncio.sleep(2 ** attempt)  # 指数退避
-                continue
-                
-            except (httpx.RequestError, anyio.EndOfStream) as e:
-                print(f"第 {attempt + 1} 次尝试网络错误: {str(e)}")
-                if attempt == max_retries - 1:
-                    raise HTTPException(status_code=500, detail=f"网络连接失败，已重试3次: {str(e)}")
-                await asyncio.sleep(2 ** attempt)  # 指数退避
-                continue
-                
-            except Exception as e:
-                print(f"第 {attempt + 1} 次尝试异常: {str(e)}")
-                if attempt == max_retries - 1:
-                    raise HTTPException(status_code=500, detail=f"API请求异常: {str(e)}")
-                await asyncio.sleep(2 ** attempt)
-                continue
+        except requests.exceptions.Timeout:
+            raise HTTPException(status_code=408, detail="请求超时")
+        except requests.exceptions.RequestException as e:
+            print(f"网络请求错误: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"网络请求错误: {str(e)}")
+        except Exception as e:
+            print(f"API请求异常: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"API请求异常: {str(e)}")
         
         # 提取AI回复内容
         ai_content = ""
