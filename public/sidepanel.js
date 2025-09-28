@@ -218,6 +218,16 @@
         return;
       }
 
+      // 先尝试注入content script
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          files: ['content.js']
+        });
+      } catch (injectionError) {
+        console.log('[Prompt Generator] Content script might already be injected:', injectionError.message);
+      }
+
       const response = await new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error('Request timeout'));
@@ -977,6 +987,16 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         console.error('[Page Analyzer] No active tab found');
         updatePageInfoDisplay(null, 'No active tab found');
         return null;
+      }
+
+      // 先尝试注入content script
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          files: ['content.js']
+        });
+      } catch (injectionError) {
+        console.log('[Page Analyzer] Content script might already be injected:', injectionError.message);
       }
 
       const response = await new Promise((resolve, reject) => {

@@ -330,11 +330,11 @@ async function captureElementScreenshot(elementData) {
     // 获取设备像素比
     const devicePixelRatio = 2; // 默认值，可以根据需要调整
 
-    // 计算实际截图尺寸
-    const actualX = Math.max(0, rect.x * devicePixelRatio);
-    const actualY = Math.max(0, rect.y * devicePixelRatio);
-    const actualWidth = Math.min(bitmap.width - actualX, rect.width * devicePixelRatio);
-    const actualHeight = Math.min(bitmap.height - actualY, rect.height * devicePixelRatio);
+    // 计算实际截图尺寸，确保是整数
+    const actualX = Math.max(0, Math.round(rect.x * devicePixelRatio));
+    const actualY = Math.max(0, Math.round(rect.y * devicePixelRatio));
+    const actualWidth = Math.max(1, Math.round(Math.min(bitmap.width - actualX, rect.width * devicePixelRatio)));
+    const actualHeight = Math.max(1, Math.round(Math.min(bitmap.height - actualY, rect.height * devicePixelRatio)));
 
     console.log('[Background] 裁剪参数:', { 
       originalRect: rect, 
@@ -343,7 +343,7 @@ async function captureElementScreenshot(elementData) {
       bitmapSize: { width: bitmap.width, height: bitmap.height }
     });
 
-    // 设置Canvas尺寸
+    // 设置Canvas尺寸，确保是整数
     canvas.width = actualWidth;
     canvas.height = actualHeight;
 
