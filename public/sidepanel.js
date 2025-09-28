@@ -430,68 +430,31 @@ Y坐标: ${Math.round(dimensions.y)}px
     }
   }
 
-  // 生成AI指令（使用OpenRouter API）
-  // OpenRouter API 配置
-  const OPENROUTER_API_KEY = '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';
-  const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+  // 生成AI指令（通过后端代理）
+  // 后端API配置
+  const BACKEND_BASE_URL = 'http://localhost:8001'; // 开发环境，生产环境需要改为Render URL
 
-  // 测试API连接
-  async function testOpenRouterAPI() {
+  // 测试后端连接
+  async function testBackendAPI() {
     try {
-      console.log('[API Test] Testing OpenRouter connection...');
-      console.log('[API Test] API Key length:', OPENROUTER_API_KEY.length);
-      console.log('[API Test] API Key starts with:', OPENROUTER_API_KEY.substring(0, 10) + '...');
+      console.log('[API Test] Testing backend connection...');
 
-      // 先测试简单的模型列表API
-      const modelsResponse = await fetch(`${OPENROUTER_BASE_URL}/models`, {
+      // 测试后端健康检查
+      const healthResponse = await fetch(`${BACKEND_BASE_URL}/health`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': window.location.origin || 'chrome-extension://unknown',
-          'X-Title': 'AI-Programming-Prompt-Generator'
+          'Content-Type': 'application/json'
         }
       });
 
-      console.log('[API Test] Models API status:', modelsResponse.status);
+      console.log('[API Test] Backend health status:', healthResponse.status);
 
-      if (modelsResponse.ok) {
-        console.log('[API Test] ✅ API Key验证成功，开始测试聊天API');
-
-        // 测试聊天API
-        const testResponse = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': window.location.origin || 'chrome-extension://unknown',
-            'X-Title': 'AI-Programming-Prompt-Generator'
-          },
-          body: JSON.stringify({
-            model: 'openai/gpt-4o-mini',
-            messages: [
-              {
-                role: 'user',
-                content: '测试连接，请回复OK'
-              }
-            ],
-            max_tokens: 10
-          })
-        });
-
-        console.log('[API Test] Chat API status:', testResponse.status);
-        const testResult = await testResponse.text();
-        console.log('[API Test] Chat API response:', testResult);
-
-        if (testResponse.ok) {
-          console.log('[API Test] ✅ 聊天API测试成功');
-          return true;
-        } else {
-          console.error('[API Test] ❌ 聊天API测试失败:', testResult);
-          return false;
-        }
+      if (healthResponse.ok) {
+        console.log('[API Test] ✅ 后端连接成功');
+        return true;
       } else {
-        const errorText = await modelsResponse.text();
-        console.error('[API Test] ❌ API Key验证失败:', errorText);
+        const errorText = await healthResponse.text();
+        console.error('[API Test] ❌ 后端连接失败:', errorText);
         return false;
       }
     } catch (error) {
@@ -810,74 +773,43 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
       // 构建智能prompt
       const promptTemplate = buildPromptTemplate(elementData);
 
-      console.log('[OpenRouter Debug] API Key:', OPENROUTER_API_KEY ? 'Present' : 'Missing');
-      console.log('[OpenRouter Debug] Base URL:', OPENROUTER_BASE_URL);
-      console.log('[OpenRouter Debug] Prompt length:', promptTemplate.length);
+      console.log('[Backend Debug] Backend URL:', BACKEND_BASE_URL);
+      console.log('[Backend Debug] Prompt length:', promptTemplate.length);
 
-      // 构建消息内容，支持图片
-      const messageContent = [{
-        type: 'text',
-        text: promptTemplate.substring(0, 8000) // 限制prompt长度避免过长
-      }];
 
-      // 如果有截图，添加到消息中
-      if (elementData.screenshot) {
-        console.log('[OpenRouter Debug] 包含元素截图，图片大小:', elementData.screenshot.length);
-        messageContent.push({
-          type: 'image_url',
-          image_url: {
-            url: elementData.screenshot,
-            detail: 'high' // 使用高质量分析
-          }
-        });
-      } else {
-        console.log('[OpenRouter Debug] 无截图，仅使用文本描述');
-      }
-
-      const requestBody = {
-        model: 'openai/gpt-4o-mini',
-        messages: [
-          {
-            role: 'user',
-            content: messageContent
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-        stream: false
+      // 构建请求数据
+      const requestData = {
+        prompt: promptTemplate.substring(0, 8000), // 限制prompt长度
+        screenshot: elementData.screenshot || null
       };
 
-      console.log('[OpenRouter Debug] Request body:', JSON.stringify(requestBody, null, 2));
-
-      // 先测试API连接（临时禁用以排查问题）
-      console.log('[Debug] 跳过API测试，直接尝试调用...');
-
-      // 调用OpenRouter API
-      const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin || 'chrome-extension://unknown',
-          'X-Title': 'AI-Programming-Prompt-Generator'
-        },
-        body: JSON.stringify(requestBody)
+      console.log('[Backend Debug] Request data:', {
+        promptLength: requestData.prompt.length,
+        hasScreenshot: !!requestData.screenshot
       });
 
-      console.log('[OpenRouter Debug] Response status:', response.status);
-      console.log('[OpenRouter Debug] Response headers:', [...response.headers.entries()]);
+      // 调用后端API
+      const response = await fetch(`${BACKEND_BASE_URL}/api/generate-prompt`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      console.log('[Backend Debug] Response status:', response.status);
 
       const responseText = await response.text();
-      console.log('[OpenRouter Debug] Response text:', responseText);
+      console.log('[Backend Debug] Response text:', responseText.substring(0, 200) + '...');
 
       if (!response.ok) {
-        throw new Error(`OpenRouter API Error ${response.status}: ${responseText}`);
+        throw new Error(`Backend API Error ${response.status}: ${responseText}`);
       }
 
       const result = JSON.parse(responseText);
-      console.log('[OpenRouter Debug] Parsed result:', result);
+      console.log('[Backend Debug] Parsed result keys:', Object.keys(result));
 
-      const aiPrompt = result.choices?.[0]?.message?.content || '生成失败';
+      const aiPrompt = result.prompt || result.content || '生成失败';
 
       if (!aiPrompt || aiPrompt === '生成失败') {
         throw new Error('API返回内容为空或格式异常');
@@ -937,8 +869,8 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
             <p><strong>详细信息:</strong> ${error.message}</p>
             <div style="margin-top: 15px; padding: 10px; background: #fff; border-radius: 4px; font-family: monospace; font-size: 12px; color: #666;">
               <strong>调试信息:</strong><br/>
-              • API Key: ${OPENROUTER_API_KEY ? '已配置' : '未配置'}<br/>
-              • API端点: ${OPENROUTER_BASE_URL}/chat/completions<br/>
+              • 后端连接: ${BACKEND_BASE_URL}<br/>
+              • API端点: ${BACKEND_BASE_URL}/api/generate-prompt<br/>
               • 错误时间: ${new Date().toLocaleString()}
             </div>
             <p style="margin-top: 15px; color: #666; font-size: 14px;">

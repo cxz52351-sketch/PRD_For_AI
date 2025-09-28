@@ -419,6 +419,94 @@ async def root():
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
+# 新的简化prompt生成接口，用于Chrome插件调用
+class PromptGenerateRequest(BaseModel):
+    prompt: str
+    screenshot: Optional[str] = None
+
+@app.post("/api/generate-prompt")
+async def generate_prompt_simple(request: PromptGenerateRequest):
+    """
+    简化的prompt生成接口，专为Chrome插件调用
+    接收prompt文本和可选的截图，返回生成的内容
+    """
+    try:
+        print(f"收到Chrome插件prompt生成请求, prompt长度: {len(request.prompt)}")
+        
+        # 构建OpenRouter请求
+        messages = [
+            {"role": "system", "content": "你是一个专业的编程助手，专门帮助开发者分析网页元素并生成详细的编程实现指令。"},
+            {"role": "user", "content": request.prompt}
+        ]
+        
+        # 如果有截图，添加到消息中
+        if request.screenshot:
+            user_content = [
+                {"type": "text", "text": request.prompt},
+                {"type": "image_url", "image_url": {"url": request.screenshot, "detail": "high"}}
+            ]
+            messages[1]["content"] = user_content
+        
+        openrouter_payload = {
+            "model": "openai/gpt-4o-mini",
+            "messages": messages,
+            "temperature": 0.7,
+            "max_tokens": 4000,
+            "stream": False
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://chrome-extension-ai-assistant.com",
+            "X-Title": "AI Programming Assistant"
+        }
+        
+        print(f"发送请求到OpenRouter API...")
+        
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                f"{OPENROUTER_BASE_URL}/chat/completions",
+                json=openrouter_payload,
+                headers=headers,
+            )
+            
+            if response.status_code != 200:
+                error_text = await response.aread()
+                error_text = error_text.decode('utf-8')
+                print(f"OpenRouter API错误: {error_text}")
+                raise HTTPException(status_code=response.status_code, 
+                                  detail=f"OpenRouter API错误: {error_text}")
+            
+            openrouter_data = response.json()
+            
+            # 提取AI回复内容
+            ai_content = ""
+            if 'choices' in openrouter_data and len(openrouter_data['choices']) > 0:
+                ai_content = openrouter_data['choices'][0].get('message', {}).get('content', '')
+            
+            if not ai_content:
+                raise HTTPException(status_code=500, detail="AI生成内容为空")
+            
+            print(f"成功生成prompt，长度: {len(ai_content)}")
+            
+            return {
+                "prompt": ai_content,
+                "content": ai_content,  # 兼容不同的前端字段名
+                "success": True
+            }
+            
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=408, detail="请求超时")
+    except httpx.RequestError as e:
+        print(f"网络请求错误: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"网络请求错误: {str(e)}")
+    except Exception as e:
+        print(f"生成prompt错误: {str(e)}")
+        import traceback
+        print(f"错误堆栈: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"服务器内部错误: {str(e)}")
+
 @app.post("/api/prompt")
 async def generate_prompt_with_openrouter(request: ChatRequest):
     """
