@@ -34,6 +34,19 @@
   const copySelCssBtn2 = document.getElementById('copySelCssBtn2');
   const copySelFontsBtn2 = document.getElementById('copySelFontsBtn2');
   
+  // 新增元素信息区域
+  const selAttrsPreview = document.getElementById('selAttrsPreview');
+  const selDimensionsPreview = document.getElementById('selDimensionsPreview');
+  const selPathPreview = document.getElementById('selPathPreview');
+  const selPageInfoPreview = document.getElementById('selPageInfoPreview');
+  const selScreenshotPreview = document.getElementById('selScreenshotPreview');
+  const screenshotSection = document.getElementById('screenshotSection');
+  const copySelAttrsBtn = document.getElementById('copySelAttrsBtn');
+  const copySelDimensionsBtn = document.getElementById('copySelDimensionsBtn');
+  const copySelPathBtn = document.getElementById('copySelPathBtn');
+  const copySelPageInfoBtn = document.getElementById('copySelPageInfoBtn');
+  const copySelScreenshotBtn = document.getElementById('copySelScreenshotBtn');
+  
   // 功能2：页面数据提取
   const pageInfoDisplay = document.getElementById('pageInfoDisplay');
   const refreshPageBtn = document.getElementById('refreshPageBtn');
@@ -335,6 +348,83 @@
       } else if (selFontsPreview) {
         selFontsPreview.textContent = '';
       }
+
+      // 新增：元素属性
+      if (selAttrsPreview) {
+        let attrsText = '';
+        if (el.attributes && Object.keys(el.attributes).length > 0) {
+          attrsText = Object.entries(el.attributes)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n');
+        } else {
+          attrsText = '无属性';
+        }
+        selAttrsPreview.textContent = attrsText;
+      }
+
+      // 新增：尺寸位置
+      if (selDimensionsPreview) {
+        let dimensionsText = '';
+        const dimensions = el.dimensions || el.rect;
+        if (dimensions) {
+          dimensionsText = `宽度: ${Math.round(dimensions.width)}px
+高度: ${Math.round(dimensions.height)}px
+X坐标: ${Math.round(dimensions.x)}px
+Y坐标: ${Math.round(dimensions.y)}px
+左侧: ${Math.round(dimensions.left)}px
+顶部: ${Math.round(dimensions.top)}px
+右侧: ${Math.round(dimensions.right)}px
+底部: ${Math.round(dimensions.bottom)}px`;
+        } else {
+          dimensionsText = '尺寸信息不可用';
+        }
+        selDimensionsPreview.textContent = dimensionsText;
+      }
+
+      // 新增：元素路径
+      if (selPathPreview) {
+        let pathText = '';
+        if (el.selector) {
+          pathText += `CSS选择器: ${el.selector}\n`;
+        }
+        if (el.xpath) {
+          pathText += `XPath: ${el.xpath}\n`;
+        }
+        if (el.tagName) {
+          pathText += `标签名: ${el.tagName}\n`;
+        }
+        if (el.id) {
+          pathText += `ID: ${el.id}\n`;
+        }
+        if (el.className) {
+          pathText += `类名: ${el.className}\n`;
+        }
+        if (!pathText) {
+          pathText = '路径信息不可用';
+        }
+        selPathPreview.textContent = pathText.trim();
+      }
+
+      // 新增：页面信息
+      if (selPageInfoPreview) {
+        const pageContext = elementData.pageContext || {};
+        let pageInfoText = `页面标题: ${pageContext.title || '未知'}
+页面URL: ${pageContext.url || '未知'}
+域名: ${pageContext.domain || '未知'}
+协议: ${pageContext.protocol || '未知'}
+选择时间: ${new Date(elementData.timestamp || Date.now()).toLocaleString()}
+用户代理: ${navigator.userAgent.substring(0, 100)}...`;
+        selPageInfoPreview.textContent = pageInfoText;
+      }
+
+      // 新增：截图显示
+      if (elementData.screenshot && selScreenshotPreview && screenshotSection) {
+        screenshotSection.style.display = 'block';
+        selScreenshotPreview.innerHTML = `<img src="${elementData.screenshot}" alt="元素截图" />`;
+      } else if (screenshotSection) {
+        screenshotSection.style.display = 'none';
+      }
+
     } catch (e) {
       console.error('[Prompt] renderSelectedElementDetails error', e);
     }
@@ -1703,6 +1793,22 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
     bindCopy(copySelTextBtn2, selTextPreview, '复制');
     bindCopy(copySelCssBtn2, selCssPreview, '复制');
     bindCopy(copySelFontsBtn2, selFontsPreview, '复制');
+    
+    // 新增信息项的复制按钮
+    bindCopy(copySelAttrsBtn, selAttrsPreview, '复制');
+    bindCopy(copySelDimensionsBtn, selDimensionsPreview, '复制');
+    bindCopy(copySelPathBtn, selPathPreview, '复制');
+    bindCopy(copySelPageInfoBtn, selPageInfoPreview, '复制');
+    
+    // 截图下载按钮
+    copySelScreenshotBtn?.addEventListener('click', () => {
+      if (currentElementData?.screenshot) {
+        const link = document.createElement('a');
+        link.href = currentElementData.screenshot;
+        link.download = 'element-screenshot.png';
+        link.click();
+      }
+    });
     
     // 功能3：PRD生成
     generateBtn?.addEventListener('click', handleGenerate);
