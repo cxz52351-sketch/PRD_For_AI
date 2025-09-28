@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ai-prompt-generator-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt
+    startCommand: python start.py
+    envVars:
+      - key: PIP_NO_CACHE_DIR
+        value: "1"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: PORT
+        value: "8001"
