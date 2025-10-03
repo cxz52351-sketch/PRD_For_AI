@@ -5,7 +5,7 @@
   "description": "三合一智能编程工具：智能Prompt生成、页面数据提取、PRD生成",
   "permissions": [
     "activeTab",
-    "sidePanel", 
+    "sidePanel",
     "storage",
     "scripting",
     "tabs",
@@ -13,12 +13,11 @@
   ],
   "host_permissions": [
     "<all_urls>",
-    "http://localhost:*/*",
-    "https://localhost:*/*",
     "https://teach.excelmaster.ai/*",
     "https://mirror.o3pro.pro/*",
     "https://*.o3pro.pro/*",
-    "https://openrouter.ai/*"
+    "https://openrouter.ai/*",
+    "https://prd-for-ai-chrome.onrender.com/*"
   ],
   "side_panel": {
     "default_path": "sidepanel.html"
@@ -28,8 +27,12 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
   ],
@@ -53,6 +56,3 @@
     }
   ]
 }
-
-
-
