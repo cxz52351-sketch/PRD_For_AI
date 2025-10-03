@@ -50,6 +50,7 @@
   // 功能2：页面数据提取
   const pageInfoDisplay = document.getElementById('pageInfoDisplay');
   const refreshPageBtn = document.getElementById('refreshPageBtn');
+  const autoUpdatePageDataCheckbox = document.getElementById('autoUpdatePageData');
   const includePageDataCheckbox = document.getElementById('includePageData');
   const togglePageDataBtn = document.getElementById('togglePageDataBtn');
   const pageDataDetails = document.getElementById('pageDataDetails');
@@ -1267,7 +1268,8 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
 
   // 生成包含页面数据的上下文提示
   function generatePageContext(pageData, userIdea) {
-    if (!pageData || !includePageDataCheckbox?.checked) {
+    // 这个函数只有在用户勾选复选框时才会被调用，所以不需要再次检查
+    if (!pageData) {
       return userIdea;
     }
 
@@ -1347,7 +1349,7 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
         conversation_id: dbConversationId,
         dify_conversation_id: difyConversationId,
         workflow_type: 'prd', // 使用PRD工作流
-        // 如果包含页面数据，添加到请求中
+        // 只有当用户勾选复选框并且页面数据存在时，才添加到请求中
         ...(includePageDataCheckbox?.checked && currentPageData ? {
           page_data: {
             url: currentPageData.url,
@@ -1722,6 +1724,12 @@ ${elementData.screenshot ? '- **以截图为准**：如果CSS数据与截图中�
 
   // 监听标签页变化
   async function handleTabChange() {
+    // 只有当自动更新复选框被勾选时，才自动更新页面数据
+    if (!autoUpdatePageDataCheckbox?.checked) {
+      console.log('[AI Assistant] Auto-update disabled, skipping tab change update');
+      return;
+    }
+    
     console.log('[AI Assistant] Tab changed, refreshing page data...');
 
     // 显示刷新状态

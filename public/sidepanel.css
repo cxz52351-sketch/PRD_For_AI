@@ -736,24 +736,71 @@ button.tiny {
   border: 1px solid rgba(154, 111, 184, 0.1);
 }
 
-/* 复选框样式 */
-.checkbox-container {
+/* 页面分析区域的小型复选框样式 */
+.section-controls .checkbox-container {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 6px;
-  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
   font-size: 12px;
 }
 
-.checkbox-container input[type="checkbox"] {
+.section-controls .checkbox-container input[type="checkbox"] {
   width: 14px;
   height: 14px;
   accent-color: var(--primary);
+  cursor: pointer;
+  margin: 0;
+}
+
+.section-controls .checkbox-label {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+/* PRD生成区域的复选框样式（保持原有大小） */
+.checkbox-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 16px;
+  background: rgba(154, 111, 184, 0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
 }
 
 .checkbox-label {
-  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
   font-weight: 500;
+  color: var(--text);
+}
+
+.checkbox-container input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.checkbox-description {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin-left: 24px;
+}
+
+.checkmark {
+  /* 可选：如果想要自定义checkmark样式 */
 }
 
 .section-controls {

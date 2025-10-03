@@ -926,6 +926,55 @@ async def chat_with_dify(request: ChatRequest):
             print(f"查询长度: {len(detailed_query)} 字符")
             print(f"传递给Dify的查询: {detailed_query[:200]}...")
         
+        elif request.workflow_type == "prd" and request.page_data:
+            # PRD生成工作流也支持页面数据
+            page_data = request.page_data
+            
+            # 构建页面上下文信息
+            page_context = f"""
+**当前页面信息**
+- 页面标题: {page_data.get('title', '未知')}
+- 页面域名: {page_data.get('domain', '未知')}
+- 页面URL: {page_data.get('url', '未知')}"""
+            
+            # 添加技术栈信息
+            tech_info = page_data.get('tech_info', {})
+            if tech_info:
+                page_context += f"""
+**技术栈信息**
+- 字体资源: {tech_info.get('fonts', [])}
+- 样式表数量: {tech_info.get('stylesheets', 0)}
+- 字体格式: {tech_info.get('font_formats', [])}"""
+            
+            # 添加页面内容摘要
+            if page_data.get('text_summary'):
+                page_context += f"""
+**页面内容摘要**
+{page_data.get('text_summary', '')[:300]}"""
+            
+            # 添加页面标题信息
+            headings = page_data.get('headings', [])
+            if headings:
+                page_context += f"""
+**页面主要标题**
+{chr(10).join(headings[:5])}"""
+            
+            # 将页面上下文添加到用户查询中
+            enhanced_query = f"{user_query}\n\n{page_context}"
+            
+            # 更新payload
+            dify_payload["inputs"].update({
+                "query": enhanced_query[:2000],  # 限制长度避免超限
+                "text": enhanced_query[:2000],
+                "page_domain": page_data.get('domain', '')[:50],
+                "page_title": page_data.get('title', '')[:100],
+            })
+            
+            print(f"添加页面数据到PRD工作流: {page_data.get('domain', 'unknown')}")
+            print(f"增强查询长度: {len(enhanced_query)} 字符")
+            print(f"传递给Dify的查询: {enhanced_query[:200]}...")
+        
+        
         # 按照经验：如果有图片，添加到inputs.input_img字段（必须是数组格式）
         if dify_files:
             # 只处理图片文件，其他类型文件暂时忽略
