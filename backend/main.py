@@ -955,9 +955,20 @@ async def chat_with_dify(request: ChatRequest):
             # 添加页面标题信息
             headings = page_data.get('headings', [])
             if headings:
+                # 处理标题数据，确保是字符串格式
+                heading_texts = []
+                for heading in headings[:5]:
+                    if isinstance(heading, dict):
+                        # 如果是字典，提取text或content字段
+                        heading_text = heading.get('text', heading.get('content', str(heading)))
+                    else:
+                        # 如果是字符串，直接使用
+                        heading_text = str(heading)
+                    heading_texts.append(heading_text)
+                
                 page_context += f"""
 **页面主要标题**
-{chr(10).join(headings[:5])}"""
+{chr(10).join(heading_texts)}"""
             
             # 将页面上下文添加到用户查询中
             enhanced_query = f"{user_query}\n\n{page_context}"

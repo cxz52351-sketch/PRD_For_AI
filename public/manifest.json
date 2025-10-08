@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AI 编程提示词生成器",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "三合一智能编程工具：智能Prompt生成、页面数据提取、PRD生成",
   "permissions": [
     "activeTab",
